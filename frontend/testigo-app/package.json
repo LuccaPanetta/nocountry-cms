@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "testigo-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,13 +8,15 @@
     "start": "next start"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.553.0",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
