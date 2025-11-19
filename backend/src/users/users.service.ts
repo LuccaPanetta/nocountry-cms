@@ -28,12 +28,9 @@ export class UsersService {
 
     if (exists) throw new BadRequestException('Email ya registrado');
 
-    const hash = await bcrypt.hash(dto.password, 10);
-
     const user = this.userRepository.create({
       ...dto,
-      password: hash,
-      // rol asignado automáticamente según entity (CONTRIBUTOR)
+      password: dto.password, 
     });
 
     return this.userRepository.save(user);
