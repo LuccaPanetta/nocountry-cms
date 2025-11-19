@@ -1,12 +1,10 @@
-/* import { create } from "zustand";
+import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { userSchema, User } from "@/schemas/user";
 
-interface UserState {
-  idUser: string,
-  email: string;
-  username: string;
+interface UserState extends Partial<User> {
   hasHydrated: boolean;
-  setUserData: (data: Partial<Pick<UserState, "idUser" | "email" | "username">>) => void;
+  setUserData: (data: Partial<User>) => void;
   clearUserData: () => void;
   setHasHydrated: (state: boolean) => void;
 }
@@ -14,18 +12,26 @@ interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      idUser: "",
+      id: "",
+      name: "",
       email: "",
-      username: "",
+      role: undefined,
+      token: "",
       hasHydrated: false,
 
-      setUserData: (data) =>
-        set((state) => ({
-          ...state,
-          ...data,
-        })),
+      setUserData: (data) => {
+        // Validar datos con Zod antes de guardar
+        const parsed = userSchema.partial().safeParse(data);
+        if (parsed.success) {
+          set((state) => ({
+            ...state,
+            ...data,
+          }));
+        }
+      },
 
-      clearUserData: () => set({ idUser: "", email: "", username: "" }),
+      clearUserData: () =>
+        set({ id: "", name: "", email: "", role: undefined, token: "" }),
 
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
@@ -37,4 +43,3 @@ export const useUserStore = create<UserState>()(
     }
   )
 );
- */
