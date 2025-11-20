@@ -31,7 +31,14 @@ async function loginService(data: LoginInput) {
 // Helper function to decode JWT token (basic implementation)
 function decodeJWT(token: string) {
   try {
-    const base64Url = token.split('.')[1];
+    // Validate token structure
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error('Invalid JWT token structure');
+      return null;
+    }
+    
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -60,21 +67,26 @@ export default function LoginForm() {
       // Decode JWT to extract user information
       const decodedToken = decodeJWT(data.access_token);
       
-      if (decodedToken && decodedToken.sub && decodedToken.email) {
-        // Validate and store the access token and user info from JWT
+      // Validate that we have the minimum required fields from JWT
+      if (decodedToken && decodedToken.sub) {
+        // Validate and extract user ID
         const userId = typeof decodedToken.sub === 'string' 
           ? parseInt(decodedToken.sub, 10) 
           : typeof decodedToken.sub === 'number' 
             ? decodedToken.sub 
             : null;
             
-        const userEmail = typeof decodedToken.email === 'string' 
+        // Extract email if available (optional field)
+        const userEmail = decodedToken.email && typeof decodedToken.email === 'string' 
           ? decodedToken.email 
           : null;
         
+        // Store the access token and user info from JWT
+        // Note: username is not available in JWT, setting to null
         setUser({
           idUser: userId,
           email: userEmail,
+          username: null, // Backend doesn't provide username in JWT
           hasHydrated: true,
           accessToken: data.access_token,
         });
