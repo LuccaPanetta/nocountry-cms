@@ -60,24 +60,31 @@ export default function LoginForm() {
       // Decode JWT to extract user information
       const decodedToken = decodeJWT(data.access_token);
       
-      if (decodedToken) {
-        // Store the access token and user info from JWT
+      if (decodedToken && decodedToken.sub && decodedToken.email) {
+        // Validate and store the access token and user info from JWT
+        const userId = typeof decodedToken.sub === 'string' 
+          ? parseInt(decodedToken.sub, 10) 
+          : typeof decodedToken.sub === 'number' 
+            ? decodedToken.sub 
+            : null;
+            
+        const userEmail = typeof decodedToken.email === 'string' 
+          ? decodedToken.email 
+          : null;
+        
         setUser({
-          idUser: decodedToken.sub ? parseInt(decodedToken.sub) : null,
-          email: decodedToken.email || null,
+          idUser: userId,
+          email: userEmail,
           hasHydrated: true,
           accessToken: data.access_token,
         });
+        
+        // Use Next.js router for navigation
+        router.push("/");
       } else {
-        // Fallback: store only access token if decode fails
-        setUser({
-          hasHydrated: true,
-          accessToken: data.access_token,
-        });
+        // If JWT decoding fails or is invalid, show error
+        setBackendError("Error al procesar la respuesta de autenticación");
       }
-      
-      // Use Next.js router for navigation
-      router.push("/");
     },
     onError: (error: any) => {
       setBackendError(error.message);
