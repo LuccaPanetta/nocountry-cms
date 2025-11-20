@@ -31,6 +31,12 @@ async function loginService(data: LoginInput) {
 // Helper function to decode JWT token (basic implementation)
 function decodeJWT(token: string) {
   try {
+    // Validate input
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      console.error('Invalid JWT token: empty or non-string input');
+      return null;
+    }
+    
     // Validate token structure
     const parts = token.split('.');
     if (parts.length !== 3) {
@@ -70,11 +76,20 @@ export default function LoginForm() {
       // Validate that we have the minimum required fields from JWT
       if (decodedToken && decodedToken.sub) {
         // Validate and extract user ID
-        const userId = typeof decodedToken.sub === 'string' 
-          ? parseInt(decodedToken.sub, 10) 
-          : typeof decodedToken.sub === 'number' 
-            ? decodedToken.sub 
-            : null;
+        let userId: number | null = null;
+        
+        if (typeof decodedToken.sub === 'string') {
+          const parsed = parseInt(decodedToken.sub, 10);
+          userId = isNaN(parsed) ? null : parsed;
+        } else if (typeof decodedToken.sub === 'number') {
+          userId = decodedToken.sub;
+        }
+        
+        // If userId is invalid, treat as authentication failure
+        if (userId === null) {
+          setBackendError("Error: ID de usuario inválido en la respuesta");
+          return;
+        }
             
         // Extract email if available (optional field)
         const userEmail = decodedToken.email && typeof decodedToken.email === 'string' 
