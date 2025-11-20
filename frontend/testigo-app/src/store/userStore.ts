@@ -1,45 +1,31 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { userSchema, User } from "@/schemas/user";
 
-interface UserState extends Partial<User> {
+type UserState = {
+  idUser: number | null;
+  email: string | null;
+  username: string | null;
   hasHydrated: boolean;
-  setUserData: (data: Partial<User>) => void;
-  clearUserData: () => void;
-  setHasHydrated: (state: boolean) => void;
-}
+  accessToken?: string;
+};
 
-export const useUserStore = create<UserState>()(
-  persist(
-    (set) => ({
-      id: "",
-      name: "",
-      email: "",
-      role: undefined,
-      token: "",
+type UserActions = {
+  setUser: (user: Partial<UserState>) => void;
+  clearUser: () => void;
+};
+
+export const useUserStore = create<UserState & UserActions>((set) => ({
+  idUser: null,
+  email: null,
+  username: null,
+  hasHydrated: false,
+  accessToken: undefined,
+  setUser: (user) => set((state) => ({ ...state, ...user })),
+  clearUser: () =>
+    set({
+      idUser: null,
+      email: null,
+      username: null,
       hasHydrated: false,
-
-      setUserData: (data) => {
-        // Validar datos con Zod antes de guardar
-        const parsed = userSchema.partial().safeParse(data);
-        if (parsed.success) {
-          set((state) => ({
-            ...state,
-            ...data,
-          }));
-        }
-      },
-
-      clearUserData: () =>
-        set({ id: "", name: "", email: "", role: undefined, token: "" }),
-
-      setHasHydrated: (state) => set({ hasHydrated: state }),
+      accessToken: undefined,
     }),
-    {
-      name: "user-storage",
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-      },
-    }
-  )
-);
+}));

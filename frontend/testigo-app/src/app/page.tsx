@@ -1,3 +1,9 @@
+import LoginForm from "@/components/loginForm";
+
 export default function Home() {
-  return <> Testigo App </>;
+  return (
+    <div>
+      <LoginForm></LoginForm>
+    </div>
+  );
 }
