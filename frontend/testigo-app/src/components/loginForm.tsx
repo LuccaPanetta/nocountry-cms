@@ -28,11 +28,7 @@ async function loginService(data: LoginInput) {
 }
 
 export default function LoginForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginInput>({
+  const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   });
   const setUser = useUserStore((s) => s.setUser);
@@ -41,88 +37,59 @@ export default function LoginForm() {
   const mutation = useMutation({
     mutationFn: loginService,
     onSuccess: (data) => {
+      // Store the access token
       setUser({
-        idUser: data.id,
-        email: data.email,
-        username: data.username,
         hasHydrated: true,
         accessToken: data.access_token,
       });
-      // Redirigir según verificación
-      if (data.verified === false) {
-        window.location.href = "/verificacion";
-      } else {
-        window.location.href = "/";
-      }
+      // Redirect to home page after successful login
+      window.location.href = "/";
     },
     onError: (error: any) => {
       setBackendError(error.message);
     },
   });
 
-  const form = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-  });
-
   return (
-    <Form
-      {...{
-        ...form,
-        register,
-        handleSubmit,
-        formState: { errors },
-      }}
-    >
+    <Form {...form}>
       <form
         className="max-w-sm mx-auto p-4 flex flex-col gap-4"
-        onSubmit={handleSubmit((data) => {
+        onSubmit={form.handleSubmit((data) => {
           setBackendError(null);
           mutation.mutate(data);
         })}
       >
         <FormField
+          control={form.control}
           name="email"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="email">Email</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
-                  id="email"
                   type="email"
-                  {...register("email")}
-                  className="border rounded w-full p-2"
+                  placeholder="tu@email.com"
+                  {...field}
                 />
               </FormControl>
-              <FormMessage>
-                {errors.email && (
-                  <span className="text-red-500 text-sm">
-                    {errors.email.message}
-                  </span>
-                )}
-              </FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />
         <FormField
+          control={form.control}
           name="password"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="password">Contraseña</FormLabel>
+              <FormLabel>Contraseña</FormLabel>
               <FormControl>
                 <Input
-                  id="password"
                   type="password"
-                  {...register("password")}
-                  className="border rounded w-full p-2"
+                  placeholder="••••••"
+                  {...field}
                 />
               </FormControl>
-              <FormMessage>
-                {errors.password && (
-                  <span className="text-red-500 text-sm">
-                    {errors.password.message}
-                  </span>
-                )}
-              </FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />
