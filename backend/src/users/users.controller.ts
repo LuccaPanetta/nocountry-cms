@@ -12,6 +12,9 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from './interfaces/user-role.enum';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -23,12 +26,13 @@ import {
 
 @ApiTags('Usuarios')
 @ApiBearerAuth('JWT-auth')
-@UseGuards(JwtAuthGuard) 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ 
     summary: 'Crear usuario de rol Operador o Administrador',
     description: 'Crea un nuevo usuario en el sistema (solo administradores)'
@@ -43,7 +47,7 @@ export class UsersController {
         nombre: 'María',
         apellido: 'García',
         email: 'maria@ejemplo.com',
-        role: 'EDITOR',
+        role: 'OPERATOR', 
         createdAt: '2024-01-15T10:30:00.000Z',
         updatedAt: '2024-01-15T10:30:00.000Z'
       }
@@ -70,6 +74,7 @@ export class UsersController {
   }
 
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.CONTRIBUTOR) 
   @ApiOperation({ 
     summary: 'Obtener todos los usuarios',
     description: 'Retorna una lista paginada de todos los usuarios del sistema'
@@ -85,7 +90,7 @@ export class UsersController {
             nombre: 'María',
             apellido: 'García',
             email: 'maria@ejemplo.com',
-            role: 'editor',
+            role: 'OPERATOR',
             createdAt: '2024-01-15T10:30:00.000Z'
           }
         ],
@@ -100,11 +105,16 @@ export class UsersController {
     status: 401, 
     description: 'No autorizado - Token inválido' 
   })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Prohibido - Permisos insuficientes' 
+  })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.CONTRIBUTOR)
   @ApiOperation({ 
     summary: 'Obtener usuario por ID',
     description: 'Retorna la información detallada de un usuario específico'
@@ -123,7 +133,7 @@ export class UsersController {
         nombre: 'María',
         apellido: 'García',
         email: 'maria@ejemplo.com',
-        role: 'editor',
+        role: 'OPERATOR',
         createdAt: '2024-01-15T10:30:00.000Z',
         updatedAt: '2024-01-15T10:30:00.000Z'
       }
@@ -137,14 +147,19 @@ export class UsersController {
     status: 401, 
     description: 'No autorizado - Token inválido' 
   })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Prohibido - Permisos insuficientes' 
+  })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ 
     summary: 'Actualizar usuario',
-    description: 'Actualiza la información de un usuario existente'
+    description: 'Actualiza la información de un usuario existente (solo administradores)'
   })
   @ApiParam({
     name: 'id',
@@ -161,7 +176,7 @@ export class UsersController {
         nombre: 'María Elena',
         apellido: 'García López',
         email: 'maria@ejemplo.com',
-        role: 'editor',
+        role: 'OPERATOR',
         createdAt: '2024-01-15T10:30:00.000Z',
         updatedAt: '2024-01-15T11:45:00.000Z'
       }
@@ -179,14 +194,19 @@ export class UsersController {
     status: 401, 
     description: 'No autorizado - Token inválido' 
   })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Prohibido - Se requieren permisos de administrador' 
+  })
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ 
     summary: 'Eliminar usuario',
-    description: 'Elimina permanentemente un usuario del sistema'
+    description: 'Elimina permanentemente un usuario del sistema (solo administradores)'
   })
   @ApiParam({
     name: 'id',
@@ -213,7 +233,7 @@ export class UsersController {
   })
   @ApiResponse({ 
     status: 403, 
-    description: 'Prohibido - No puedes eliminar tu propio usuario' 
+    description: 'Prohibido - No puedes eliminar tu propio usuario o permisos insuficientes' 
   })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);

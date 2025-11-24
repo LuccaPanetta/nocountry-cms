@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt'; // Necesario para el método update
 
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,12 +28,9 @@ export class UsersService {
 
     if (exists) throw new BadRequestException('Email ya registrado');
 
-    const hash = await bcrypt.hash(dto.password, 10);
-
     const user = this.userRepository.create({
       ...dto,
-      password: hash,
-      // rol asignado automáticamente según entity (CONTRIBUTOR)
+      password: dto.password, 
     });
 
     return this.userRepository.save(user);
@@ -69,7 +66,6 @@ export class UsersService {
   // ------------------------------------------
   async update(id: string, dto: UpdateUserDto) {
     const user = await this.findOne(id);
-
     if (dto.password) {
       dto.password = await bcrypt.hash(dto.password, 10);
     }
