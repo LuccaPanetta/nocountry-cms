@@ -35,7 +35,7 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({
-    example: 'Secreto123',
+    example: 'Secreto123!',
     description: 'Contraseña del usuario (mínimo 6 caracteres)',
     minLength: 6,
     required: true,

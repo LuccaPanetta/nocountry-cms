@@ -6,36 +6,215 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam 
+} from '@nestjs/swagger';
 
+@ApiTags('Usuarios') // 👈 Agrupa endpoints de usuarios
+@ApiBearerAuth('JWT-auth') // 👈 Requiere autenticación para todos los endpoints
+@UseGuards(JwtAuthGuard) // 👈 Protege todo el controlador
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiOperation({ 
+    summary: 'Crear usuario',
+    description: 'Crea un nuevo usuario en el sistema (solo administradores)'
+  })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Usuario creado exitosamente',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        nombre: 'María',
+        apellido: 'García',
+        email: 'maria@ejemplo.com',
+        role: 'editor',
+        createdAt: '2024-01-15T10:30:00.000Z',
+        updatedAt: '2024-01-15T10:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Datos del usuario inválidos' 
+  })
+  @ApiResponse({ 
+    status: 409, 
+    description: 'El email ya está registrado' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'No autorizado - Token inválido' 
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Prohibido - Se requieren permisos de administrador' 
+  })
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
 
   @Get()
+  @ApiOperation({ 
+    summary: 'Obtener todos los usuarios',
+    description: 'Retorna una lista paginada de todos los usuarios del sistema'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de usuarios obtenida exitosamente',
+    schema: {
+      example: {
+        data: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            nombre: 'María',
+            apellido: 'García',
+            email: 'maria@ejemplo.com',
+            role: 'editor',
+            createdAt: '2024-01-15T10:30:00.000Z'
+          }
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'No autorizado - Token inválido' 
+  })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({ 
+    summary: 'Obtener usuario por ID',
+    description: 'Retorna la información detallada de un usuario específico'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID del usuario',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Usuario encontrado exitosamente',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        nombre: 'María',
+        apellido: 'García',
+        email: 'maria@ejemplo.com',
+        role: 'editor',
+        createdAt: '2024-01-15T10:30:00.000Z',
+        updatedAt: '2024-01-15T10:30:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Usuario no encontrado' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'No autorizado - Token inválido' 
+  })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiOperation({ 
+    summary: 'Actualizar usuario',
+    description: 'Actualiza la información de un usuario existente'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID del usuario a actualizar',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Usuario actualizado exitosamente',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        nombre: 'María Elena',
+        apellido: 'García López',
+        email: 'maria@ejemplo.com',
+        role: 'editor',
+        createdAt: '2024-01-15T10:30:00.000Z',
+        updatedAt: '2024-01-15T11:45:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Usuario no encontrado' 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Datos de actualización inválidos' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'No autorizado - Token inválido' 
+  })
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
   }
 
   @Delete(':id')
+  @ApiOperation({ 
+    summary: 'Eliminar usuario',
+    description: 'Elimina permanentemente un usuario del sistema'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID del usuario a eliminar',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Usuario eliminado exitosamente',
+    schema: {
+      example: {
+        message: 'Usuario eliminado correctamente',
+        id: '550e8400-e29b-41d4-a716-446655440000'
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'Usuario no encontrado' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'No autorizado - Token inválido' 
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Prohibido - No puedes eliminar tu propio usuario' 
+  })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
