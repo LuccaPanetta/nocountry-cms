@@ -23,17 +23,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // ✅ CORS CONFIGURADO PARA MULTIPLES ORIGENS
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001', 
-      'https://tu-frontend.vercel.app', // Tu frontend en Vercel
-      'https://tu-backend.onrender.com' // Tu propio backend
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-    credentials: true,
-  });
+ app.enableCors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    process.env.RENDER_BACKEND_URL
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  credentials: true,
+});
 
   app.setGlobalPrefix('api/v1');
 
