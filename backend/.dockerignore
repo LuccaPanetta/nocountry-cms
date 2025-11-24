@@ -1,0 +1,6 @@
+# .dockerignore (dentro de la carpeta backend/)
+node_modules
+dist
+.env
+npm-debug.log
+.DS_Store
