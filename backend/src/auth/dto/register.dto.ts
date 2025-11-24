@@ -25,7 +25,7 @@ export class RegisterDto {
   apellido: string;
 
   @ApiProperty({
-    example: 'juan@example.com',
+    example: 'contributor@dominio.com',
     description: 'Correo electrónico del usuario',
     format: 'email',
     required: true
@@ -35,7 +35,7 @@ export class RegisterDto {
   email: string;
 
   @ApiProperty({
-    example: 'Secreto123!',
+    example: 'contributor123!',
     description: 'Contraseña del usuario (mínimo 6 caracteres)',
     minLength: 6,
     required: true,
