@@ -6,17 +6,35 @@ import { HttpExceptionFilter } from './infra/validators/http-exception.filter';
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
 async function bootstrap() {
-
   dotenv.config();
   const port = process.env.PORT || 3000;
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   const localUrl = `http://localhost:${port}`;
+  const backendUrl = process.env.RENDER_BACKEND_URL || `https://tu-backend.onrender.com`; // Asegúrate de que sea HTTPS
 
-  const backendUrl = process.env.RENDER_BACKEND_URL || localUrl;
-  const frontendUrl = process.env.VERCEL_FRONTEND_URL || 'http://localhost:3001';
+  console.log('🚀 Iniciando aplicación...');
+  console.log('🔧 Configuración Servidores:', {
+    NODE_ENV: process.env.NODE_ENV,
+    localUrl,
+    backendUrl
+  });
 
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors();
+  // ✅ CORS CONFIGURADO PARA MULTIPLES ORIGENS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://tu-frontend.vercel.app', // Tu frontend en Vercel
+      'https://tu-backend.onrender.com' // Tu propio backend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    credentials: true,
+  });
+
   app.setGlobalPrefix('api/v1');
 
   app.useGlobalPipes(
@@ -29,6 +47,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  // ✅ SWAGGER CON MULTIPLES SERVIDORES FUNCIONALES
   const config = new DocumentBuilder()
     .setTitle('Testimonial CMS - TestiGo')
     .setDescription(`
@@ -36,17 +55,15 @@ async function bootstrap() {
 
 Sistema diseñado para recopilar, organizar y publicar testimonios de impacto de programas educativos. 
 Gestiona historias reales de estudiantes y programas con moderación integrada y analítica de engagement.
-Soporta múltiples formatos multimedia y ofrece integración sencilla mediante embeds y API pública.
 
-### 🌐 Despliegues
-- **💻 Desarrollo Local**: [localhost:${port}](${localUrl}/api/v1/docs)
-- **🚀 TestiGo - Backend**: [Render](${backendUrl})
-- **⚡ TestiGo - Frontend**: [Vercel](${frontendUrl})
+### 🌐 Servidores Disponibles
+- **💻 Desarrollo Local**: Ideal para desarrollo y testing
+- **🚀 Producción**: Entorno estable en Render
     `)
     .setVersion('1.0')
-    .addServer(`${localUrl}`, '💻 Desarrollo Local')
-    .addServer(`${backendUrl}`, '🚀 CMS de Testimonios - Backend (Render)')
-    .addServer(`${frontendUrl}`, '⚡ CMS de Testimonios - Frontend (Vercel)')
+    // ✅ AMBOS SERVIDORES CON DESCRIPCIONES CLARAS
+    .addServer(localUrl, '💻 Desarrollo Local - Entorno de desarrollo')
+    .addServer(backendUrl, '🚀 Producción - Entorno estable en Render')
     .addBearerAuth(
       {
         type: 'http',
@@ -66,7 +83,49 @@ Soporta múltiples formatos multimedia y ofrece integración sencilla mediante e
     swaggerOptions: {
       persistAuthorization: true,
       filter: true,
+      // ✅ CONFIGURACIÓN PARA MULTIPLES SERVIDORES
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+      validatorUrl: null,
+      tryItOutEnabled: true,
+      // ✅ CONFIGURACIÓN CRÍTICA: Especifica qué servidor usar por defecto
+      urls: [
+        {
+          url: `${localUrl}/api/v1/docs-json`,
+          name: '💻 Desarrollo Local'
+        },
+        {
+          url: `${backendUrl}/api/v1/docs-json`, 
+          name: '🚀 Producción'
+        }
+      ]
     },
+    customJs: `
+      // Script para manejar correctamente los servidores
+      window.onload = function() {
+        const select = document.querySelector('#servers');
+        if (select) {
+          select.addEventListener('change', function(e) {
+            const selectedUrl = e.target.value;
+            console.log('Servidor seleccionado:', selectedUrl);
+          });
+        }
+      }
+    `,
+  });
+
+  // ✅ MIDDLEWARE PARA LOGGING DE CORS
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} | Origin: ${origin}`);
+    
+    // Headers CORS explícitos para Swagger
+    if (origin && origin.includes('localhost') || origin?.includes('render.com')) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    }
+    
+    next();
   });
 
   await app.listen(port);
@@ -74,17 +133,14 @@ Soporta múltiples formatos multimedia y ofrece integración sencilla mediante e
   console.log(`
 ==========================================================
 📚 Testimonial CMS - Edtech
-==========================================================
+✅ Aplicación iniciada correctamente
 📍 Puerto: ${port}
-🌍 Ambiente: ${process.env.NODE_ENV || 'development'}
+🌍 Ambiente: ${isProduction ? 'production' : 'development'}
 
-🔗 Accesos:
-├── API Local: ${localUrl}/api/v1
-├── Docs: ${localUrl}/api/v1/docs
-├── Frontend: ${frontendUrl}
-└── Backend: ${backendUrl}
-==========================================================
-  `);
+🔗 Servidores Swagger:
+├── 💻 Desarrollo: ${localUrl}/api/v1/docs  
+└── 🚀 Producción: ${backendUrl}/api/v1/docs
+==========================================================`);
 }
 
 bootstrap();
