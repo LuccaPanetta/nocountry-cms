@@ -21,11 +21,6 @@ export class AuthController {
     description: 'Contribuidor registrado exitosamente',
     schema: {
       example: {
-        id: 1,
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        email: 'usuario@gmail.com',
-        role: 'CONTRIBUTOR',
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
       }
     }
@@ -80,49 +75,14 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
   }
 })
 @ApiResponse({
-  status: 200,
-  description: 'Login exitoso',
-  schema: {
-    examples: {
-      admin: {
-        summary: 'Login como Admin',
-        value: {
-          id: 1,
-          nombre: 'Admin',
-          apellido: 'Sistema',
-          email: 'admin@testimonialcms.com',
-          role: 'admin',
-          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          permissions: ['all']
-        }
-      },
-      operator: {
-        summary: 'Login como Operator',
-        value: {
-          id: 2,
-          nombre: 'Operador',
-          apellido: 'Sistema',
-          email: 'operator@testimonialcms.com',
-          role: 'operator',
-          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          permissions: ['moderate', 'read_all', 'manage_testimonials']
-        }
-      },
-      contributor: {
-        summary: 'Login como Contributor',
-        value: {
-          id: 3,
-          nombre: 'Contribuidor',
-          apellido: 'Ejemplo',
-          email: 'contributor@testimonialcms.com',
-          role: 'contributor',
-          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          permissions: ['create', 'read_own', 'update_own']
-        }
+    status: 201,
+    description: 'Contribuidor registrado exitosamente',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
       }
     }
-  }
-})
+  })
 @ApiResponse({
   status: 401,
   description: 'Credenciales inválidas'
@@ -132,64 +92,33 @@ login(@Body() dto: LoginDto) {
 }
 
   @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Perfil de usuario',
-    description: 'Obtiene la información del perfil del usuario autenticado'
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Perfil obtenido exitosamente',
-    schema: {
-      examples: {
-        admin: {
-          summary: 'Perfil Admin',
-          value: {
-            id: 1,
-            nombre: 'Admin',
-            apellido: 'Sistema',
-            email: 'admin@testimonialcms.com',
-            role: 'admin',
-            permissions: ['all'],
-            createdAt: '2024-01-15T10:30:00.000Z',
-            updatedAt: '2024-01-15T10:30:00.000Z'
-          }
-        },
-        operator: {
-          summary: 'Perfil Operator',
-          value: {
-            id: 2,
-            nombre: 'Operador',
-            apellido: 'Sistema',
-            email: 'operator@testimonialcms.com',
-            role: 'operator',
-            permissions: ['moderate', 'read_all', 'manage_testimonials'],
-            createdAt: '2024-01-15T10:30:00.000Z',
-            updatedAt: '2024-01-15T10:30:00.000Z'
-          }
-        },
-        contributor: {
-          summary: 'Perfil Contributor',
-          value: {
-            id: 3,
-            nombre: 'Contribuidor',
-            apellido: 'Ejemplo',
-            email: 'contributor@testimonialcms.com',
-            role: 'contributor',
-            permissions: ['create', 'read_own', 'update_own'],
-            createdAt: '2024-01-15T10:30:00.000Z',
-            updatedAt: '2024-01-15T10:30:00.000Z'
-          }
-        }
-      }
+@Get('profile')
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({
+  summary: 'Perfil de usuario',
+  description: 'Obtiene la información completa del perfil del usuario autenticado'
+})
+@ApiResponse({
+  status: 200,
+  description: 'Perfil obtenido exitosamente',
+  schema: {
+    example: {
+      nombre: 'Juan',
+      apellido: 'Pérez',
+      email: 'usuario@gmail.com',
+      rol: 'CONTRIBUTOR'
     }
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado - Token inválido o expirado'
-  })
-  profile(@Req() req: any) {
-    return this.authService.profile(req.user);
   }
+})
+@ApiResponse({
+  status: 401,
+  description: 'No autorizado - Token inválido o expirado'
+})
+@ApiResponse({
+  status: 404,
+  description: 'Usuario no encontrado'
+})
+profile(@Req() req: any) {
+  return this.authService.profile(req.user);
+}
 }
