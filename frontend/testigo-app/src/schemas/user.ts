@@ -1,10 +1,12 @@
+// Esquema de validación y tipado para el usuario autenticado
 import { z } from "zod";
 
 export const userSchema = z.object({
   id: z.string().uuid(), // UUID del usuario
-  name: z.string(), // Nombre del usuario
+  nombre: z.string(), // Nombre del usuario
+  apellido: z.string(), // Apellido del usuario
   email: z.email(), // Email válido
-  role: z.enum(["admin", "user"]), // Rol fijo: admin o user
+  rol: z.enum(["admin", "operator", "contributor"]), // Roles reales del backend
   token: z.string(), // JWT recibido del backend
 });
 
