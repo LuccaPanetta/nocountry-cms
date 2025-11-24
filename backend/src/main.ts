@@ -15,7 +15,6 @@ async function bootstrap() {
   
   const app = await NestFactory.create(AppModule, { cors: true });
   
-  // Configuración global
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new GlobalValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
