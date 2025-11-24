@@ -39,14 +39,14 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 Soporta múltiples formatos multimedia y ofrece integración sencilla mediante embeds y API pública.
 
 ### 🌐 Despliegues
+- **💻 Desarrollo Local**: [localhost:${port}](${localUrl}/api/v1/docs)
 - **🚀 TestiGo - Backend**: [Render](${backendUrl})
 - **⚡ TestiGo - Frontend**: [Vercel](${frontendUrl})
-- **💻 Desarrollo Local**: [localhost:${port}](${localUrl}/api/v1/docs)
     `)
     .setVersion('1.0')
-    .addServer(`${backendUrl}/api/v1`, '🚀 CMS de Testimonios - Backend (Render)')
-    .addServer(`${frontendUrl}/api`, '⚡ CMS de Testimonios - Frontend (Vercel)')
-    .addServer(`${localUrl}/api/v1`, '💻 Desarrollo Local')
+    .addServer(`${localUrl}`, '💻 Desarrollo Local')
+    .addServer(`${backendUrl}`, '🚀 CMS de Testimonios - Backend (Render)')
+    .addServer(`${frontendUrl}`, '⚡ CMS de Testimonios - Frontend (Vercel)')
     .addBearerAuth(
       {
         type: 'http',
