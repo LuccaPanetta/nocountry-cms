@@ -15,7 +15,7 @@ async function bootstrap() {
   
   const app = await NestFactory.create(AppModule, { cors: true });
   
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
   app.useGlobalPipes(new GlobalValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   
@@ -35,9 +35,9 @@ Soporta múltiples formatos multimedia y ofrece integración sencilla mediante e
 - **💻 Desarrollo Local**: [localhost:${port}](${localUrl}/api/v1/docs)
     `)
     .setVersion('1.0')
-    .addServer(`${backendUrl}/api/v1`, '🚀 CMS de Testimonios - Backend (Render)')
+    .addServer(`${backendUrl}/api/`, '🚀 CMS de Testimonios - Backend (Render)')
     .addServer(`${frontendUrl}/api`, '⚡ CMS de Testimonios - Frontend (Vercel)') 
-    .addServer(`${localUrl}/api/v1`, '💻 Desarrollo Local')
+    .addServer(`${localUrl}/api/`, '💻 Desarrollo Local')
     .addBearerAuth(
       {
         type: 'http',
@@ -70,8 +70,8 @@ Soporta múltiples formatos multimedia y ofrece integración sencilla mediante e
 🌍 Ambiente: ${process.env.NODE_ENV || 'development'}
 
 🔗 Accesos:
-├── API Local: ${localUrl}/api/v1
-├── Docs: ${localUrl}/api/v1/docs
+├── API Local: ${localUrl}/api
+├── Docs: ${localUrl}/api/docs
 ├── Frontend: ${frontendUrl}
 └── Backend: ${backendUrl}
 ==========================================================

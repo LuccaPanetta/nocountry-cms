@@ -16,7 +16,7 @@ export class AppController {
     status: 200, 
     description: 'Sistema funcionando correctamente',
     schema: {
-      example: '¡Bienvenido al Testimonial CMS - Edtech! 🚀'
+      example: '¡Bienvenido al Testimonial CMS - TestiGo! 🚀'
     }
   })
   getHello(): string {

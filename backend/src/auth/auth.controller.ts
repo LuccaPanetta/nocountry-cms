@@ -12,20 +12,20 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({
-    summary: 'Registro de usuario',
-    description: 'Crea una nueva cuenta de usuario en el sistema'
+    summary: 'Registro de contribuidor',
+    description: 'Crea una nueva cuenta de contribuidor en el sistema'
   })
   @ApiBody({ type: RegisterDto })
   @ApiResponse({
     status: 201,
-    description: 'Usuario registrado exitosamente',
+    description: 'Contribuidor registrado exitosamente',
     schema: {
       example: {
         id: 1,
         nombre: 'Juan',
         apellido: 'Pérez',
-        email: 'usuario@ejemplo.com',
-        role: 'contributor',
+        email: 'usuario@gmail.com',
+        role: 'CONTRIBUTOR',
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
       }
     }
@@ -58,7 +58,7 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
       description: 'Acceso completo al sistema',
       value: {
         email: 'admin@testimonialcms.com',
-        password: 'admin123'
+        password: 'admin123!'
       }
     },
     operator: {
@@ -66,15 +66,15 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
       description: 'Puede moderar testimonios de todos los usuarios',
       value: {
         email: 'operator@testimonialcms.com',
-        password: 'operator123'
+        password: 'operator123!'
       }
     },
     contributor: {
       summary: '👤 Contribuidor',
       description: 'Puede gestionar sus propios testimonios',
       value: {
-        email: 'contributor@testimonialcms.com',
-        password: 'contributor123'
+        email: 'contributor@dominio.com',
+        password: 'contributor123!'
       }
     }
   }
