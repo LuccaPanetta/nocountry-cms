@@ -10,29 +10,45 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   const isProduction = process.env.NODE_ENV === 'production';
   
-  const localUrl = `http://localhost:${port}`;
-  const backendUrl = process.env.RENDER_BACKEND_URL || `https://tu-backend.onrender.com`; // Asegúrate de que sea HTTPS
+  // ✅ DETECTAR PROTOCOLO CORRECTO AUTOMÁTICAMENTE
+  const protocol = isProduction ? 'https' : 'http';
+  const localUrl = `${protocol}://localhost:${port}`;
+  
+  // ✅ FORZAR HTTPS EN PRODUCCIÓN PARA RENDER
+  const backendUrl = process.env.RENDER_BACKEND_URL || 
+                    (isProduction ? `https://tu-backend.onrender.com` : `http://localhost:${port}`);
 
   console.log('🚀 Iniciando aplicación...');
   console.log('🔧 Configuración Servidores:', {
     NODE_ENV: process.env.NODE_ENV,
+    protocol,
     localUrl,
     backendUrl
   });
 
   const app = await NestFactory.create(AppModule);
 
-  // ✅ CORS CONFIGURADO PARA MULTIPLES ORIGENS
- app.enableCors({
-  origin: [
+  // ✅ CORS CONFIGURADO CORRECTAMENTE
+  const allowedOrigins = [
     'http://localhost:3000',
-    'http://localhost:3001', 
-    process.env.RENDER_BACKEND_URL
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  credentials: true,
-});
+    'http://localhost:3001',
+    'https://localhost:3000', // HTTPS local
+    'https://localhost:3001', // HTTPS local
+    backendUrl,
+    process.env.RENDER_BACKEND_URL,
+  ].filter((origin): origin is string => !!origin); // ✅ Elimina valores undefined
+
+  // ✅ AGREGAR URL ACTUAL COMO ORIGEN PERMITIDO
+  if (!allowedOrigins.includes(backendUrl)) {
+    allowedOrigins.push(backendUrl);
+  }
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    credentials: true,
+  });
 
   app.setGlobalPrefix('api/v1');
 
@@ -46,7 +62,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // ✅ SWAGGER CON MULTIPLES SERVIDORES FUNCIONALES
+  // ✅ SWAGGER CONFIGURADO PARA HTTPS EN PRODUCCIÓN
   const config = new DocumentBuilder()
     .setTitle('Testimonial CMS - TestiGo')
     .setDescription(`
@@ -60,7 +76,7 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 - **🚀 Producción**: Entorno estable en Render
     `)
     .setVersion('1.0')
-    // ✅ AMBOS SERVIDORES CON DESCRIPCIONES CLARAS
+    // ✅ USAR PROTOCOLO CORRECTO EN CADA SERVIDOR
     .addServer(localUrl, '💻 Desarrollo Local - Entorno de desarrollo')
     .addServer(backendUrl, '🚀 Producción - Entorno estable en Render')
     .addBearerAuth(
@@ -77,53 +93,38 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 
   const document = SwaggerModule.createDocument(app, config);
 
+  // ✅ CONFIGURACIÓN SWAGGER MEJORADA
   SwaggerModule.setup('api/v1/docs', app, document, {
     customSiteTitle: 'Testimonial CMS - Edtech',
     swaggerOptions: {
       persistAuthorization: true,
       filter: true,
-      // ✅ CONFIGURACIÓN PARA MULTIPLES SERVIDORES
       supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
       validatorUrl: null,
       tryItOutEnabled: true,
-      // ✅ CONFIGURACIÓN CRÍTICA: Especifica qué servidor usar por defecto
-      urls: [
-        {
-          url: `${localUrl}/api/v1/docs-json`,
-          name: '💻 Desarrollo Local'
-        },
-        {
-          url: `${backendUrl}/api/v1/docs-json`, 
-          name: '🚀 Producción'
-        }
-      ]
+      // ✅ CONFIGURACIÓN PARA EVITAR MIXED CONTENT
+      configUrl: `${backendUrl}/api/v1/docs-json`,
+      oauth2RedirectUrl: `${backendUrl}/api/v1/docs/oauth2-redirect.html`,
     },
-    customJs: `
-      // Script para manejar correctamente los servidores
-      window.onload = function() {
-        const select = document.querySelector('#servers');
-        if (select) {
-          select.addEventListener('change', function(e) {
-            const selectedUrl = e.target.value;
-            console.log('Servidor seleccionado:', selectedUrl);
-          });
-        }
-      }
-    `,
   });
 
-  // ✅ MIDDLEWARE PARA LOGGING DE CORS
+  // ✅ MIDDLEWARE PARA FORZAR HTTPS EN PRODUCCIÓN
+  if (isProduction) {
+    app.use((req, res, next) => {
+      // Verificar si la request viene por HTTP y redirigir a HTTPS
+      if (req.headers['x-forwarded-proto'] !== 'https' && !req.secure) {
+        const httpsUrl = `https://${req.headers.host}${req.url}`;
+        console.log(`🔒 Redirigiendo a HTTPS: ${httpsUrl}`);
+        return res.redirect(301, httpsUrl);
+      }
+      next();
+    });
+  }
+
+  // ✅ MIDDLEWARE PARA LOGGING
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} | Origin: ${origin}`);
-    
-    // Headers CORS explícitos para Swagger
-    if (origin && origin.includes('localhost') || origin?.includes('render.com')) {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-    }
-    
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} | Origin: ${origin} | Protocol: ${req.protocol}`);
     next();
   });
 
@@ -135,10 +136,13 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 ✅ Aplicación iniciada correctamente
 📍 Puerto: ${port}
 🌍 Ambiente: ${isProduction ? 'production' : 'development'}
+🔒 Protocolo: ${protocol}
 
 🔗 Servidores Swagger:
 ├── 💻 Desarrollo: ${localUrl}/api/v1/docs  
 └── 🚀 Producción: ${backendUrl}/api/v1/docs
+
+⚠️  IMPORTANTE: En producción usa siempre HTTPS
 ==========================================================`);
 }
 
