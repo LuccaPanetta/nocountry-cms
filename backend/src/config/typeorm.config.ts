@@ -2,6 +2,9 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 config();
 
+// ✅ DEFINE la variable isDevelopment
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   url: process.env.DATABASE_URL, 
