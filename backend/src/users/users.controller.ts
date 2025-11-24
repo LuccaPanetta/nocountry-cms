@@ -21,9 +21,9 @@ import {
   ApiParam 
 } from '@nestjs/swagger';
 
-@ApiTags('Usuarios') // 👈 Agrupa endpoints de usuarios
-@ApiBearerAuth('JWT-auth') // 👈 Requiere autenticación para todos los endpoints
-@UseGuards(JwtAuthGuard) // 👈 Protege todo el controlador
+@ApiTags('Usuarios')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(JwtAuthGuard) 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
