@@ -95,7 +95,7 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 
   // ✅ CONFIGURACIÓN SWAGGER MEJORADA
   SwaggerModule.setup('api/v1/docs', app, document, {
-    customSiteTitle: 'Testimonial CMS - Edtech',
+    customSiteTitle: 'Testimonial CMS - TestiGo Docs',
     swaggerOptions: {
       persistAuthorization: true,
       filter: true,
@@ -132,7 +132,7 @@ Gestiona historias reales de estudiantes y programas con moderación integrada y
 
   console.log(`
 ==========================================================
-📚 Testimonial CMS - Edtech
+📚 Testimonial CMS - TestiGo
 ✅ Aplicación iniciada correctamente
 📍 Puerto: ${port}
 🌍 Ambiente: ${isProduction ? 'production' : 'development'}
