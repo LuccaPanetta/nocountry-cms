@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +26,7 @@ export class AuthService {
 
     const user = await this.usersService.create({
       ...dto,
-      password: hash,
+      password: hash, // Envía el hash al UsersService
     });
 
     return this.buildToken(user);
@@ -42,20 +43,29 @@ export class AuthService {
     return this.buildToken(user);
   }
 
-  // Construir token
-  private buildToken(user: any) {
+  // Construir token 
+  private buildToken(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: user.rol,
+      rol: user.rol,
+    };
+
+    // Objeto limpio para el frontend 
+    const cleanUser = {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      rol: user.rol,
     };
 
     return {
+      user: cleanUser,
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  // Perfil (solo para usuarios autenticados)
   async profile(user: any) {
     return user;
   }

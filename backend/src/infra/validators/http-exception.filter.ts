@@ -5,30 +5,38 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { Request, Response } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const res = ctx.getResponse();
-    const req = ctx.getRequest();
+    const res = ctx.getResponse<Response>();
+    const req = ctx.getRequest<Request>();
 
-    if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const error = exception.getResponse();
-      res.status(status).json({
-        statusCode: status,
-        mensaje: (error as any).message || (error as any).mensaje || 'Error',
-        path: req.url,
-        timestamp: new Date().toISOString(),
-      });
-      return;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const exceptionResponse =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : { message: 'Error interno del servidor' };
+
+    let errorMessage: string | string[];
+
+    if (typeof exceptionResponse === 'string') {
+      errorMessage = exceptionResponse;
+    } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      errorMessage = (exceptionResponse as any).message || (exceptionResponse as any).error || 'Error desconocido';
+    } else {
+      errorMessage = 'Error desconocido';
     }
 
-    // Unexpected error
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      mensaje: 'Error interno del servidor',
+    res.status(status).json({
+      statusCode: status,
+      mensaje: errorMessage,
       path: req.url,
       timestamp: new Date().toISOString(),
     });

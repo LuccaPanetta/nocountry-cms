@@ -17,16 +17,23 @@ export class RolesGuard implements CanActivate {
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-    if (!requiredRoles || requiredRoles.length === 0) return true;
+
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    if (!user) throw new ForbiddenException('Acceso denegado');
 
-    // user.role may be 'rol' or 'role' depending on jwt strategy; we used 'role'
-    const userRole = user.role || user.rol || user.role;
+    if (!user) {
+      throw new ForbiddenException('Acceso denegado: Usuario no identificado');
+    }
 
-    if (requiredRoles.includes(userRole)) return true;
+    const userRole = user.rol;
+
+    if (requiredRoles.includes(userRole)) {
+      return true;
+    }
 
     throw new ForbiddenException(
       'No tienes permisos para realizar esta acción',
