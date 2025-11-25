@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { Testimonial } from './entities/testimonial.entity';
 import { User } from '../users/entities/user.entity';
+import { TestimonialStatus } from './entities/testimonial.entity'; 
+import { ListTestimonialFilterDto } from './dto/list-testimonial.filter.dto';
 
 @Injectable()
 export class TestimonialsService {
@@ -22,8 +23,13 @@ export class TestimonialsService {
     return this.testimonialRepository.save(testimonial);
   }
 
-  async findAll() {
-    return this.testimonialRepository.find();
+  async findAll(filterDto: ListTestimonialFilterDto) {
+    const { status, category, tags } = filterDto;
+    const statusFilter = status || TestimonialStatus.APPROVED;
+    const query = this.testimonialRepository.createQueryBuilder('testimonial');
+    
+    query.where('testimonial.status = :status', { status: statusFilter });
+    return query.getMany();
   }
 
   async findOne(id: string): Promise<Testimonial> {
@@ -36,7 +42,7 @@ export class TestimonialsService {
   }
 
   async update(id: string, updateTestimonialDto: UpdateTestimonialDto) {
-    const testimonial = await this.findOne(id); // Verifica si existe
+    const testimonial = await this.findOne(id); 
     
     Object.assign(testimonial, updateTestimonialDto); 
 

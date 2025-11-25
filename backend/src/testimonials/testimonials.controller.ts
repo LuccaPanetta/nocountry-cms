@@ -3,6 +3,8 @@ import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
+import { Query } from '@nestjs/common'; 
+import { ListTestimonialFilterDto } from './dto/list-testimonial.filter.dto'
 
 @Controller('testimonials')
 export class TestimonialsController {
@@ -15,8 +17,8 @@ export class TestimonialsController {
   }
 
   @Get()
-  findAll() {
-    return this.testimonialsService.findAll();
+  findAll(@Query() filterDto: ListTestimonialFilterDto) { 
+    return this.testimonialsService.findAll(filterDto);
   }
   
   @Get(':id')
