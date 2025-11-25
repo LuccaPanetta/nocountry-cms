@@ -21,7 +21,7 @@ export function CreateUserSwagger() {
           nombre: 'María',
           apellido: 'García',
           email: 'maria@ejemplo.com',
-          role: 'OPERATOR', 
+          role: 'EDITOR', 
           createdAt: '2024-01-15T10:30:00.000Z',
           updatedAt: '2024-01-15T10:30:00.000Z'
         }
