@@ -32,18 +32,19 @@ export default function LoginForm() {
       return await login(data.email, data.password);
     },
     onSuccess: ({ user, access_token }) => {
-      // Guarda el usuario en el store y redirecciona según el rol
+      // Guarda el usuario en el store y redirecciona según el rol y el id
       setUserData({
         id: user.id,
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
-        rol: user.rol,
+        rol: user.rol as "admin" | "operator" | "contributor",
         token: access_token,
       });
-      if (user.rol === "admin") router.push("/dashboard/admin");
-      else if (user.rol === "operator") router.push("/dashboard/operator");
-      else router.push("/dashboard/contributor");
+      if (user.rol === "admin") router.push(`/dashboard/admin/${user.id}`);
+      else if (user.rol === "operator")
+        router.push(`/dashboard/operator/${user.id}`);
+      else router.push(`/dashboard/contributor/${user.id}`);
     },
     onError: (err: any) => {
       // Puedes personalizar el mensaje de error
