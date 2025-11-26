@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { Testimonial, TestimonialStatus  } from './entities/testimonial.entity';
-import { User } from '../users/entities/user.entity';
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
+import { Testimonial, TestimonialStatus } from './entities/testimonial.entity';
+import { User } from '../users/entities/user.entity'; 
+import { UserRole } from '../users/interfaces/user-role.enum'; 
 
 @Injectable()
 export class TestimonialsService {
@@ -22,17 +23,19 @@ export class TestimonialsService {
     return this.testimonialRepository.save(testimonial);
   }
 
-  async findAll(filterDto: GetTestimonialsDto) {
+  async findAll(filterDto: GetTestimonialsDto, user?: User) {
     const { status, categoryId, tags } = filterDto;
-
+    const isPublicRequest = !user || user.rol !== UserRole.ADMIN;
+    
     const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
       .leftJoinAndSelect('testimonial.category', 'category')
-      .leftJoinAndSelect('testimonial.tags', 'tag'); 
+      .leftJoinAndSelect('testimonial.tags', 'tag');
 
-    if (status) {
+    if (isPublicRequest) {
+      queryBuilder.andWhere('testimonial.status = :approvedStatus', { approvedStatus: TestimonialStatus.APPROVED });
+    } else if (status) {
       queryBuilder.andWhere('testimonial.status = :status', { status });
     }
-
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId });
     }
@@ -54,7 +57,7 @@ export class TestimonialsService {
   }
 
   async update(id: string, updateTestimonialDto: UpdateTestimonialDto) {
-    const testimonial = await this.findOne(id); // Verifica si existe
+    const testimonial = await this.findOne(id);
     
     Object.assign(testimonial, updateTestimonialDto); 
 
@@ -68,7 +71,7 @@ export class TestimonialsService {
   }
   
   async updateStatus(id: string, newStatus: TestimonialStatus) {
-    const testimonial = await this.findOne(id); 
+    const testimonial = await this.findOne(id);
 
     testimonial.status = newStatus;
     

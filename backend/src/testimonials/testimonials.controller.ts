@@ -2,9 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, 
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
+import { UpdateStatusDto } from './dto/update-status.dto'; 
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/interfaces/user-role.enum';
@@ -20,8 +20,9 @@ export class TestimonialsController {
   }
 
   @Get()
-  findAll(@Query() filterDto: GetTestimonialsDto) {
-    return this.testimonialsService.findAll(filterDto);
+  @UseGuards(JwtAuthGuard)
+  findAll(@Query() filterDto: GetTestimonialsDto, @Request() req) {
+    return this.testimonialsService.findAll(filterDto, req.user);
   }
   
   @Get(':id')
