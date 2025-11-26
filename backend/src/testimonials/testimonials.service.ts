@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { Testimonial } from './entities/testimonial.entity';
 import { User } from '../users/entities/user.entity';
+import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
 @Injectable()
 export class TestimonialsService {
@@ -22,8 +22,26 @@ export class TestimonialsService {
     return this.testimonialRepository.save(testimonial);
   }
 
-  async findAll() {
-    return this.testimonialRepository.find();
+  async findAll(filterDto: GetTestimonialsDto) {
+    const { status, categoryId, tags } = filterDto;
+
+    const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
+      .leftJoinAndSelect('testimonial.category', 'category')
+      .leftJoinAndSelect('testimonial.tags', 'tag'); 
+
+    if (status) {
+      queryBuilder.andWhere('testimonial.status = :status', { status });
+    }
+
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
+
+    if (tags && tags.length > 0) {
+      queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+    }
+    
+    return queryBuilder.getMany();
   }
 
   async findOne(id: string): Promise<Testimonial> {
