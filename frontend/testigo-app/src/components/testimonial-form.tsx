@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
 type ContentType = 'text' | 'image' | 'video';
 
@@ -81,8 +81,8 @@ export function TestimonialForm() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-8 text-Accent text-3xl text-center font-bold">Creá tu testimonio</h1>
+    <div className="mx-auto max-w-2xl md:min-w-3xl p-6">
+      <h1 className="mb-4 text-Accent text-3xl text-center font-bold">Creá tu testimonio</h1>
       <p className='text-center mb-8 '>Compartí tu experiencia y ayudanos a darle voz</p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -112,13 +112,19 @@ export function TestimonialForm() {
           </label>
           <select
             id="category"
-            defaultValue="proximamente"
-            {...register('category')}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+            defaultValue=""
+            {...register('category', { required: 'Seleccione una categoria'})}
+            className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 ${
+              errors.category
+                ? 'border-Error focus:ring-Error'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
           >
-            <option value="proximamente">Proximamente</option>
-            <option value="opcion2">Opción 2</option>
-            <option value="opcion3">Opción 3</option>
+            <option value="">Categoria</option>
+            <option value="Producto">Producto</option>
+            <option value="Evento">Evento</option>
+            <option value="Cliente">Cliente</option>
+            <option value="Industria">Industria</option>
           </select>
         </div>
 
@@ -183,35 +189,44 @@ export function TestimonialForm() {
             <button
               type="button"
               onClick={() => setValue('contentType', 'text')}
-              className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 flex justify-center items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 contentType === 'text'
                   ? 'bg-Primary text-white'
                   : 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
               }`}
             >
-              Texto
+              <MessageCircle 
+              className='h-4 w-4'
+              />
+              <p>Texto</p>
             </button>
             <button
               type="button"
               onClick={() => setValue('contentType', 'image')}
-              className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 flex justify-center items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 contentType === 'image'
                   ? 'bg-Primary text-white'
                   : 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
               }`}
             >
-              Imagen
+              <Image 
+              className='h-4 w-4'
+              />
+              <p>Imagen</p>
             </button>
             <button
               type="button"
               onClick={() => setValue('contentType', 'video')}
-              className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 flex justify-center items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 contentType === 'video'
                   ? 'bg-Primary text-white'
                   : 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
               }`}
             >
-              Video
+              <CirclePlay  
+              className='h-4 w-4'
+              />
+              <p>Video</p>
             </button>
           </div>
         </div>
@@ -419,13 +434,13 @@ export function TestimonialForm() {
               placeholder="Agregar tag"
               className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
             /> */}
-            <button
+            {/*<button
               type="button"
               onClick={handleAddTag}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
               Agregar
-            </button>
+            </button>*/}
           </div>
           {tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
