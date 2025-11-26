@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { Testimonial } from './entities/testimonial.entity';
+import { Testimonial, TestimonialStatus  } from './entities/testimonial.entity';
 import { User } from '../users/entities/user.entity';
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
@@ -65,5 +65,13 @@ export class TestimonialsService {
     const testimonial = await this.findOne(id);
     await this.testimonialRepository.remove(testimonial);
     return { message: 'Testimonio eliminado con éxito' };
+  }
+  
+  async updateStatus(id: string, newStatus: TestimonialStatus) {
+    const testimonial = await this.findOne(id); 
+
+    testimonial.status = newStatus;
+    
+    return this.testimonialRepository.save(testimonial);
   }
 }
