@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
+import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 
 @Controller('testimonials')
 export class TestimonialsController {
@@ -15,19 +16,22 @@ export class TestimonialsController {
   }
 
   @Get()
-  findAll() {
-    return this.testimonialsService.findAll();
+  findAll(@Query() filterDto: GetTestimonialsDto) {
+    return this.testimonialsService.findAll(filterDto);
   }
   
+  @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.testimonialsService.findOne(+id);
+    return this.testimonialsService.findOne(id); 
   }
 
+  @Patch(':id')
   update(@Param('id') id: string, @Body() updateTestimonialDto: UpdateTestimonialDto) {
-    return this.testimonialsService.update(+id, updateTestimonialDto);
+    return this.testimonialsService.update(id, updateTestimonialDto);
   }
 
+  @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.testimonialsService.remove(+id);
+    return this.testimonialsService.remove(id); 
   }
 }
