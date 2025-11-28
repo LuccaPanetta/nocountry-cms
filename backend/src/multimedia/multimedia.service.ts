@@ -1,3 +1,4 @@
+// multimedia/multimedia.service.ts
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,6 +8,17 @@ import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { UpdateMultimediaDto } from './dto/update-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { CloudinarySimpleService } from '../cloudinary/cloudinary.service';
+
+// Interface para el resultado de Cloudinary
+interface CloudinaryUploadResult {
+  secure_url: string;
+  public_id: string;
+  format: string;
+  bytes: number;
+  width?: number;
+  height?: number;
+  duration?: number;
+}
 
 @Injectable()
 export class MultimediaService {
@@ -18,23 +30,14 @@ export class MultimediaService {
     private readonly cloudinaryService: CloudinarySimpleService,
   ) {}
 
+  /**
+   * Crear registro de multimedia (sin subir archivo)
+   */
   async create(createMultimediaDto: CreateMultimediaDto): Promise<Multimedia> {
-    // Verificar que el testimonio existe
-    const testimonio = await this.testimonialRepository.findOne({
-      where: { id: createMultimediaDto.testimonioId }
-    });
-
-    if (!testimonio) {
-      throw new NotFoundException(`Testimonio con ID ${createMultimediaDto.testimonioId} no encontrado`);
-    }
-
-    // Verificar que no exista un multimedia con el mismo publicId
-    const existingMultimedia = await this.multimediaRepository.findOne({
-      where: { publicId: createMultimediaDto.publicId }
-    });
-
-    if (existingMultimedia) {
-      throw new ConflictException(`Ya existe un multimedia con el publicId: ${createMultimediaDto.publicId}`);
+    const testimonio = await this.verifyTestimonioExists(createMultimediaDto.testimonioId);
+    
+    if (createMultimediaDto.publicId) {
+      await this.verifyPublicIdUnique(createMultimediaDto.publicId);
     }
 
     const multimedia = this.multimediaRepository.create({
@@ -46,56 +49,99 @@ export class MultimediaService {
   }
 
   /**
-   * Crear multimedia subiendo archivo a Cloudinary
+   * Crear multimedia subiendo archivo a Cloudinary (MÉTODO PRINCIPAL)
    */
   async createWithUpload(
     testimonioId: string,
-    fileBuffer: Buffer,
+    file: Express.Multer.File,
     tipo: MultimediaType,
     descripcion?: string,
-  ): Promise<Multimedia> {
-    // Verificar que el testimonio existe
-    const testimonio = await this.testimonialRepository.findOne({
-      where: { id: testimonioId }
-    });
+  ): Promise<{ multimedia: Multimedia; cloudinaryData: any }> {
+    const testimonio = await this.verifyTestimonioExists(testimonioId);
 
-    if (!testimonio) {
-      throw new NotFoundException(`Testimonio con ID ${testimonioId} no encontrado`);
-    }
-
-    let uploadResult;
+    // ✅ INICIALIZAR uploadResult para evitar el error
+    let uploadResult: CloudinaryUploadResult | null = null;
     const folder = `testimonios/${testimonioId}`;
     const tags = [`testimonio-${testimonioId}`, tipo.toLowerCase()];
 
     try {
+      // Subir a Cloudinary según el tipo
       if (tipo === MultimediaType.IMAGE) {
-        uploadResult = await this.cloudinaryService.uploadImage(fileBuffer, folder, tags);
+        uploadResult = await this.cloudinaryService.uploadImage(
+          file.buffer, 
+          folder, 
+          tags
+        ) as CloudinaryUploadResult;
       } else if (tipo === MultimediaType.VIDEO) {
-        uploadResult = await this.cloudinaryService.uploadVideo(fileBuffer, folder, tags);
+        uploadResult = await this.cloudinaryService.uploadVideo(
+          file.buffer, 
+          folder, 
+          tags
+        ) as CloudinaryUploadResult;
       } else {
         throw new BadRequestException(`Tipo de multimedia no soportado: ${tipo}`);
       }
 
-      // Crear registro en la base de datos
-      const multimedia = this.multimediaRepository.create({
+      // ✅ CORREGIDO: Usar solo los campos que existen en tu entidad
+      const multimediaData = {
         testimonioId,
         tipo,
         url: uploadResult.secure_url,
         publicId: uploadResult.public_id,
         descripcion,
+        nombreArchivo: file.originalname,
+        // ❌ ELIMINADOS: tamaño, formato, duracion, resolucion (no existen en tu entidad)
+      };
+
+      const multimedia = this.multimediaRepository.create({
+        ...multimediaData,
+        testimonio: testimonio,
       });
 
-      return await this.multimediaRepository.save(multimedia);
+      const savedMultimedia = await this.multimediaRepository.save(multimedia);
+
+      return {
+        multimedia: savedMultimedia,
+        cloudinaryData: uploadResult
+      };
+
     } catch (error) {
-      // Si falla la subida, limpiar cualquier recurso subido
+      // ✅ CORREGIDO: Ahora uploadResult puede ser null
       if (uploadResult?.public_id) {
-        await this.cloudinaryService.deleteResource(uploadResult.public_id, tipo === MultimediaType.VIDEO ? 'video' : 'image');
+        await this.cloudinaryService.deleteResource(
+          uploadResult.public_id, 
+          tipo === MultimediaType.VIDEO ? 'video' : 'image'
+        );
       }
       throw new BadRequestException(`Error subiendo archivo: ${error.message}`);
     }
   }
 
-  async findAll(testimonioId?: string): Promise<Multimedia[]> {
+  /**
+   * Subir múltiples archivos
+   */
+  async uploadMultiple(
+    testimonioId: string,
+    files: Express.Multer.File[],
+    tipo: MultimediaType,
+  ): Promise<Array<{ multimedia: Multimedia; cloudinaryData: any }>> {
+    // ✅ CORREGIDO: Especificar el tipo del array
+    const results: Array<{ multimedia: Multimedia; cloudinaryData: any }> = [];
+    
+    for (const file of files) {
+      try {
+        const result = await this.createWithUpload(testimonioId, file, tipo);
+        results.push(result);
+      } catch (error) {
+        // Continuar con los demás archivos si uno falla
+        console.error(`Error subiendo archivo ${file.originalname}:`, error.message);
+      }
+    }
+
+    return results;
+  }
+
+  async findAll(testimonioId?: string, tipo?: MultimediaType): Promise<Multimedia[]> {
     const query = this.multimediaRepository
       .createQueryBuilder('multimedia')
       .leftJoinAndSelect('multimedia.testimonio', 'testimonio');
@@ -104,15 +150,11 @@ export class MultimediaService {
       query.where('multimedia.testimonio_id = :testimonioId', { testimonioId });
     }
 
-    return await query.orderBy('multimedia.creadoEn', 'DESC').getMany();
-  }
+    if (tipo) {
+      query.andWhere('multimedia.tipo = :tipo', { tipo });
+    }
 
-  async findByTestimonioId(testimonioId: string): Promise<Multimedia[]> {
-    return await this.multimediaRepository.find({
-      where: { testimonioId },
-      relations: ['testimonio'],
-      order: { creadoEn: 'DESC' }
-    });
+    return await query.orderBy('multimedia.creadoEn', 'DESC').getMany();
   }
 
   async findOne(id: string): Promise<Multimedia> {
@@ -128,51 +170,18 @@ export class MultimediaService {
     return multimedia;
   }
 
-  async findByPublicId(publicId: string): Promise<Multimedia> {
-    const multimedia = await this.multimediaRepository.findOne({
-      where: { publicId },
-      relations: ['testimonio']
-    });
-
-    if (!multimedia) {
-      throw new NotFoundException(`Multimedia con publicId ${publicId} no encontrado`);
-    }
-
-    return multimedia;
-  }
-
-  async update(id: string, updateMultimediaDto: UpdateMultimediaDto): Promise<Multimedia> {
+  async remove(id: string): Promise<{ message: string; deletedMultimedia: any }> {
     const multimedia = await this.findOne(id);
-
-    // Si se actualiza el testimonioId, verificar que exista
-    if (updateMultimediaDto.testimonioId && updateMultimediaDto.testimonioId !== multimedia.testimonioId) {
-      const testimonio = await this.testimonialRepository.findOne({
-        where: { id: updateMultimediaDto.testimonioId }
-      });
-
-      if (!testimonio) {
-        throw new NotFoundException(`Testimonio con ID ${updateMultimediaDto.testimonioId} no encontrado`);
-      }
-      multimedia.testimonio = testimonio;
-    }
-
-    // Si se actualiza el publicId, verificar que no exista otro
-    if (updateMultimediaDto.publicId && updateMultimediaDto.publicId !== multimedia.publicId) {
-      const existingMultimedia = await this.multimediaRepository.findOne({
-        where: { publicId: updateMultimediaDto.publicId }
-      });
-
-      if (existingMultimedia && existingMultimedia.id !== id) {
-        throw new ConflictException(`Ya existe un multimedia con el publicId: ${updateMultimediaDto.publicId}`);
-      }
-    }
-
-    Object.assign(multimedia, updateMultimediaDto);
-    return await this.multimediaRepository.save(multimedia);
-  }
-
-  async remove(id: string): Promise<{ message: string }> {
-    const multimedia = await this.findOne(id);
+    
+    // ✅ CORREGIDO: Usar solo campos existentes
+    const multimediaInfo = {
+      id: multimedia.id,
+      tipo: multimedia.tipo,
+      url: multimedia.url,
+      publicId: multimedia.publicId,
+      nombreArchivo: multimedia.nombreArchivo,
+      creadoEn: multimedia.creadoEn
+    };
     
     // Eliminar de Cloudinary primero
     try {
@@ -186,24 +195,85 @@ export class MultimediaService {
 
     // Eliminar de la base de datos
     await this.multimediaRepository.remove(multimedia);
-    return { message: 'Multimedia eliminado exitosamente' };
+    
+    return { 
+      message: 'Multimedia eliminado exitosamente',
+      deletedMultimedia: multimediaInfo
+    };
   }
 
-  async removeByPublicId(publicId: string): Promise<{ message: string }> {
-    const multimedia = await this.findByPublicId(publicId);
-    
-    // Eliminar de Cloudinary primero
-    try {
-      await this.cloudinaryService.deleteResource(
-        multimedia.publicId, 
-        multimedia.tipo === MultimediaType.VIDEO ? 'video' : 'image'
-      );
-    } catch (error) {
-      console.warn(`No se pudo eliminar de Cloudinary: ${error.message}`);
+  /**
+   * Obtener URLs optimizadas para diferentes usos
+   */
+  /**
+ * Obtener URLs optimizadas para diferentes usos
+ */
+async getOptimizedUrls(multimediaId: string): Promise<{ 
+  original: string;
+  optimized: string;
+  thumbnail: string;
+  preview?: string;
+}> {
+  const multimedia = await this.findOne(multimediaId);
+  
+  // Inicializar el objeto con todas las propiedades posibles
+  const result: {
+    original: string;
+    optimized: string;
+    thumbnail: string;
+    preview?: string;
+  } = {
+    original: multimedia.url,
+    optimized: multimedia.url,
+    thumbnail: multimedia.url
+    // preview se añadirá solo para videos
+  };
+
+  if (multimedia.tipo === MultimediaType.IMAGE) {
+    // Para imágenes
+    result.optimized = this.cloudinaryService.generateImageUrl(multimedia.publicId, 800, 600);
+    result.thumbnail = this.cloudinaryService.generateImageUrl(multimedia.publicId, 300, 200);
+  } else if (multimedia.tipo === MultimediaType.VIDEO) {
+    // Para videos
+    result.optimized = this.cloudinaryService.generateVideoUrl(multimedia.publicId, 1280, 720);
+    result.thumbnail = this.cloudinaryService.generateVideoThumbnail(multimedia.publicId);
+    result.preview = this.cloudinaryService.generateVideoUrl(multimedia.publicId, 640, 360);
+  }
+
+  return result;
+}
+  /**
+   * Métodos de verificación privados
+   */
+  private async verifyTestimonioExists(testimonioId: string): Promise<Testimonial> {
+    const testimonio = await this.testimonialRepository.findOne({
+      where: { id: testimonioId }
+    });
+
+    if (!testimonio) {
+      throw new NotFoundException(`Testimonio con ID ${testimonioId} no encontrado`);
     }
 
-    await this.multimediaRepository.remove(multimedia);
-    return { message: 'Multimedia eliminado exitosamente' };
+    return testimonio;
+  }
+
+  private async verifyPublicIdUnique(publicId: string): Promise<void> {
+    const existingMultimedia = await this.multimediaRepository.findOne({
+      where: { publicId }
+    });
+
+    if (existingMultimedia) {
+      throw new ConflictException(`Ya existe un multimedia con el publicId: ${publicId}`);
+    }
+  }
+
+  // ✅ AÑADIR: Métodos adicionales útiles
+  async findByTestimonioId(testimonioId: string): Promise<Multimedia[]> {
+    return await this.multimediaRepository.find({
+      where: { testimonioId },
+      relations: ['testimonio'],
+      order: { creadoEn: 'DESC' }
+    });
   }
 
   async countByTestimonioId(testimonioId: string): Promise<number> {
@@ -219,29 +289,16 @@ export class MultimediaService {
     });
   }
 
-  /**
-   * Obtener URLs optimizadas para frontend
-   */
-  async getOptimizedUrls(multimediaId: string): Promise<{ 
-    original: string; 
-    optimized: string; 
-    thumbnail?: string 
-  }> {
-    const multimedia = await this.findOne(multimediaId);
-    
-    const result: any = {
-      original: multimedia.url,
-    };
+  async findByPublicId(publicId: string): Promise<Multimedia> {
+    const multimedia = await this.multimediaRepository.findOne({
+      where: { publicId },
+      relations: ['testimonio']
+    });
 
-    if (multimedia.tipo === MultimediaType.IMAGE) {
-      result.optimized = this.cloudinaryService.generateImageUrl(multimedia.publicId, 800, 600);
-    } else if (multimedia.tipo === MultimediaType.VIDEO) {
-      result.optimized = this.cloudinaryService.generateVideoUrl(multimedia.publicId, 640, 360);
-      result.thumbnail = this.cloudinaryService.generateVideoThumbnail(multimedia.publicId);
-    } else {
-      result.optimized = multimedia.url;
+    if (!multimedia) {
+      throw new NotFoundException(`Multimedia con publicId ${publicId} no encontrado`);
     }
 
-    return result;
+    return multimedia;
   }
 }

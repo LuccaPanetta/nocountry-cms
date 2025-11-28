@@ -1,16 +1,16 @@
-// multimedia.module.ts
+// multimedia/multimedia.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MultimediaController } from './multimedia.controller';
-import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
-import { Multimedia } from './entities/multimedia.entity'; // Añade esta importación
+import { CloudinaryMediaService } from './../cloudinary/cloudinary-media.service'; // ✅ Ruta correcta
+import { Multimedia } from './entities/multimedia.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Multimedia]), // Añade esta línea
+    TypeOrmModule.forFeature([Multimedia]),
   ],
   controllers: [MultimediaController],
-  providers: [CloudinaryMediaService],
-  exports: [CloudinaryMediaService],
+  providers: [CloudinaryMediaService], // ✅ Proveer el servicio
+  exports: [CloudinaryMediaService], // ✅ Exportar si es necesario
 })
 export class MultimediaModule {}

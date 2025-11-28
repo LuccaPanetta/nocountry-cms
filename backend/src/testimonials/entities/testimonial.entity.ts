@@ -13,6 +13,7 @@ import {
 import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
 import { Multimedia } from '../../multimedia/entities/multimedia.entity';
+import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
 
 export enum TestimonialStatus {
   PENDING = 'pending',
@@ -65,7 +66,8 @@ export class Testimonial {
   
 @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, { 
   cascade: true,
-  onDelete: 'CASCADE'
+  onDelete: 'CASCADE',
+  eager: false
 })
 multimedias: Multimedia[];
 
@@ -75,4 +77,17 @@ multimedias: Multimedia[];
 
   @UpdateDateColumn()
   actualizadoEn: Date;
+
+   // Métodos de ayuda para manejar multimedia
+  getImagenPrincipal(): Multimedia | undefined {
+    return this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
+  }
+
+  getVideos(): Multimedia[] {
+    return this.multimedias?.filter(m => m.tipo === MultimediaType.VIDEO) || [];
+  }
+
+  getImagenes(): Multimedia[] {
+    return this.multimedias?.filter(m => m.tipo === MultimediaType.IMAGE) || [];
+  }
 }

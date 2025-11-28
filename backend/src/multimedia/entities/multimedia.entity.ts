@@ -37,4 +37,7 @@ export class Multimedia {
 
   @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
+
+  @Column({ name: 'nombre_archivo', type: 'varchar', nullable: true })
+  nombreArchivo: string;
 }

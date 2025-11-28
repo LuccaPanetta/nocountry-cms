@@ -5,11 +5,7 @@ import {
   v2 as cloudinary
 } from 'cloudinary';
 import * as stream from 'stream';
-
-export enum MediaType {
-  IMAGE = 'IMAGE',
-  VIDEO = 'VIDEO'
-}
+import { MultimediaType } from '../multimedia/enums/multimedia-type.enum'; // ✅ Usar el enum existente
 
 @Injectable()
 export class CloudinaryMediaService {
@@ -21,7 +17,7 @@ export class CloudinaryMediaService {
   async uploadMedia(
     fileBuffer: Buffer,
     testimonioId: string,
-    tipo: MediaType,
+    tipo: MultimediaType, // ✅ Usar MultimediaType en lugar de MediaType
     descripcion?: string
   ): Promise<{
     media: UploadApiResponse;
@@ -37,7 +33,7 @@ export class CloudinaryMediaService {
     try {
       let result: UploadApiResponse;
 
-      if (tipo === MediaType.IMAGE) {
+      if (tipo === MultimediaType.IMAGE) {
         result = await this.uploadImage(fileBuffer, folder, tags);
       } else {
         result = await this.uploadVideo(fileBuffer, folder, tags);
@@ -59,9 +55,9 @@ export class CloudinaryMediaService {
   /**
    * Eliminar archivo multimedia
    */
-  async deleteMedia(publicId: string, tipo: MediaType): Promise<DeleteApiResponse> {
+  async deleteMedia(publicId: string, tipo: MultimediaType): Promise<DeleteApiResponse> {
     try {
-      const resourceType = tipo === MediaType.VIDEO ? 'video' : 'image';
+      const resourceType = tipo === MultimediaType.VIDEO ? 'video' : 'image';
       return await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
     } catch (error) {
       this.logger.error(`Error eliminando ${publicId}: ${error.message}`);
@@ -72,20 +68,20 @@ export class CloudinaryMediaService {
   /**
    * Obtener URLs optimizadas
    */
-  getMediaUrls(publicId: string, tipo: MediaType) {
+  getMediaUrls(publicId: string, tipo: MultimediaType) {
     return this.generateMediaUrls(publicId, tipo);
   }
 
   /**
    * Listar archivos de un testimonio
    */
-  async listTestimonioMedia(testimonioId: string, tipo?: MediaType) {
+  async listTestimonioMedia(testimonioId: string, tipo?: MultimediaType) {
     try {
       let resourceType: 'image' | 'video' | 'all' = 'all';
       let folder = `testimonios/${testimonioId}`;
 
       if (tipo) {
-        resourceType = tipo === MediaType.VIDEO ? 'video' : 'image';
+        resourceType = tipo === MultimediaType.VIDEO ? 'video' : 'image';
         folder += `/${tipo.toLowerCase()}s`;
       }
 
@@ -99,7 +95,7 @@ export class CloudinaryMediaService {
       return result.resources.map(resource => ({
         ...resource,
         urls: this.generateMediaUrls(resource.public_id, 
-          resource.resource_type === 'video' ? MediaType.VIDEO : MediaType.IMAGE)
+          resource.resource_type === 'video' ? MultimediaType.VIDEO : MultimediaType.IMAGE)
       }));
 
     } catch (error) {
@@ -172,12 +168,12 @@ export class CloudinaryMediaService {
     });
   }
 
-  private generateMediaUrls(publicId: string, tipo: MediaType) {
+  private generateMediaUrls(publicId: string, tipo: MultimediaType) {
     const urls: any = {
       original: cloudinary.url(publicId, { secure: true })
     };
 
-    if (tipo === MediaType.IMAGE) {
+    if (tipo === MultimediaType.IMAGE) {
       urls.optimized = cloudinary.url(publicId, {
         width: 800,
         height: 600,

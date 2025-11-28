@@ -23,7 +23,7 @@ import { MultimediaModule } from './multimedia/multimedia.module'; // Añade est
     TestimonialsModule,
     CategoriesModule,
     TagsModule,
-    MultimediaModule, // Añade este módulo
+    MultimediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
