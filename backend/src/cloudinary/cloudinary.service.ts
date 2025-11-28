@@ -1,137 +1,75 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { 
   UploadApiResponse, 
   UploadApiOptions, 
   DeleteApiResponse, 
   v2 as cloudinary
 } from 'cloudinary';
-import { UploadMediaDto, UploadVideoDto } from './dto/upload-media.dto';
-import { VideoUploadResponse, VideoTransformationOptions } from './interfaces/cloudinary-response.interface';
 import * as stream from 'stream';
 
 @Injectable()
-export class CloudinaryService {
-  
-  // ========== MÉTODOS PARA IMÁGENES (EXISTENTES) ==========
-  
+export class CloudinarySimpleService {
+  private readonly logger = new Logger(CloudinarySimpleService.name);
+
+  constructor() {
+    // Verificar configuración al inicializar
+    this.verifyConfiguration();
+  }
+
+  /**
+   * Verificar que la configuración de Cloudinary esté presente
+   */
+  private verifyConfiguration(): void {
+    const requiredEnvVars = [
+      'CLOUDINARY_CLOUD_NAME',
+      'CLOUDINARY_API_KEY', 
+      'CLOUDINARY_API_SECRET'
+    ];
+
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+    if (missingVars.length > 0) {
+      this.logger.warn(`Variables de Cloudinary faltantes: ${missingVars.join(', ')}`);
+    } else {
+      this.logger.log('✅ Cloudinary configurado correctamente');
+    }
+  }
+
+  /**
+   * Subir imagen desde buffer
+   */
   async uploadImage(
     fileBuffer: Buffer,
-    options: UploadMediaDto = {},
+    folder: string = 'images',
+    tags: string[] = [],
   ): Promise<UploadApiResponse> {
-    return this.uploadMedia(fileBuffer, {
-      ...options,
-      resource_type: 'image',
-    });
-  }
-
-  async uploadImageFromUrl(
-    imageUrl: string,
-    options: UploadMediaDto = {},
-  ): Promise<UploadApiResponse> {
-    return this.uploadMediaFromUrl(imageUrl, {
-      ...options,
-      resource_type: 'image',
-    });
-  }
-
-  // ========== MÉTODOS PARA VIDEOS (NUEVOS) ==========
-
-  /**
-   * Subir video desde buffer
-   */
-  async uploadVideo(
-    fileBuffer: Buffer,
-    options: UploadVideoDto = {},
-  ): Promise<VideoUploadResponse> {
-    const uploadOptions: UploadApiOptions = {
-      resource_type: 'video',
-      folder: options.folder || 'videos',
-      tags: options.tags,
-    };
-
-    // Aplicar transformaciones específicas de video si existen
-    if (options.videoTransformation) {
-      uploadOptions.transformation = [
-        {
-          ...options.videoTransformation,
-        },
-      ];
-    }
+    this.logger.log(`Subiendo imagen a carpeta: ${folder}`);
 
     return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            reject(new BadRequestException(`Error uploading video: ${error.message}`));
-          } else if (!result) {
-            reject(new BadRequestException('No result from Cloudinary upload'));
-          } else {
-            // ✅ CORRECCIÓN: Cast a VideoUploadResponse
-            resolve(result as unknown as VideoUploadResponse);
-          }
+      const uploadOptions: UploadApiOptions = {
+        resource_type: 'image',
+        folder,
+        tags,
+        transformation: {
+          width: 1200,
+          height: 800,
+          crop: 'limit',
+          quality: 'auto',
+          format: 'webp',
         },
-      );
-
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(fileBuffer);
-      bufferStream.pipe(uploadStream);
-    });
-  }
-
-  /**
-   * Subir video desde URL
-   */
-  async uploadVideoFromUrl(
-    videoUrl: string,
-    options: UploadVideoDto = {},
-  ): Promise<VideoUploadResponse> {
-    try {
-      const uploadOptions: UploadApiOptions = {
-        resource_type: 'video',
-        folder: options.folder || 'videos',
-        tags: options.tags,
-      };
-
-      if (options.videoTransformation) {
-        uploadOptions.transformation = [
-          {
-            ...options.videoTransformation,
-          },
-        ];
-      }
-
-      // ✅ CORRECCIÓN: Cast a VideoUploadResponse
-      const result = await cloudinary.uploader.upload(videoUrl, uploadOptions);
-      return result as unknown as VideoUploadResponse;
-    } catch (error) {
-      throw new BadRequestException(`Error uploading video from URL: ${error.message}`);
-    }
-  }
-
-  /**
-   * Método genérico para subir cualquier tipo de medio
-   */
-  async uploadMedia(
-    fileBuffer: Buffer,
-    options: UploadMediaDto = {},
-  ): Promise<UploadApiResponse> {
-    return new Promise((resolve, reject) => {
-      const uploadOptions: UploadApiOptions = {
-        resource_type: options.resource_type || 'auto',
-        folder: options.folder || 'media',
-        transformation: options.transformation,
-        tags: options.tags,
       };
 
       const uploadStream = cloudinary.uploader.upload_stream(
         uploadOptions,
         (error, result) => {
           if (error) {
-            reject(new BadRequestException(`Error uploading media: ${error.message}`));
+            this.logger.error(`Error subiendo imagen: ${error.message}`);
+            reject(new BadRequestException(`Error subiendo imagen: ${error.message}`));
           } else if (!result) {
-            reject(new BadRequestException('No result from Cloudinary upload'));
+            this.logger.error('No se obtuvo resultado de Cloudinary');
+            reject(new BadRequestException('No se obtuvo resultado de Cloudinary'));
           } else {
+            this.logger.log(`✅ Imagen subida: ${result.public_id}`);
             resolve(result);
           }
         },
@@ -144,328 +82,372 @@ export class CloudinaryService {
   }
 
   /**
-   * Método genérico para subir desde URL
+   * Subir video desde buffer
    */
-  async uploadMediaFromUrl(
-    mediaUrl: string,
-    options: UploadMediaDto = {},
+  async uploadVideo(
+    fileBuffer: Buffer,
+    folder: string = 'videos',
+    tags: string[] = [],
   ): Promise<UploadApiResponse> {
-    try {
+    this.logger.log(`Subiendo video a carpeta: ${folder}`);
+
+    return new Promise((resolve, reject) => {
       const uploadOptions: UploadApiOptions = {
-        resource_type: options.resource_type || 'auto',
-        folder: options.folder || 'media',
-        transformation: options.transformation,
-        tags: options.tags,
-      };
-
-      return await cloudinary.uploader.upload(mediaUrl, uploadOptions);
-    } catch (error) {
-      throw new BadRequestException(`Error uploading media from URL: ${error.message}`);
-    }
-  }
-
-  // ========== MÉTODOS DE ELIMINACIÓN ==========
-
-  async deleteImage(publicId: string): Promise<DeleteApiResponse> {
-    return this.deleteMedia(publicId, 'image');
-  }
-
-  async deleteVideo(publicId: string): Promise<DeleteApiResponse> {
-    return this.deleteMedia(publicId, 'video');
-  }
-
-  /**
-   * Eliminar cualquier tipo de medio
-   */
-  async deleteMedia(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'image'): Promise<DeleteApiResponse> {
-    try {
-      return await cloudinary.uploader.destroy(publicId, {
-        resource_type: resourceType,
-      });
-    } catch (error) {
-      throw new BadRequestException(`Error deleting media: ${error.message}`);
-    }
-  }
-
-  async deleteMultipleImages(publicIds: string[]): Promise<any> {
-    return this.deleteMultipleMedia(publicIds, 'image');
-  }
-
-  async deleteMultipleVideos(publicIds: string[]): Promise<any> {
-    return this.deleteMultipleMedia(publicIds, 'video');
-  }
-
-  async deleteMultipleMedia(publicIds: string[], resourceType: 'image' | 'video' | 'raw' = 'image'): Promise<any> {
-    try {
-      return await cloudinary.api.delete_resources(publicIds, {
-        resource_type: resourceType,
-      });
-    } catch (error) {
-      throw new BadRequestException(`Error deleting multiple media: ${error.message}`);
-    }
-  }
-
-  // ========== MÉTODOS DE LISTADO Y CONSULTA ==========
-
-  async listImages(folder: string = 'images', maxResults: number = 10) {
-    return this.listResources(folder, maxResults, 'image');
-  }
-
-  async listVideos(folder: string = 'videos', maxResults: number = 10) {
-    return this.listResources(folder, maxResults, 'video');
-  }
-
-  async listResources(folder: string = 'media', maxResults: number = 10, resourceType: 'image' | 'video' | 'raw' = 'image') {
-    try {
-      return await cloudinary.api.resources({
-        type: 'upload',
-        resource_type: resourceType,
-        prefix: folder,
-        max_results: maxResults,
-      });
-    } catch (error) {
-      throw new BadRequestException(`Error listing resources: ${error.message}`);
-    }
-  }
-
-  async getImageInfo(publicId: string) {
-    return this.getResourceInfo(publicId, 'image');
-  }
-
-  async getVideoInfo(publicId: string) {
-    return this.getResourceInfo(publicId, 'video');
-  }
-
-  async getResourceInfo(publicId: string, resourceType: 'image' | 'video' | 'raw' = 'image') {
-    try {
-      return await cloudinary.api.resource(publicId, {
-        resource_type: resourceType,
-      });
-    } catch (error) {
-      throw new BadRequestException(`Error getting resource info: ${error.message}`);
-    }
-  }
-
-  // ========== MÉTODOS DE TRANSFORMACIÓN ==========
-
-  generateImageUrl(publicId: string, transformations: any = {}) {
-    return cloudinary.url(publicId, {
-      ...transformations,
-      secure: true,
-    });
-  }
-
-  /**
-   * Generar URL de video con transformaciones
-   */
-  generateVideoUrl(publicId: string, transformations: VideoTransformationOptions = {}) {
-    return cloudinary.url(publicId, {
-      resource_type: 'video',
-      ...transformations,
-      secure: true,
-    });
-  }
-
-  /**
-   * Generar thumbnail desde video
-   */
-  generateVideoThumbnail(publicId: string, timeOffset: string = '00:00:01') {
-    return cloudinary.url(publicId, {
-      resource_type: 'video',
-      transformation: [
-        {
-          start_offset: timeOffset,
-        },
-        {
-          format: 'jpg',
-        },
-      ],
-      secure: true,
-    });
-  }
-
-  /**
-   * Generar URL de video optimizado para streaming
-   */
-  generateStreamingUrl(publicId: string, quality: string = 'auto') {
-    return cloudinary.url(publicId, {
-      resource_type: 'video',
-      transformation: [
-        {
-          quality: quality,
+        resource_type: 'video',
+        folder,
+        tags,
+        transformation: {
+          width: 1280,
+          height: 720,
+          crop: 'limit',
+          quality: 'auto',
           format: 'mp4',
         },
-      ],
+      };
+
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            this.logger.error(`Error subiendo video: ${error.message}`);
+            reject(new BadRequestException(`Error subiendo video: ${error.message}`));
+          } else if (!result) {
+            this.logger.error('No se obtuvo resultado de Cloudinary');
+            reject(new BadRequestException('No se obtuvo resultado de Cloudinary'));
+          } else {
+            this.logger.log(`✅ Video subido: ${result.public_id} (${result.bytes} bytes)`);
+            resolve(result);
+          }
+        },
+      );
+
+      const bufferStream = new stream.PassThrough();
+      bufferStream.end(fileBuffer);
+      bufferStream.pipe(uploadStream);
+    });
+  }
+
+  /**
+   * Subir archivo genérico (detecta automáticamente el tipo)
+   */
+  async uploadFile(
+    fileBuffer: Buffer,
+    folder: string = 'files',
+    tags: string[] = [],
+    mimeType?: string,
+  ): Promise<UploadApiResponse> {
+    // Determinar resource_type basado en el mimeType
+    let resourceType: 'image' | 'video' | 'auto' = 'auto';
+    
+    if (mimeType) {
+      if (mimeType.startsWith('image/')) {
+        resourceType = 'image';
+      } else if (mimeType.startsWith('video/')) {
+        resourceType = 'video';
+      }
+    }
+
+    this.logger.log(`Subiendo archivo (${resourceType}) a carpeta: ${folder}`);
+
+    return new Promise((resolve, reject) => {
+      const uploadOptions: UploadApiOptions = {
+        resource_type: resourceType,
+        folder,
+        tags,
+      };
+
+      // Aplicar transformaciones específicas según el tipo
+      if (resourceType === 'image') {
+        uploadOptions.transformation = {
+          width: 1200,
+          height: 800,
+          crop: 'limit',
+          quality: 'auto',
+          format: 'webp',
+        };
+      } else if (resourceType === 'video') {
+        uploadOptions.transformation = {
+          width: 1280,
+          height: 720,
+          crop: 'limit',
+          quality: 'auto',
+          format: 'mp4',
+        };
+      }
+
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            this.logger.error(`Error subiendo archivo: ${error.message}`);
+            reject(new BadRequestException(`Error subiendo archivo: ${error.message}`));
+          } else if (!result) {
+            this.logger.error('No se obtuvo resultado de Cloudinary');
+            reject(new BadRequestException('No se obtuvo resultado de Cloudinary'));
+          } else {
+            this.logger.log(`✅ Archivo subido: ${result.public_id} (${result.resource_type})`);
+            resolve(result);
+          }
+        },
+      );
+
+      const bufferStream = new stream.PassThrough();
+      bufferStream.end(fileBuffer);
+      bufferStream.pipe(uploadStream);
+    });
+  }
+
+  /**
+   * Eliminar recurso por publicId
+   */
+  async deleteResource(
+    publicId: string, 
+    resourceType: 'image' | 'video' | 'auto' = 'auto'
+  ): Promise<DeleteApiResponse> {
+    this.logger.log(`Eliminando recurso: ${publicId} (${resourceType})`);
+
+    try {
+      const result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: resourceType,
+      });
+
+      if (result.result === 'ok') {
+        this.logger.log(`✅ Recurso eliminado: ${publicId}`);
+      } else {
+        this.logger.warn(`Resultado inesperado al eliminar ${publicId}: ${result.result}`);
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error(`Error eliminando recurso ${publicId}: ${error.message}`);
+      throw new BadRequestException(`Error eliminando recurso: ${error.message}`);
+    }
+  }
+
+  /**
+   * Eliminar múltiples recursos
+   */
+  async deleteMultipleResources(
+    publicIds: string[], 
+    resourceType: 'image' | 'video' | 'auto' = 'auto'
+  ): Promise<any> {
+    this.logger.log(`Eliminando ${publicIds.length} recursos`);
+
+    try {
+      const result = await cloudinary.api.delete_resources(publicIds, {
+        resource_type: resourceType,
+      });
+
+      this.logger.log(`✅ ${Object.keys(result.deleted || {}).length} recursos eliminados`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error eliminando múltiples recursos: ${error.message}`);
+      throw new BadRequestException(`Error eliminando múltiples recursos: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generar URL optimizada para imagen
+   */
+  generateImageUrl(
+    publicId: string, 
+    width: number = 800, 
+    height: number = 600,
+    format: string = 'webp'
+  ): string {
+    return cloudinary.url(publicId, {
+      width,
+      height,
+      crop: 'fill',
+      quality: 'auto',
+      format,
       secure: true,
     });
   }
 
-  // ========== MÉTODOS DE GESTIÓN ==========
-
-  async purgeImageFolder(folder: string): Promise<any> {
-    return this.purgeFolder(folder, 'image');
-  }
-
-  async purgeVideoFolder(folder: string): Promise<any> {
-    return this.purgeFolder(folder, 'video');
-  }
-
-  async purgeFolder(folder: string, resourceType: 'image' | 'video' | 'raw' = 'image'): Promise<any> {
-    try {
-      const resources = await cloudinary.api.resources({
-        type: 'upload',
-        resource_type: resourceType,
-        prefix: folder,
-        max_results: 100,
-      });
-
-      if (resources.resources.length === 0) {
-        return { message: 'Folder is already empty' };
-      }
-
-      const publicIds = resources.resources.map(resource => resource.public_id);
-      const deleteResult = await this.deleteMultipleMedia(publicIds, resourceType);
-      
-      return {
-        message: `Folder ${folder} purged successfully`,
-        deleted: publicIds.length,
-        resource_type: resourceType,
-        details: deleteResult,
-      };
-    } catch (error) {
-      throw new BadRequestException(`Error purging folder: ${error.message}`);
-    }
-  }
-
-  // ========== MÉTODOS DE FIRMAS Y UPLOAD DIRECTO ==========
-
-  generateImageUploadSignature(folder: string = 'images') {
-    return this.generateUploadSignature(folder, 'image');
-  }
-
-  generateVideoUploadSignature(folder: string = 'videos') {
-    return this.generateUploadSignature(folder, 'video');
-  }
-
-  generateUploadSignature(folder: string = 'media', resourceType: 'image' | 'video' = 'image') {
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    
-    // ✅ CORRECCIÓN: Verificar que la API_SECRET existe
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!apiSecret) {
-      throw new BadRequestException('CLOUDINARY_API_SECRET is not configured');
-    }
-    
-    const signature = cloudinary.utils.api_sign_request(
-      {
-        timestamp,
-        folder,
-        resource_type: resourceType,
-      },
-      apiSecret, // ✅ Ahora es string, no string | undefined
-    );
-
-    return {
-      signature,
-      timestamp,
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      folder,
-      resource_type: resourceType,
-    };
-  }
-
-  // ========== MÉTODOS ADICIONALES PARA VIDEO ==========
-
   /**
- * Generar sprite de video (thumbnails grid)
- * Cloudinary genera sprites automáticamente al subir videos
- * Este método obtiene la URL del sprite ya generado
- */
-async createVideoSprite(publicId: string, options: any = {}): Promise<string> {
-  try {
-    // Cloudinary genera automáticamente sprites para videos
-    // Solo necesitamos construir la URL del sprite
-    const spriteUrl = cloudinary.url(publicId, {
+   * Generar thumbnail para video
+   */
+  generateVideoThumbnail(
+    publicId: string, 
+    timeOffset: string = '00:00:01',
+    width: number = 400,
+    height: number = 300
+  ): string {
+    return cloudinary.url(publicId, {
       resource_type: 'video',
       transformation: [
         {
-          format: 'jpg',
-          variables: [
-            ['$gs', '!'], // Force sprite generation
-          ],
-        },
-      ],
-      ...options,
-      secure: true,
-    });
-
-    return spriteUrl;
-  } catch (error) {
-    throw new BadRequestException(`Error generating video sprite: ${error.message}`);
-  }
-}
-
-/**
- * Generar URL de video con overlay de thumbnail
- */
-generateVideoWithThumbnailOverlay(publicId: string, timeOffset: string = '00:00:01'): string {
-  return cloudinary.url(publicId, {
-    resource_type: 'video',
-    transformation: [
-      {
-        overlay: {
-          resource_type: 'video',
-          public_id: publicId,
-          format: 'jpg',
           start_offset: timeOffset,
         },
-      },
-      { flags: 'splice' },
-    ],
-    secure: true,
-  });
-}
-
-/**
- * Obtener información extendida del video incluyendo sprites
- */
-async getVideoDetailedInfo(publicId: string): Promise<any> {
-  try {
-    const resourceInfo = await cloudinary.api.resource(publicId, {
-      resource_type: 'video',
-      image_metadata: true,
-      colors: true,
-      faces: true,
-      quality_analysis: true,
+        {
+          width,
+          height,
+          crop: 'fill',
+        },
+        {
+          format: 'jpg',
+        },
+      ],
+      secure: true,
     });
-
-    // Generar URL del sprite automáticamente
-    const spriteUrl = await this.createVideoSprite(publicId);
-
-    return {
-      ...resourceInfo,
-      sprite_url: spriteUrl,
-      thumbnail_url: this.generateVideoThumbnail(publicId),
-      streaming_url: this.generateStreamingUrl(publicId),
-    };
-  } catch (error) {
-    throw new BadRequestException(`Error getting video detailed info: ${error.message}`);
   }
-}
 
-/**
- * Extraer audio de un video
- */
-generateAudioExtractUrl(publicId: string): string {
-  return cloudinary.url(publicId, {
-    resource_type: 'video',
-    transformation: [
-      {
-        flags: 'waveform',
-      },
-    ],
-    secure: true,
-  });
-}
+  /**
+   * Generar URL de video optimizada
+   */
+  generateVideoUrl(
+    publicId: string, 
+    width: number = 640, 
+    height: number = 360,
+    format: string = 'mp4'
+  ): string {
+    return cloudinary.url(publicId, {
+      resource_type: 'video',
+      width,
+      height,
+      crop: 'scale',
+      quality: 'auto',
+      format,
+      secure: true,
+    });
+  }
+
+  /**
+   * Generar URL con transformaciones personalizadas
+   */
+  generateCustomUrl(
+    publicId: string,
+    transformations: any = {},
+    resourceType: 'image' | 'video' | 'auto' = 'image'
+  ): string {
+    return cloudinary.url(publicId, {
+      ...transformations,
+      resource_type: resourceType,
+      secure: true,
+    });
+  }
+
+  /**
+   * Verificar conexión con Cloudinary
+   */
+  async healthCheck(): Promise<{ 
+    status: string; 
+    cloudName: string;
+    details: any;
+  }> {
+    try {
+      // Intentar listar recursos para verificar conexión
+      const resources = await cloudinary.api.resources({ 
+        max_results: 1,
+        type: 'upload'
+      });
+
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'unknown';
+      
+      this.logger.log(`✅ Health check exitoso - Cloud: ${cloudName}`);
+      
+      return {
+        status: 'healthy',
+        cloudName,
+        details: {
+          total_resources: resources.total_count,
+          api_available: true,
+          cloud_name: cloudName,
+        }
+      };
+    } catch (error) {
+      this.logger.error(`❌ Health check falló: ${error.message}`);
+      throw new BadRequestException(`Cloudinary no responde: ${error.message}`);
+    }
+  }
+
+  /**
+   * Obtener información de un recurso
+   */
+  async getResourceInfo(publicId: string, resourceType: 'image' | 'video' = 'image'): Promise<any> {
+    try {
+      const resource = await cloudinary.api.resource(publicId, {
+        resource_type: resourceType,
+      });
+
+      this.logger.log(`✅ Información obtenida para: ${publicId}`);
+      return resource;
+    } catch (error) {
+      this.logger.error(`Error obteniendo información de ${publicId}: ${error.message}`);
+      throw new BadRequestException(`Error obteniendo información del recurso: ${error.message}`);
+    }
+  }
+
+  /**
+   * Listar recursos en una carpeta
+   */
+  async listResources(
+    folder: string = '', 
+    resourceType: 'image' | 'video' | 'all' = 'all',
+    maxResults: number = 20
+  ): Promise<any> {
+    try {
+      const options: any = {
+        type: 'upload',
+        max_results: maxResults,
+      };
+
+      if (folder) {
+        options.prefix = folder;
+      }
+
+      if (resourceType !== 'all') {
+        options.resource_type = resourceType;
+      }
+
+      const result = await cloudinary.api.resources(options);
+
+      this.logger.log(`✅ Listados ${result.resources.length} recursos de: ${folder || 'root'}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error listando recursos: ${error.message}`);
+      throw new BadRequestException(`Error listando recursos: ${error.message}`);
+    }
+  }
+
+  /**
+   * Crear carpeta en Cloudinary
+   */
+  async createFolder(folderPath: string): Promise<any> {
+    try {
+      const result = await cloudinary.api.create_folder(folderPath);
+      this.logger.log(`✅ Carpeta creada: ${folderPath}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error creando carpeta ${folderPath}: ${error.message}`);
+      throw new BadRequestException(`Error creando carpeta: ${error.message}`);
+    }
+  }
+
+  /**
+   * Validar si un publicId existe
+   */
+  async resourceExists(publicId: string, resourceType: 'image' | 'video' = 'image'): Promise<boolean> {
+    try {
+      await this.getResourceInfo(publicId, resourceType);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Obtener uso y estadísticas
+   */
+  async getUsage(): Promise<any> {
+    try {
+      const usage = await cloudinary.api.usage();
+      this.logger.log('✅ Estadísticas de uso obtenidas');
+      return usage;
+    } catch (error) {
+      this.logger.error(`Error obteniendo estadísticas: ${error.message}`);
+      throw new BadRequestException(`Error obteniendo estadísticas: ${error.message}`);
+    }
+  }
 }

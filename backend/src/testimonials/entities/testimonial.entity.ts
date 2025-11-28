@@ -5,12 +5,14 @@ import {
   CreateDateColumn, 
   UpdateDateColumn, 
   ManyToOne, 
-  ManyToMany, 
+  ManyToMany,
+  OneToMany, 
   JoinColumn, 
   JoinTable 
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
+import { Multimedia } from '../../multimedia/entities/multimedia.entity';
 
 export enum TestimonialStatus {
   PENDING = 'pending',
@@ -59,6 +61,13 @@ export class Testimonial {
     },
   })
   tags: Tag[]; 
+  
+  
+@OneToMany(() => Multimedia, multimedia => multimedia.testimonio, { 
+  cascade: true,
+  onDelete: 'CASCADE'
+})
+multimedias: Multimedia[];
 
 
   @CreateDateColumn()

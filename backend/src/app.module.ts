@@ -1,3 +1,4 @@
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
+import { MultimediaModule } from './multimedia/multimedia.module'; // Añade esta importación
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { TagsModule } from './tags/tags.module';
     TestimonialsModule,
     CategoriesModule,
     TagsModule,
+    MultimediaModule, // Añade este módulo
   ],
   controllers: [AppController],
   providers: [AppService],
