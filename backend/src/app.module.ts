@@ -12,8 +12,11 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { DatabaseModule } from './database/database.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
+
+import { MultimediaModule } from './multimedia/multimedia.module'; 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+
 
 @Module({
   imports: [
@@ -27,6 +30,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     TestimonialsModule,
     CategoriesModule,
     TagsModule,
+    MultimediaModule,
   ],
   controllers: [AppController],
   providers: [

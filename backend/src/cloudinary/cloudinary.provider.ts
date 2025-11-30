@@ -10,18 +10,15 @@ export const CloudinaryProvider: Provider = {
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    // Validar que todas las variables estén presentes
-    if (!cloudName || !apiKey || !apiSecret) {
-      logger.error('Missing Cloudinary environment variables');
-      throw new Error('Cloudinary configuration is incomplete');
-    }
-
-    logger.log('Cloudinary configured successfully');
-    
-    return cloudinary.config({
+    // Configurar Cloudinary
+    const config = cloudinary.config({
       cloud_name: cloudName,
       api_key: apiKey,
       api_secret: apiSecret,
+      secure: true,
     });
+
+    logger.log('☁️  Cloudinary configurado correctamente');
+    return config;
   },
 };
