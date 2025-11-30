@@ -1,7 +1,7 @@
 // database/seeds/tags-categories.seed.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Tag } from '../tags/entities/tag.entity';
 import { Category } from '../categories/entities/category.entity';
 
@@ -14,14 +14,26 @@ export class TagsCategoriesSeed {
     private readonly tagRepository: Repository<Tag>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async seed() {
     try {
+      // ✅ VERIFICAR SI LAS TABLAS EXISTEN ANTES DE CONTAR
+      const [tagsTableExists, categoriesTableExists] = await Promise.all([
+        this.checkIfTableExists('tags'),
+        this.checkIfTableExists('categories')
+      ]);
+
+      if (!tagsTableExists || !categoriesTableExists) {
+        this.logger.warn('⚠️ Las tablas de tags o categorías no existen. Saltando seeding...');
+        return;
+      }
+
       // ✅ VERIFICAR SI YA EXISTEN DATOS (SEGURO PARA PRODUCCIÓN)
       const [tagCount, categoryCount] = await Promise.all([
-        this.tagRepository.count(),
-        this.categoryRepository.count()
+        this.tagRepository.count().catch(() => 0), // Si falla, asumir 0
+        this.categoryRepository.count().catch(() => 0)
       ]);
 
       if (tagCount > 0 && categoryCount > 0) {
@@ -42,7 +54,20 @@ export class TagsCategoriesSeed {
       this.logger.log(`✅ Tags y categorías creados: ${tags.length} tags, ${categories.length} categorías`);
     } catch (error) {
       this.logger.error('❌ Error durante el seeding de tags y categorías:', error);
-      throw error;
+      // No relanzar el error para que la aplicación pueda continuar
+    }
+  }
+
+  private async checkIfTableExists(tableName: string): Promise<boolean> {
+    try {
+      const result = await this.dataSource.query(
+        `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1)`,
+        [tableName]
+      );
+      return result[0].exists;
+    } catch (error) {
+      this.logger.warn(`⚠️ No se pudo verificar la existencia de la tabla ${tableName}:`, error);
+      return false;
     }
   }
 
