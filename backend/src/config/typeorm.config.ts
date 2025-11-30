@@ -8,7 +8,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   
-  // ✅ USAR DATABASE_URL si existe (Render), sino parámetros individuales
+  // Configuración de conexión
   ...(process.env.DATABASE_URL 
     ? { url: process.env.DATABASE_URL }
     : {
@@ -20,10 +20,10 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
       }
   ),
   
-  // ✅ SYNCHRONIZE: true en desarrollo, false en producción
-  synchronize: isDevelopment,
+  // ✅ SYNCHRONIZE: true en desarrollo para recrear tablas
+  synchronize: true, // IMPORTANTE: true para que se creen las tablas
   
-  // ✅ SSL para producción
+  // SSL para producción
   ssl: isDevelopment ? false : { rejectUnauthorized: false },
   extra: isDevelopment ? {} : { 
     ssl: { 
@@ -31,20 +31,19 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
     } 
   },
   
-  // ✅ Entidades
+  // Entidades
   autoLoadEntities: true,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
   
-  // ✅ Logging
-  logging: isDevelopment,
+  // Logging
+  logging: true, // Activar para ver qué está pasando
   
-  // ✅ Configuración de conexión
   retryAttempts: 5,
   retryDelay: 3000,
 };
 
-console.log('🗄️ Configuración Base de Datos:', {
+console.log('🔧 CONFIGURACIÓN TYPEORM:', {
   environment: process.env.NODE_ENV || 'development',
-  synchronize: isDevelopment,
+  synchronize: true, // Debe ser true
   usingDatabaseUrl: !!process.env.DATABASE_URL,
 });

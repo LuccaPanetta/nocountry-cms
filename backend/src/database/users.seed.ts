@@ -27,12 +27,66 @@ export class UsersSeed {
 
       this.logger.log('🌱 CREANDO USUARIOS...');
 
-      const users = await this.createUsers();
-      await this.userRepository.save(users);
+      // ✅ PRIMERO: Limpiar cualquier usuario existente (backup)
+      await this.cleanExistingUsers();
 
-      this.logger.log(`✅ ${users.length} usuarios creados`);
+      const users = await this.createUsers();
+      
+      // ✅ INSERTAR con manejo de duplicados
+      await this.insertUsersSafely(users);
+
+      this.logger.log(`✅ ${users.length} usuarios procesados`);
     } catch (error) {
       this.logger.error('❌ Error durante el seeding:', error);
+    }
+  }
+
+  private async cleanExistingUsers() {
+    try {
+      // Verificar si hay usuarios existentes
+      const existingCount = await this.userRepository.count().catch(() => 0);
+      
+      if (existingCount > 0) {
+        this.logger.log(`🗑️  Eliminando ${existingCount} usuarios existentes...`);
+        
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        
+        try {
+          // Deshabilitar temporalmente las constraints
+          await queryRunner.query('ALTER TABLE usuarios DISABLE TRIGGER ALL;');
+          await queryRunner.query('DELETE FROM usuarios;');
+          await queryRunner.query('ALTER TABLE usuarios ENABLE TRIGGER ALL;');
+          
+          this.logger.log('✅ Usuarios existentes eliminados');
+        } finally {
+          await queryRunner.release();
+        }
+      }
+    } catch (error) {
+      this.logger.warn('⚠️ No se pudieron eliminar usuarios existentes:', error.message);
+    }
+  }
+
+  private async insertUsersSafely(users: User[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    
+    try {
+      for (const user of users) {
+        try {
+          await queryRunner.manager.save(User, user);
+          this.logger.log(`✅ Usuario creado: ${user.email}`);
+        } catch (error) {
+          if (error.code === '23505') { // Violación de unique constraint
+            this.logger.warn(`⚠️ Usuario duplicado omitido: ${user.email}`);
+          } else {
+            this.logger.error(`❌ Error creando usuario ${user.email}:`, error.message);
+          }
+        }
+      }
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -64,36 +118,36 @@ export class UsersSeed {
       {
         nombre: 'Editor',
         apellido: 'Uno',
-        email: 'editor@testimonialcms.com',
+        email: 'editor1@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
       {
-        nombre: 'Editor',
-        apellido: 'Dos', 
-        email: 'editor1@testimonialcms.com',
+        nombre: 'Editor', 
+        apellido: 'Dos',
+        email: 'editor2@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
       // 3 Contribuidores
       {
         nombre: 'Juan',
-        apellido: 'Perez',
+        apellido: 'Perez', 
         email: 'juan.perez@gmail.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
       {
         nombre: 'Manuel',
-        apellido: 'Gutiérrez',
-        email: 'user1@testimonialcms.com', 
-        rol: UserRole.CONTRIBUTOR,
+        apellido: 'Gomez',
+        email: 'manuel.gomez@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR, 
         password: hashedPassword,
       },
       {
-        nombre: 'Mabel',
-        apellido: 'Martínez',
-        email: 'user2@testimonialcms.com',
+        nombre: 'Maria',
+        apellido: 'Mendoza',
+        email: 'maria.mendoza@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
