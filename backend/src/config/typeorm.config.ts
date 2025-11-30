@@ -1,3 +1,4 @@
+// src/config/typeorm.config.ts
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 config();
@@ -6,31 +7,44 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
-  url: process.env.DATABASE_URL, 
   
-  // ✅ SSL OBLIGATORIO PARA RENDER
+  // ✅ USAR DATABASE_URL si existe (Render), sino parámetros individuales
+  ...(process.env.DATABASE_URL 
+    ? { url: process.env.DATABASE_URL }
+    : {
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432', 10),
+        username: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASS || 'password',
+        database: process.env.DB_NAME || 'testimonial_cms',
+      }
+  ),
+  
+  // ✅ SYNCHRONIZE: true en desarrollo, false en producción
+  synchronize: isDevelopment,
+  
+  // ✅ SSL para producción
   ssl: isDevelopment ? false : { rejectUnauthorized: false },
-  extra: isDevelopment ? {} : { ssl: { rejectUnauthorized: false } },
+  extra: isDevelopment ? {} : { 
+    ssl: { 
+      rejectUnauthorized: false 
+    } 
+  },
   
-  host: process.env.DATABASE_URL ? undefined : process.env.DB_HOST,
-  port: process.env.DATABASE_URL ? undefined : parseInt(process.env.DB_PORT || '5432', 10),
-  username: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
-  password: process.env.DATABASE_URL ? undefined : process.env.DB_PASS,
-  database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
-  
-  autoLoadEntities: true, 
+  // ✅ Entidades
+  autoLoadEntities: true,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: isDevelopment, 
-  logging: isDevelopment ? ['query', 'error'] : ['error'],
   
-  // ✅ RETRY PARA CONEXIONES EN PRODUCCIÓN
-  retryAttempts: 3,
+  // ✅ Logging
+  logging: isDevelopment,
+  
+  // ✅ Configuración de conexión
+  retryAttempts: 5,
   retryDelay: 3000,
 };
 
-// Log para verificar configuración
 console.log('🗄️ Configuración Base de Datos:', {
-  hasDatabaseUrl: !!process.env.DATABASE_URL,
-  sslEnabled: !isDevelopment,
-  synchronize: isDevelopment
+  environment: process.env.NODE_ENV || 'development',
+  synchronize: isDevelopment,
+  usingDatabaseUrl: !!process.env.DATABASE_URL,
 });

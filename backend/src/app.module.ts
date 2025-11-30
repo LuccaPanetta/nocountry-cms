@@ -1,4 +1,4 @@
-// src/app.module.ts
+// src/app.module.ts (NO CAMBIES ESTE ARCHIVO)
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -12,18 +12,16 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { DatabaseModule } from './database/database.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
-
 import { MultimediaModule } from './multimedia/multimedia.module'; 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
-
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot(typeOrmConfig),
+    TypeOrmModule.forRoot(typeOrmConfig), // ✅ Usa tu configuración actual
     DatabaseModule,
     UsersModule, 
     AuthModule,
