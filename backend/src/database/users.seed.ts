@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { Testimonial } from '../testimonials/entities/testimonial.entity';
 import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
 
@@ -13,6 +14,8 @@ export class UsersSeed {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Testimonial)
+    private readonly testimonialRepository: Repository<Testimonial>,
   ) {}
 
   async seed() {
@@ -42,16 +45,22 @@ export class UsersSeed {
     }
   }
 
-  private async resetDatabase(): Promise<void> {
-    try {
-      // ✅ Eliminar todos los usuarios existentes
-      await this.userRepository.clear();
-      this.logger.log('🗑️  Todos los usuarios eliminados');
-    } catch (error) {
-      this.logger.error('❌ Error al resetear la base de datos:', error);
-      throw error;
-    }
+ // En UsersSeed - Alternativa simple
+private async resetDatabase(): Promise<void> {
+  try {
+    // ✅ Primero eliminar todos los testimonios (tabla dependiente)
+    await this.testimonialRepository.clear();
+    this.logger.log('🗑️  Todos los testimonios eliminados');
+    
+    // ✅ Luego eliminar todos los usuarios (tabla principal)
+    await this.userRepository.clear();
+    this.logger.log('🗑️  Todos los usuarios eliminados');
+    
+  } catch (error) {
+    this.logger.error('❌ Error al resetear la base de datos:', error);
+    throw error;
   }
+}
 
   private async createUsers(): Promise<User[]> {
     const hashedPassword = await bcrypt.hash('password123!', 10);
