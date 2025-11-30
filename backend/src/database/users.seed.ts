@@ -1,7 +1,7 @@
 // src/database/users.seed.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
@@ -13,26 +13,38 @@ export class UsersSeed {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async seed() {
     try {
-      // Verificar si ya existen usuarios
-      const userCount = await this.userRepository.count().catch(() => 0);
-      
-      if (userCount > 0) {
-        this.logger.log('✅ Ya existen usuarios. Saltando seeding...');
+      // ✅ VERIFICAR SI LA TABLA EXISTE
+      const tableExists = await this.checkIfTableExists('usuarios');
+      if (!tableExists) {
+        this.logger.warn('⚠️ La tabla usuarios no existe. Saltando seeding...');
         return;
       }
 
-      this.logger.log('🌱 Creando usuarios...');
+      this.logger.log('🌱 CREANDO USUARIOS...');
 
       const users = await this.createUsers();
       await this.userRepository.save(users);
 
       this.logger.log(`✅ ${users.length} usuarios creados`);
     } catch (error) {
-      this.logger.error('❌ Error creando usuarios:', error);
+      this.logger.error('❌ Error durante el seeding:', error);
+    }
+  }
+
+  private async checkIfTableExists(tableName: string): Promise<boolean> {
+    try {
+      const result = await this.dataSource.query(
+        `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1)`,
+        [tableName]
+      );
+      return result[0].exists;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -40,7 +52,7 @@ export class UsersSeed {
     const hashedPassword = await bcrypt.hash('password123!', 10);
     
     const users: Partial<User>[] = [
-      // Administrador
+      // 1 Administrador
       {
         nombre: 'Admin',
         apellido: 'Sistema',
@@ -48,32 +60,39 @@ export class UsersSeed {
         rol: UserRole.ADMIN,
         password: hashedPassword,
       },
-      // Editores
+      // 2 Editores
       {
         nombre: 'Editor',
         apellido: 'Uno',
+        email: 'editor@testimonialcms.com',
+        rol: UserRole.EDITOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Editor',
+        apellido: 'Dos', 
         email: 'editor1@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
-      {
-        nombre: 'Editor',
-        apellido: 'Dos',
-        email: 'editor2@testimonialcms.com',
-        rol: UserRole.EDITOR,
-        password: hashedPassword,
-      },
-      // Contribuidores
+      // 3 Contribuidores
       {
         nombre: 'Usuario',
         apellido: 'Uno',
-        email: 'user1@testimonialcms.com',
+        email: 'user@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
       {
         nombre: 'Usuario',
         apellido: 'Dos',
+        email: 'user1@testimonialcms.com', 
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Usuario',
+        apellido: 'Tres',
         email: 'user2@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
