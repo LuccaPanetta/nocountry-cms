@@ -18,6 +18,17 @@ export class TagsCategoriesSeed {
 
   async seed() {
     try {
+      // ✅ VERIFICAR SI YA EXISTEN DATOS (SEGURO PARA PRODUCCIÓN)
+      const [tagCount, categoryCount] = await Promise.all([
+        this.tagRepository.count(),
+        this.categoryRepository.count()
+      ]);
+
+      if (tagCount > 0 && categoryCount > 0) {
+        this.logger.log('✅ La base de datos ya tiene tags y categorías. Saltando seeding...');
+        return;
+      }
+
       this.logger.log('🌱 Iniciando seeding de tags y categorías...');
 
       const [tags, categories] = await Promise.all([
