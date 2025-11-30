@@ -1,4 +1,4 @@
-// database/database.module.ts
+// src/database/database.module.ts
 import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
@@ -24,11 +24,22 @@ export class DatabaseModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    if (process.env.NODE_ENV !== 'production') {
-      // Orden CRÍTICO: primero reset (en usersSeed), luego datos
+    // ✅ SOLUCIÓN SIMPLE: Siempre ejecutar, pero los seeds son seguros
+    await this.executeSeeding();
+  }
+
+  private async executeSeeding() {
+    try {
+      console.log('🌱 Iniciando proceso de seeding...');
+      
+      // Orden correcto de ejecución
       await this.usersSeed.seed();
-      await this.tagsCategoriesSeed.seed();
+      await this.tagsCategoriesSeed.seed(); 
       await this.testimonialsSeed.seed();
+      
+      console.log('✅ Seeding completado exitosamente');
+    } catch (error) {
+      console.error('❌ Error durante el seeding:', error);
     }
   }
 }

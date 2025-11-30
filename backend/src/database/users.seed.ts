@@ -28,17 +28,17 @@ export class UsersSeed {
 
   async seed() {
     try {
-      // ✅ EN DESARROLLO: Siempre resetear la base de datos
+      // ✅ VERIFICAR SI YA EXISTEN USUARIOS (SEGURO PARA PRODUCCIÓN)
+      const userCount = await this.userRepository.count();
+      if (userCount > 0) {
+        this.logger.log('✅ La base de datos ya tiene usuarios. Saltando seeding...');
+        return;
+      }
+
+      // ✅ SOLO EN DESARROLLO: Resetear la base de datos
       if (this.isDevelopment) {
         this.logger.log('🔄 Modo desarrollo: Reiniciando base de datos...');
         await this.resetDatabase();
-      } else {
-        // ✅ EN PRODUCCIÓN: Solo crear si no existen usuarios
-        const userCount = await this.userRepository.count();
-        if (userCount > 0) {
-          this.logger.log('✅ La base de datos ya tiene usuarios. Saltando seeding...');
-          return;
-        }
       }
 
       this.logger.log('🌱 Iniciando seeding de usuarios...');
@@ -54,6 +54,12 @@ export class UsersSeed {
   }
 
   private async resetDatabase(): Promise<void> {
+    // ✅ SOLO EJECUTAR EN DESARROLLO
+    if (!this.isDevelopment) {
+      this.logger.log('⚠️  Reset de base de datos solo disponible en desarrollo');
+      return;
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
     
     await queryRunner.connect();
@@ -62,17 +68,13 @@ export class UsersSeed {
     try {
       this.logger.log('🗑️  Eliminando todas las tablas con CASCADE...');
       
-      // ✅ EL ORDEN ES CRÍTICO: Primero las tablas de unión, luego las dependientes, finalmente las principales
-      
-      // 1. Primero la tabla de unión ManyToMany (más dependiente)
+      // EL ORDEN ES CRÍTICO: Primero las tablas de unión, luego las dependientes, finalmente las principales
       await queryRunner.query('TRUNCATE TABLE "testimonial_tags" CASCADE');
       this.logger.log('✅ testimonial_tags truncada');
       
-      // 2. Luego las tablas que tienen dependencias
       await queryRunner.query('TRUNCATE TABLE "testimonios" CASCADE');
       this.logger.log('✅ testimonios truncada');
       
-      // 3. Finalmente las tablas principales
       await queryRunner.query('TRUNCATE TABLE "categorias" CASCADE');
       this.logger.log('✅ categorias truncada');
       
@@ -93,7 +95,6 @@ export class UsersSeed {
     }
   }
 
-  // ... el resto del código createUsers() permanece igual
   private async createUsers(): Promise<User[]> {
     const hashedPassword = await bcrypt.hash('password123!', 10);
     

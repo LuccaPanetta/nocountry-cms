@@ -10,7 +10,6 @@ import { Category } from '../categories/entities/category.entity';
 @Injectable()
 export class TestimonialsSeed {
   private readonly logger = new Logger(TestimonialsSeed.name);
-  private readonly isDevelopment = process.env.NODE_ENV !== 'production';
 
   constructor(
     @InjectRepository(Testimonial)
@@ -25,14 +24,11 @@ export class TestimonialsSeed {
 
   async seed() {
     try {
-      if (this.isDevelopment) {
-        this.logger.log('🔄 Modo desarrollo: Creando testimonios...');
-      } else {
-        const testimonialCount = await this.testimonialRepository.count();
-        if (testimonialCount > 0) {
-          this.logger.log('✅ La base de datos ya tiene testimonios. Saltando seeding...');
-          return;
-        }
+      // ✅ VERIFICAR SI YA EXISTEN TESTIMONIOS (SEGURO PARA PRODUCCIÓN)
+      const testimonialCount = await this.testimonialRepository.count();
+      if (testimonialCount > 0) {
+        this.logger.log('✅ La base de datos ya tiene testimonios. Saltando seeding...');
+        return;
       }
 
       this.logger.log('🌱 Iniciando seeding de testimonios...');
@@ -54,6 +50,17 @@ export class TestimonialsSeed {
       this.tagRepository.find(),
       this.categoryRepository.find(),
     ]);
+
+    // Verificar que existen usuarios, tags y categorías
+    if (users.length === 0) {
+      this.logger.warn('⚠️ No hay usuarios disponibles para asociar testimonios');
+    }
+    if (allTags.length === 0) {
+      this.logger.warn('⚠️ No hay tags disponibles para asociar testimonios');
+    }
+    if (allCategories.length === 0) {
+      this.logger.warn('⚠️ No hay categorías disponibles para asociar testimonios');
+    }
 
     // Función helper para encontrar tags de forma segura
     const findTags = (...tagNames: string[]): Tag[] => {
@@ -198,6 +205,15 @@ export class TestimonialsSeed {
       },
     ];
 
-    return this.testimonialRepository.create(testimonialsData);
+    // Filtrar testimonios que tengan al menos un usuario disponible
+    const validTestimonials = testimonialsData.filter(testimonial => 
+      testimonial.user !== undefined
+    );
+
+    if (validTestimonials.length < testimonialsData.length) {
+      this.logger.warn(`⚠️ Se omitieron ${testimonialsData.length - validTestimonials.length} testimonios por falta de usuarios`);
+    }
+
+    return this.testimonialRepository.create(validTestimonials);
   }
 }
