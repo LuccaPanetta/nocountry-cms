@@ -30,95 +30,133 @@ export class DatabaseModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.initializeDatabase();
+    console.log('🚀 INICIANDO RESET Y SEEDING COMPLETO...');
+    
+    // Dar tiempo a que TypeORM se inicialice completamente
+    setTimeout(() => {
+      this.resetAndSeedDatabase();
+    }, 5000);
   }
 
-  private async initializeDatabase() {
+  private async resetAndSeedDatabase() {
     try {
-      console.log('🗄️ Iniciando inicialización de base de datos...');
+      console.log('🔄 INICIANDO PROCESO DE RESET Y SEEDING...');
       
-      // 1. ✅ EJECUTAR MIGRACIONES DE FORMA EXPLÍCITA
-      await this.runMigrations();
+      // 1. Resetear toda la base de datos
+      await this.resetDatabase();
       
-      // 2. ✅ Pequeña pausa para asegurar que las migraciones se completen
+      // 2. Esperar a que las tablas estén listas
+      await this.waitForTables();
+      
+      // 3. Ejecutar seeds
+      await this.executeAllSeeds();
+      
+      console.log('✅ RESET Y SEEDING COMPLETADO EXITOSAMENTE');
+    } catch (error) {
+      console.error('❌ Error en el proceso de reset y seeding:', error);
+    }
+  }
+
+  private async resetDatabase() {
+    try {
+      console.log('🗑️  RESETEANDO BASE DE DATOS...');
+      
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      try {
+        // EL ORDEN ES CRÍTICO: Primero tablas con dependencias, luego las principales
+        console.log('📋 Eliminando datos en orden...');
+        
+        // 1. Tablas de relación Many-to-Many
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "testimonial_tags" CASCADE');
+        console.log('✅ testimonial_tags reseteada');
+        
+        // 2. Tablas con dependencias
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "testimonios" CASCADE');
+        console.log('✅ testimonios reseteada');
+        
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "multimedias" CASCADE');
+        console.log('✅ multimedias reseteada');
+        
+        // 3. Tablas principales
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "categorias" CASCADE');
+        console.log('✅ categorias reseteada');
+        
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "tags" CASCADE');
+        console.log('✅ tags reseteada');
+        
+        await this.safeQuery(queryRunner, 'TRUNCATE TABLE "usuarios" CASCADE');
+        console.log('✅ usuarios reseteada');
+
+        await queryRunner.commitTransaction();
+        console.log('🗑️  TODOS LOS DATOS ELIMINADOS CORRECTAMENTE');
+        
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        console.error('❌ Error durante el reset:', error);
+        throw error;
+      } finally {
+        await queryRunner.release();
+      }
+      
+    } catch (error) {
+      console.error('❌ Error en resetDatabase:', error);
+    }
+  }
+
+  private async safeQuery(queryRunner: any, query: string) {
+    try {
+      await queryRunner.query(query);
+    } catch (error) {
+      console.log(`⚠️  Query falló (posiblemente tabla no existe): ${query}`);
+      // No relanzar el error, continuar con el proceso
+    }
+  }
+
+  private async waitForTables(maxAttempts = 20): Promise<boolean> {
+    console.log('⏳ ESPERANDO QUE LAS TABLAS ESTÉN LISTAS...');
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const tablesExist = await this.checkIfTablesExist();
+      
+      if (tablesExist) {
+        console.log('✅ TODAS LAS TABLAS ESTÁN LISTAS');
+        return true;
+      }
+      
+      console.log(`📊 Intento ${attempt}/${maxAttempts}: Esperando tablas...`);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 3. ✅ LUEGO: Ejecutar seeding
-      await this.executeSeeding();
-      
-      console.log('✅ Base de datos inicializada correctamente');
-    } catch (error) {
-      console.error('❌ Error durante la inicialización de la base de datos:', error);
-      // No relanzar el error para que la aplicación pueda iniciar
     }
+    
+    console.log('❌ TIMEOUT: Las tablas no están listas después del reset');
+    return false;
   }
 
-  private async runMigrations() {
+  private async checkIfTablesExist(): Promise<boolean> {
     try {
-      console.log('🔄 Ejecutando migraciones...');
+      const tables = [
+        { entity: 'User', tableName: 'usuarios' },
+        { entity: 'Tag', tableName: 'tags' },
+        { entity: 'Category', tableName: 'categorias' },
+        { entity: 'Testimonial', tableName: 'testimonios' }
+      ];
       
-      // Verificar si hay migraciones pendientes
-      const hasPendingMigrations = await this.dataSource.showMigrations();
+      let allTablesExist = true;
       
-      if (!hasPendingMigrations) {
-        console.log('✅ No hay migraciones pendientes');
-        return;
-      }
-
-      console.log('📦 Ejecutando migraciones pendientes...');
-      const executedMigrations = await this.dataSource.runMigrations();
-      
-      if (executedMigrations && executedMigrations.length > 0) {
-        console.log(`✅ Migraciones ejecutadas: ${executedMigrations.length}`);
-        executedMigrations.forEach(migration => {
-          console.log(`   - ${migration.name}`);
-        });
-      } else {
-        console.log('✅ No se ejecutaron migraciones (ya estaban aplicadas)');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error ejecutando migraciones:', error);
-      // En producción, es mejor continuar aunque falle las migraciones
-    }
-  }
-
-  private async executeSeeding() {
-    try {
-      console.log('🌱 Iniciando proceso de seeding...');
-      
-      // Verificar que las tablas principales existen antes de hacer seeding
-      const tablesExist = await this.checkEssentialTables();
-      
-      if (!tablesExist) {
-        console.log('⚠️ Las tablas esenciales no existen. Saltando seeding...');
-        return;
-      }
-      
-      // Orden correcto de ejecución
-      await this.usersSeed.seed();
-      await this.tagsCategoriesSeed.seed(); 
-      await this.testimonialsSeed.seed();
-      
-      console.log('✅ Seeding completado exitosamente');
-    } catch (error) {
-      console.error('❌ Error durante el seeding:', error);
-    }
-  }
-
-  private async checkEssentialTables(): Promise<boolean> {
-    try {
-      const essentialTables = ['users', 'tags', 'categories', 'testimonials'];
-      
-      for (const table of essentialTables) {
-        const exists = await this.checkIfTableExists(table);
-        if (!exists) {
-          console.log(`⚠️ Tabla ${table} no existe`);
-          return false;
+      for (const { entity, tableName } of tables) {
+        const exists = await this.checkIfTableExists(tableName);
+        if (exists) {
+          console.log(`✅ ${entity} → ${tableName}`);
+        } else {
+          console.log(`❌ ${entity} → ${tableName}`);
+          allTablesExist = false;
         }
       }
       
-      return true;
+      return allTablesExist;
+      
     } catch (error) {
       console.error('❌ Error verificando tablas:', error);
       return false;
@@ -134,6 +172,31 @@ export class DatabaseModule implements OnModuleInit {
       return result[0].exists;
     } catch (error) {
       return false;
+    }
+  }
+
+  private async executeAllSeeds() {
+    console.log('\n🌱 EJECUTANDO SEEDS...');
+    
+    try {
+      await this.usersSeed.seed();
+      console.log('✅ Users seed completado');
+    } catch (error) {
+      console.error('❌ Error en users seed:', error.message);
+    }
+    
+    try {
+      await this.tagsCategoriesSeed.seed();
+      console.log('✅ Tags/Categories seed completado');
+    } catch (error) {
+      console.error('❌ Error en tags/categories seed:', error.message);
+    }
+    
+    try {
+      await this.testimonialsSeed.seed();
+      console.log('✅ Testimonials seed completado');
+    } catch (error) {
+      console.error('❌ Error en testimonials seed:', error.message);
     }
   }
 }

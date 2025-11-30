@@ -1,4 +1,4 @@
-// src/database/migration.runner.ts
+/* // src/database/migration.runner.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
@@ -29,4 +29,4 @@ export class MigrationRunner {
       throw error;
     }
   }
-}
+} */

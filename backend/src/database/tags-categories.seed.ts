@@ -1,4 +1,4 @@
-// database/seeds/tags-categories.seed.ts
+// src/database/tags-categories.seed.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -19,10 +19,10 @@ export class TagsCategoriesSeed {
 
   async seed() {
     try {
-      // ✅ VERIFICAR SI LAS TABLAS EXISTEN ANTES DE CONTAR
+      // ✅ VERIFICAR SI LAS TABLAS EXISTEN
       const [tagsTableExists, categoriesTableExists] = await Promise.all([
         this.checkIfTableExists('tags'),
-        this.checkIfTableExists('categories')
+        this.checkIfTableExists('categorias')
       ]);
 
       if (!tagsTableExists || !categoriesTableExists) {
@@ -30,18 +30,7 @@ export class TagsCategoriesSeed {
         return;
       }
 
-      // ✅ VERIFICAR SI YA EXISTEN DATOS (SEGURO PARA PRODUCCIÓN)
-      const [tagCount, categoryCount] = await Promise.all([
-        this.tagRepository.count().catch(() => 0), // Si falla, asumir 0
-        this.categoryRepository.count().catch(() => 0)
-      ]);
-
-      if (tagCount > 0 && categoryCount > 0) {
-        this.logger.log('✅ La base de datos ya tiene tags y categorías. Saltando seeding...');
-        return;
-      }
-
-      this.logger.log('🌱 Iniciando seeding de tags y categorías...');
+      this.logger.log('🌱 CREANDO TAGS Y CATEGORÍAS...');
 
       const [tags, categories] = await Promise.all([
         this.createTags(),
@@ -51,10 +40,9 @@ export class TagsCategoriesSeed {
       await this.tagRepository.save(tags);
       await this.categoryRepository.save(categories);
 
-      this.logger.log(`✅ Tags y categorías creados: ${tags.length} tags, ${categories.length} categorías`);
+      this.logger.log(`✅ ${tags.length} tags y ${categories.length} categorías creados`);
     } catch (error) {
       this.logger.error('❌ Error durante el seeding de tags y categorías:', error);
-      // No relanzar el error para que la aplicación pueda continuar
     }
   }
 
@@ -66,7 +54,6 @@ export class TagsCategoriesSeed {
       );
       return result[0].exists;
     } catch (error) {
-      this.logger.warn(`⚠️ No se pudo verificar la existencia de la tabla ${tableName}:`, error);
       return false;
     }
   }

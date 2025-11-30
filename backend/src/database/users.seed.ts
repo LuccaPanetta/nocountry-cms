@@ -1,97 +1,50 @@
-// database/users.seed.ts
+// src/database/users.seed.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { Testimonial } from '../testimonials/entities/testimonial.entity';
-import { Tag } from '../tags/entities/tag.entity';
-import { Category } from '../categories/entities/category.entity';
 import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersSeed {
   private readonly logger = new Logger(UsersSeed.name);
-  private readonly isDevelopment = process.env.NODE_ENV !== 'production';
 
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Testimonial)
-    private readonly testimonialRepository: Repository<Testimonial>,
-    @InjectRepository(Tag)
-    private readonly tagRepository: Repository<Tag>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
     private readonly dataSource: DataSource,
   ) {}
 
   async seed() {
     try {
-      // ✅ VERIFICAR SI YA EXISTEN USUARIOS (SEGURO PARA PRODUCCIÓN)
-      const userCount = await this.userRepository.count();
-      if (userCount > 0) {
-        this.logger.log('✅ La base de datos ya tiene usuarios. Saltando seeding...');
+      // ✅ VERIFICAR SI LA TABLA EXISTE
+      const tableExists = await this.checkIfTableExists('usuarios');
+      if (!tableExists) {
+        this.logger.warn('⚠️ La tabla usuarios no existe. Saltando seeding...');
         return;
       }
 
-      // ✅ SOLO EN DESARROLLO: Resetear la base de datos
-      if (this.isDevelopment) {
-        this.logger.log('🔄 Modo desarrollo: Reiniciando base de datos...');
-        await this.resetDatabase();
-      }
-
-      this.logger.log('🌱 Iniciando seeding de usuarios...');
+      this.logger.log('🌱 CREANDO USUARIOS...');
 
       const users = await this.createUsers();
       await this.userRepository.save(users);
 
-      this.logger.log(`✅ Seeding completado: ${users.length} usuarios creados`);
+      this.logger.log(`✅ ${users.length} usuarios creados`);
     } catch (error) {
       this.logger.error('❌ Error durante el seeding:', error);
-      throw error;
     }
   }
 
-  private async resetDatabase(): Promise<void> {
-    // ✅ SOLO EJECUTAR EN DESARROLLO
-    if (!this.isDevelopment) {
-      this.logger.log('⚠️  Reset de base de datos solo disponible en desarrollo');
-      return;
-    }
-
-    const queryRunner = this.dataSource.createQueryRunner();
-    
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
+  private async checkIfTableExists(tableName: string): Promise<boolean> {
     try {
-      this.logger.log('🗑️  Eliminando todas las tablas con CASCADE...');
-      
-      // EL ORDEN ES CRÍTICO: Primero las tablas de unión, luego las dependientes, finalmente las principales
-      await queryRunner.query('TRUNCATE TABLE "testimonial_tags" CASCADE');
-      this.logger.log('✅ testimonial_tags truncada');
-      
-      await queryRunner.query('TRUNCATE TABLE "testimonios" CASCADE');
-      this.logger.log('✅ testimonios truncada');
-      
-      await queryRunner.query('TRUNCATE TABLE "categorias" CASCADE');
-      this.logger.log('✅ categorias truncada');
-      
-      await queryRunner.query('TRUNCATE TABLE "tags" CASCADE');
-      this.logger.log('✅ tags truncada');
-      
-      await queryRunner.query('TRUNCATE TABLE "usuarios" CASCADE');
-      this.logger.log('✅ usuarios truncada');
-      
-      await queryRunner.commitTransaction();
-      this.logger.log('✅ Todas las tablas reseteadas correctamente');
+      const result = await this.dataSource.query(
+        `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1)`,
+        [tableName]
+      );
+      return result[0].exists;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error('❌ Error al resetear la base de datos:', error);
-      throw error;
-    } finally {
-      await queryRunner.release();
+      return false;
     }
   }
 
@@ -101,102 +54,46 @@ export class UsersSeed {
     const users: Partial<User>[] = [
       // 1 Administrador
       {
-        nombre: 'Verónica',
-        apellido: 'Sanchez',
+        nombre: 'Admin',
+        apellido: 'Sistema',
         email: 'admin@testimonialcms.com',
         rol: UserRole.ADMIN,
         password: hashedPassword,
       },
-      // 3 Editores
+      // 2 Editores
       {
-        nombre: 'Juan',
-        apellido: 'Diaz',
+        nombre: 'Editor',
+        apellido: 'Uno',
         email: 'editor@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
       {
-        nombre: 'Manuel',
-        apellido: 'Gutiérrez',
+        nombre: 'Editor',
+        apellido: 'Dos', 
         email: 'editor1@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
+      // 3 Contribuidores
       {
-        nombre: 'Maria',
-        apellido: 'Gonzalez',
-        email: 'editor2@testimonialcms.com',
-        rol: UserRole.EDITOR,
-        password: hashedPassword,
-      },
-      // 10 Contribuidores
-      {
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        email: 'juan.perez@gmail.com',
+        nombre: 'Usuario',
+        apellido: 'Uno',
+        email: 'user@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
       {
-        nombre: 'María',
-        apellido: 'García',
-        email: 'maria.garcia@gmail.com',
+        nombre: 'Usuario',
+        apellido: 'Dos',
+        email: 'user1@testimonialcms.com', 
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
       {
-        nombre: 'Carlos',
-        apellido: 'López',
-        email: 'carlos.lopez@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Ana',
-        apellido: 'Martínez',
-        email: 'ana.martinez@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Pedro',
-        apellido: 'Rodríguez',
-        email: 'pedro.rodriguez@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Laura',
-        apellido: 'Hernández',
-        email: 'laura.hernandez@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Miguel',
-        apellido: 'Gómez',
-        email: 'miguel.gomez@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Sofía',
-        apellido: 'Díaz',
-        email: 'sofia.diaz@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'David',
-        apellido: 'Torres',
-        email: 'david.torres@gmail.com',
-        rol: UserRole.CONTRIBUTOR,
-        password: hashedPassword,
-      },
-      {
-        nombre: 'Elena',
-        apellido: 'Ramírez',
-        email: 'elena.ramirez@gmail.com',
+        nombre: 'Usuario',
+        apellido: 'Tres',
+        email: 'user2@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
