@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Testimonial, TestimonialStatus } from '../testimonials/entities/testimonial.entity';
 import { User } from '../users/entities/user.entity';
+import { Tag } from '../tags/entities/tag.entity';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class TestimonialsSeed {
@@ -15,16 +17,17 @@ export class TestimonialsSeed {
     private readonly testimonialRepository: Repository<Testimonial>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async seed() {
     try {
-      // ✅ EN DESARROLLO: Siempre resetear los testimonios
       if (this.isDevelopment) {
-        this.logger.log('🔄 Modo desarrollo: Reiniciando testimonios...');
-        await this.resetTestimonials();
+        this.logger.log('🔄 Modo desarrollo: Creando testimonios...');
       } else {
-        // ✅ EN PRODUCCIÓN: Solo crear si no existen testimonios
         const testimonialCount = await this.testimonialRepository.count();
         if (testimonialCount > 0) {
           this.logger.log('✅ La base de datos ya tiene testimonios. Saltando seeding...');
@@ -44,22 +47,25 @@ export class TestimonialsSeed {
     }
   }
 
-  private async resetTestimonials(): Promise<void> {
-    try {
-      // ✅ Eliminar todos los testimonios existentes
-      await this.testimonialRepository.clear();
-      this.logger.log('🗑️  Todos los testimonios eliminados');
-    } catch (error) {
-      this.logger.error('❌ Error al resetear los testimonios:', error);
-      throw error;
-    }
-  }
-
   private async createTestimonials(): Promise<Testimonial[]> {
-    // Obtener algunos usuarios para asociar testimonios
-    const users = await this.userRepository.find({
-      take: 8, // Tomar 8 usuarios para asociar testimonios
-    });
+    // Obtener datos necesarios
+    const [users, allTags, allCategories] = await Promise.all([
+      this.userRepository.find({ take: 8 }),
+      this.tagRepository.find(),
+      this.categoryRepository.find(),
+    ]);
+
+    // Función helper para encontrar tags de forma segura
+    const findTags = (...tagNames: string[]): Tag[] => {
+      return tagNames
+        .map(name => allTags.find(tag => tag.name === name))
+        .filter((tag): tag is Tag => tag !== undefined);
+    };
+
+    // Función helper para encontrar categoría de forma segura
+    const findCategory = (categoryName: string): Category | undefined => {
+      return allCategories.find(category => category.name === categoryName);
+    };
 
     const testimonialsData: Partial<Testimonial>[] = [
       // Testimonios aprobados
@@ -69,6 +75,8 @@ export class TestimonialsSeed {
         status: TestimonialStatus.APPROVED,
         videoUrl: 'https://example.com/videos/testimonio1.mp4',
         user: users[0],
+        category: findCategory('servicios'),
+        tags: findTags('servicio', 'soporte', 'recomendación'),
       },
       {
         contenido: 'Llevo más de 2 años usando esta plataforma y ha transformado completamente mi negocio. La facilidad de uso y las funcionalidades son excepcionales.',
@@ -76,6 +84,8 @@ export class TestimonialsSeed {
         status: TestimonialStatus.APPROVED,
         imageUrl: 'https://example.com/images/testimonio2.jpg',
         user: users[1],
+        category: findCategory('tecnología'),
+        tags: findTags('tecnología', 'facilidad-uso', 'empresa'),
       },
       {
         contenido: 'La mejor decisión que tomé para mi empresa. El ROI fue inmediato y el equipo de implementación fue excelente. ¡Gracias por todo!',
@@ -83,12 +93,16 @@ export class TestimonialsSeed {
         status: TestimonialStatus.APPROVED,
         videoUrl: 'https://example.com/videos/testimonio3.mp4',
         user: users[2],
+        category: findCategory('consultoría'),
+        tags: findTags('empresa', 'innovación'),
       },
       {
         contenido: 'Me encanta lo intuitiva que es la plataforma. En menos de una semana ya estaba operando con total normalidad. El soporte 24/7 es un plus increíble.',
         autorNombre: 'María González',
         status: TestimonialStatus.APPROVED,
         user: users[3],
+        category: findCategory('tecnología'),
+        tags: findTags('facilidad-uso', 'soporte'),
       },
 
       // Testimonios pendientes
@@ -97,6 +111,8 @@ export class TestimonialsSeed {
         autorNombre: 'José Ramírez',
         status: TestimonialStatus.PENDING,
         user: users[4],
+        category: findCategory('servicios'),
+        tags: findTags('servicio', 'soporte'),
       },
       {
         contenido: 'Interesante plataforma con mucho potencial. Estoy en proceso de evaluación pero hasta ahora todo va muy bien. Espero poder dar una reseña más completa pronto.',
@@ -104,6 +120,8 @@ export class TestimonialsSeed {
         status: TestimonialStatus.PENDING,
         imageUrl: 'https://example.com/images/testimonio6.jpg',
         user: users[5],
+        category: findCategory('tecnología'),
+        tags: findTags('tecnología', 'innovación'),
       },
 
       // Testimonios rechazados (para testing de moderación)
@@ -112,12 +130,16 @@ export class TestimonialsSeed {
         autorNombre: 'Usuario Anónimo',
         status: TestimonialStatus.REJECTED,
         user: users[6],
+        category: findCategory('servicios'),
+        tags: findTags('servicio'),
       },
       {
         contenido: 'Prometen mucho pero no cumplen. No recomiendo este servicio para negocios serios.',
         autorNombre: 'Cliente Insatisfecho',
         status: TestimonialStatus.REJECTED,
         user: users[7],
+        category: findCategory('consultoría'),
+        tags: findTags('empresa'),
       },
 
       // Más testimonios variados
@@ -126,39 +148,53 @@ export class TestimonialsSeed {
         autorNombre: 'Diego Herrera',
         status: TestimonialStatus.APPROVED,
         videoUrl: 'https://example.com/videos/testimonio9.mp4',
+        category: findCategory('tecnología'),
+        tags: findTags('tecnología', 'innovación'),
       },
       {
         contenido: 'Como freelancer, esta plataforma me ha permitido organizar mis proyectos de manera mucho más efectiva. Las métricas y reportes son muy útiles.',
         autorNombre: 'Sofía Castro',
         status: TestimonialStatus.APPROVED,
         imageUrl: 'https://example.com/images/testimonio10.jpg',
+        category: findCategory('productos'),
+        tags: findTags('freelancer', 'facilidad-uso'),
       },
       {
         contenido: 'Excelente relación calidad-precio. Hay funciones que no esperaba encontrar en este rango de precio. Muy satisfecho con la compra.',
         autorNombre: 'Miguel Ángel Ruiz',
         status: TestimonialStatus.PENDING,
+        category: findCategory('productos'),
+        tags: findTags('recomendación'),
       },
       {
         contenido: 'La curva de aprendizaje es mínima. En un par de horas ya estaba usando las funciones principales. Documentación clara y ejemplos prácticos.',
         autorNombre: 'Elena Morales',
         status: TestimonialStatus.APPROVED,
+        category: findCategory('educación'),
+        tags: findTags('facilidad-uso', 'educación'),
       },
       {
         contenido: 'El equipo de ventas fue muy honesto sobre las capacidades reales del producto. Aprecio la transparencia y el enfoque en el cliente.',
         autorNombre: 'Fernando Jiménez',
         status: TestimonialStatus.APPROVED,
         videoUrl: 'https://example.com/videos/testimonio13.mp4',
+        category: findCategory('servicios'),
+        tags: findTags('servicio', 'recomendación'),
       },
       {
         contenido: 'Las actualizaciones constantes mantienen la plataforma siempre relevante. Se nota que escuchan el feedback de los usuarios.',
         autorNombre: 'Patricia Navarro',
         status: TestimonialStatus.PENDING,
         imageUrl: 'https://example.com/images/testimonio14.jpg',
+        category: findCategory('tecnología'),
+        tags: findTags('tecnología', 'innovación'),
       },
       {
         contenido: 'Perfecto para equipos remotos. La colaboración en tiempo real ha mejorado nuestra productividad en un 40%. Herramienta esencial hoy en día.',
         autorNombre: 'Ricardo Ortega',
         status: TestimonialStatus.APPROVED,
+        category: findCategory('tecnología'),
+        tags: findTags('tecnología', 'empresa', 'innovación'),
       },
     ];
 

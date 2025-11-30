@@ -1,8 +1,11 @@
+// database/users.seed.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Testimonial } from '../testimonials/entities/testimonial.entity';
+import { Tag } from '../tags/entities/tag.entity';
+import { Category } from '../categories/entities/category.entity';
 import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
 
@@ -16,6 +19,11 @@ export class UsersSeed {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Testimonial)
     private readonly testimonialRepository: Repository<Testimonial>,
+    @InjectRepository(Tag)
+    private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async seed() {
@@ -45,23 +53,47 @@ export class UsersSeed {
     }
   }
 
- // En UsersSeed - Alternativa simple
-private async resetDatabase(): Promise<void> {
-  try {
-    // ✅ Primero eliminar todos los testimonios (tabla dependiente)
-    await this.testimonialRepository.clear();
-    this.logger.log('🗑️  Todos los testimonios eliminados');
+  private async resetDatabase(): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
     
-    // ✅ Luego eliminar todos los usuarios (tabla principal)
-    await this.userRepository.clear();
-    this.logger.log('🗑️  Todos los usuarios eliminados');
-    
-  } catch (error) {
-    this.logger.error('❌ Error al resetear la base de datos:', error);
-    throw error;
-  }
-}
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    try {
+      this.logger.log('🗑️  Eliminando todas las tablas con CASCADE...');
+      
+      // ✅ EL ORDEN ES CRÍTICO: Primero las tablas de unión, luego las dependientes, finalmente las principales
+      
+      // 1. Primero la tabla de unión ManyToMany (más dependiente)
+      await queryRunner.query('TRUNCATE TABLE "testimonial_tags" CASCADE');
+      this.logger.log('✅ testimonial_tags truncada');
+      
+      // 2. Luego las tablas que tienen dependencias
+      await queryRunner.query('TRUNCATE TABLE "testimonios" CASCADE');
+      this.logger.log('✅ testimonios truncada');
+      
+      // 3. Finalmente las tablas principales
+      await queryRunner.query('TRUNCATE TABLE "categorias" CASCADE');
+      this.logger.log('✅ categorias truncada');
+      
+      await queryRunner.query('TRUNCATE TABLE "tags" CASCADE');
+      this.logger.log('✅ tags truncada');
+      
+      await queryRunner.query('TRUNCATE TABLE "usuarios" CASCADE');
+      this.logger.log('✅ usuarios truncada');
+      
+      await queryRunner.commitTransaction();
+      this.logger.log('✅ Todas las tablas reseteadas correctamente');
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error('❌ Error al resetear la base de datos:', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // ... el resto del código createUsers() permanece igual
   private async createUsers(): Promise<User[]> {
     const hashedPassword = await bcrypt.hash('password123!', 10);
     
