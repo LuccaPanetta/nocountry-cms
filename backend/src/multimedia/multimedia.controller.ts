@@ -54,82 +54,72 @@ class UploadMultimediaDto {
 export class MultimediaController {
   constructor(private readonly mediaService: CloudinaryMediaService) { }
 
-  @Post('upload/:testimonioId')
-  @Roles(UserRole.ADMIN, UserRole.EDITOR)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({
-    summary: 'Subir archivo multimedia para testimonio',
-    description: 'Sube un archivo de imagen o video y lo asocia a un testimonio específico. Los archivos se almacenan en Cloudinary.'
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description: 'Formulario para subir archivo multimedia',
-    schema: {
-      type: 'object',
-      required: ['file', 'tipo'],
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Archivo de imagen (JPEG, PNG, WEBP) o video (MP4, MOV)'
-        },
-        tipo: {
-          type: 'string',
-          enum: Object.values(MultimediaType),
-          example: MultimediaType.IMAGE,
-          description: 'Tipo de archivo multimedia - IMAGE para imágenes, VIDEO para videos'
-        },
-        descripcion: {
-          type: 'string',
-          description: 'Descripción opcional del archivo multimedia',
-          example: 'Imagen principal del testimonio'
-        }
+ @Post('upload/:testimonioId')
+@Roles(UserRole.ADMIN, UserRole.EDITOR)
+@UseInterceptors(FileInterceptor('file'))
+@ApiOperation({
+  summary: 'Subir archivo multimedia para testimonio',
+  description: 'Sube un archivo de imagen o video y lo asocia a un testimonio específico. Los archivos se almacenan en Cloudinary.'
+})
+@ApiConsumes('multipart/form-data')
+@ApiBody({
+  description: 'Formulario para subir archivo multimedia',
+  schema: {
+    type: 'object',
+    required: ['file', 'tipo'],
+    properties: {
+      file: {
+        type: 'string',
+        format: 'binary',
+        description: 'Archivo de imagen (JPEG, PNG, WEBP) o video (MP4, MOV)'
       },
-    }
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Archivo multimedia subido exitosamente'
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Error en los datos de entrada o archivo no proporcionado'
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado - Token JWT requerido'
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Rol de usuario no tiene permisos'
-  })
-  @ApiParam({
-    name: 'testimonioId',
-    description: 'ID del testimonio al que se asociará el archivo multimedia',
-    example: '123e4567-e89b-12d3-a456-426614174000'
-  })
-  async uploadMedia(
-    @Param('testimonioId') testimonioId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: UploadMultimediaDto
-  ) {
-    const { tipo, descripcion } = body;
-
-    if (!file) {
-      throw new BadRequestException('No se proporcionó archivo');
-    }
-
-    if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
-      throw new BadRequestException('Tipo debe ser IMAGE o VIDEO');
-    }
-
-    return this.mediaService.uploadMedia(
-      file.buffer,
-      testimonioId,
-      tipo,
-      descripcion
-    );
+      tipo: {
+        type: 'string',
+        enum: Object.values(MultimediaType),
+        example: MultimediaType.IMAGE,
+        description: 'Tipo de archivo multimedia - IMAGE para imágenes, VIDEO para videos'
+      },
+      descripcion: {
+        type: 'string',
+        description: 'Descripción opcional del archivo multimedia',
+        example: 'Imagen principal del testimonio'
+      }
+    },
   }
+})
+async uploadMedia(
+  @Param('testimonioId') testimonioId: string,
+  @UploadedFile() file: Express.Multer.File,
+  @Body() body: any // ✅ CAMBIO: Usar 'any' en lugar del DTO
+) {
+  // ✅ EXTRAER manualmente los campos del body
+  const tipo = body.tipo as MultimediaType;
+  const descripcion = body.descripcion;
+
+  console.log('🔍 DEBUG - Body recibido:', body); // ✅ Debug
+  console.log('🔍 DEBUG - Tipo recibido:', tipo); // ✅ Debug
+  console.log('🔍 DEBUG - File recibido:', file?.originalname); // ✅ Debug
+
+  // ✅ VALIDACIONES manuales
+  if (!file) {
+    throw new BadRequestException('No se proporcionó archivo');
+  }
+
+  if (!tipo) {
+    throw new BadRequestException('El campo "tipo" es requerido');
+  }
+
+  if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
+    throw new BadRequestException(`Tipo debe ser ${MultimediaType.IMAGE} o ${MultimediaType.VIDEO}. Recibido: ${tipo}`);
+  }
+
+  return this.mediaService.uploadMedia(
+    file.buffer,
+    testimonioId,
+    tipo,
+    descripcion
+  );
+}
 
   @Get('testimonio/:testimonioId')
   @ApiOperation({
@@ -259,4 +249,31 @@ export class MultimediaController {
   async healthCheck() {
     return this.mediaService.healthCheck();
   }
+
+
+  // En tu MultimediaController
+@Get('config/check')
+@ApiOperation({ summary: 'Verificar configuración de servicios' })
+async checkConfig() {
+  const cloudinaryConfig = {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : undefined,
+    api_secret: process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : undefined,
+    configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+  };
+
+  return {
+    services: {
+      cloudinary: cloudinaryConfig,
+      database: {
+        has_url: !!process.env.DATABASE_URL,
+        environment: process.env.NODE_ENV
+      }
+    },
+    status: cloudinaryConfig.configured ? '✅ Configurado' : '❌ No configurado',
+    message: cloudinaryConfig.configured 
+      ? 'Todos los servicios están configurados correctamente'
+      : 'Verifica las variables de entorno de Cloudinary'
+  };
+}
 }

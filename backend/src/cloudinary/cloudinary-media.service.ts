@@ -1,15 +1,56 @@
+// src/cloudinary/cloudinary-media.service.ts
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config'; // ✅ AGREGAR ESTO
 import { 
   UploadApiResponse, 
   DeleteApiResponse, 
   v2 as cloudinary
 } from 'cloudinary';
 import * as stream from 'stream';
-import { MultimediaType } from '../multimedia/enums/multimedia-type.enum'; // ✅ Usar el enum existente
+import { MultimediaType } from '../multimedia/enums/multimedia-type.enum';
 
 @Injectable()
 export class CloudinaryMediaService {
   private readonly logger = new Logger(CloudinaryMediaService.name);
+
+  // ✅ AGREGAR CONSTRUCTOR CON CONFIG SERVICE
+  constructor(private configService: ConfigService) {
+    this.configureCloudinary(); // ✅ CONFIGURAR AL INICIAR
+  }
+
+  /**
+   * CONFIGURAR CLOUDINARY CON LAS CREDENCIALES
+   */
+  private configureCloudinary() {
+    try {
+      const cloudName = this.configService.get('CLOUDINARY_CLOUD_NAME');
+      const apiKey = this.configService.get('CLOUDINARY_API_KEY');
+      const apiSecret = this.configService.get('CLOUDINARY_API_SECRET');
+
+      this.logger.debug('🔐 Configurando Cloudinary...');
+      this.logger.debug(`🔐 Cloud Name: ${cloudName}`);
+      this.logger.debug(`🔐 API Key: ${apiKey ? '***' + apiKey.slice(-4) : 'undefined'}`);
+      this.logger.debug(`🔐 API Secret: ${apiSecret ? '***' + apiSecret.slice(-4) : 'undefined'}`);
+
+      // ✅ VERIFICAR QUE EXISTAN LAS CREDENCIALES
+      if (!cloudName || !apiKey || !apiSecret) {
+        throw new Error('Configuración de Cloudinary incompleta. Verifica las variables de entorno.');
+      }
+
+      // ✅ CONFIGURAR CLOUDINARY
+      cloudinary.config({
+        cloud_name: cloudName,
+        api_key: apiKey,
+        api_secret: apiSecret,
+        secure: true,
+      });
+
+      this.logger.log('✅ Cloudinary configurado correctamente');
+    } catch (error) {
+      this.logger.error(`❌ Error configurando Cloudinary: ${error.message}`);
+      throw error;
+    }
+  }
 
   /**
    * Subir archivo multimedia
@@ -17,7 +58,7 @@ export class CloudinaryMediaService {
   async uploadMedia(
     fileBuffer: Buffer,
     testimonioId: string,
-    tipo: MultimediaType, // ✅ Usar MultimediaType en lugar de MediaType
+    tipo: MultimediaType,
     descripcion?: string
   ): Promise<{
     media: UploadApiResponse;
@@ -27,6 +68,8 @@ export class CloudinaryMediaService {
       thumbnail?: string;
     };
   }> {
+    this.logger.log(`📤 Subiendo ${tipo} para testimonio: ${testimonioId}`);
+
     const folder = `testimonios/${testimonioId}/${tipo.toLowerCase()}s`;
     const tags = ['testimonio', `testimonio-${testimonioId}`, tipo.toLowerCase()];
 
@@ -41,13 +84,15 @@ export class CloudinaryMediaService {
 
       const urls = this.generateMediaUrls(result.public_id, tipo);
 
+      this.logger.log(`✅ ${tipo} subido exitosamente: ${result.public_id}`);
+
       return {
         media: result,
         urls
       };
 
     } catch (error) {
-      this.logger.error(`Error subiendo ${tipo.toLowerCase()} para testimonio ${testimonioId}: ${error.message}`);
+      this.logger.error(`❌ Error subiendo ${tipo} para testimonio ${testimonioId}: ${error.message}`);
       throw new BadRequestException(`Error subiendo archivo: ${error.message}`);
     }
   }
