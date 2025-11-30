@@ -8,6 +8,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module'; 
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { DatabaseModule } from './database/database.module';
+import { CategoriesModule } from './categories/categories.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { DatabaseModule } from './database/database.module';
     UsersModule, 
     AuthModule,
     TestimonialsModule,
+    CategoriesModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

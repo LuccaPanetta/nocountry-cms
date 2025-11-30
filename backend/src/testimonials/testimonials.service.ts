@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Testimonial } from './entities/testimonial.entity';
-import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { GetTestimonialsDto } from './dto/get-testimonials.dto';
+import { Testimonial, TestimonialStatus } from './entities/testimonial.entity';
+import { User } from '../users/entities/user.entity'; 
+import { UserRole } from '../users/interfaces/user-role.enum'; 
 
 @Injectable()
 export class TestimonialsService {
@@ -14,28 +16,65 @@ export class TestimonialsService {
   ) {}
 
   async create(createTestimonialDto: CreateTestimonialDto, user: User) {
-    // Creamos una nueva instancia del testimonio
     const testimonial = this.testimonialRepository.create({
       ...createTestimonialDto,
     });
 
-    // Guardamos en la base de datos
     return this.testimonialRepository.save(testimonial);
   }
 
-  async findAll() {
-    return this.testimonialRepository.find();
-  }
-  
-  findOne(id: number) {
-    return `This action returns a #${id} testimonial`;
-  }
-  
-  update(id: number, updateTestimonialDto: UpdateTestimonialDto) {
-    return `This action updates a #${id} testimonial`;
+  async findAll(filterDto: GetTestimonialsDto, user?: User) {
+    const { status, categoryId, tags } = filterDto;
+    const isPublicRequest = !user || user.rol !== UserRole.ADMIN;
+    
+    const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
+      .leftJoinAndSelect('testimonial.category', 'category')
+      .leftJoinAndSelect('testimonial.tags', 'tag');
+
+    if (isPublicRequest) {
+      queryBuilder.andWhere('testimonial.status = :approvedStatus', { approvedStatus: TestimonialStatus.APPROVED });
+    } else if (status) {
+      queryBuilder.andWhere('testimonial.status = :status', { status });
+    }
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
+
+    if (tags && tags.length > 0) {
+      queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+    }
+    
+    return queryBuilder.getMany();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} testimonial`;
+  async findOne(id: string): Promise<Testimonial> {
+    const testimonial = await this.testimonialRepository.findOneBy({ id });
+
+    if (!testimonial) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+    }
+    return testimonial;
+  }
+
+  async update(id: string, updateTestimonialDto: UpdateTestimonialDto) {
+    const testimonial = await this.findOne(id);
+    
+    Object.assign(testimonial, updateTestimonialDto); 
+
+    return this.testimonialRepository.save(testimonial);
+  }
+
+  async remove(id: string) {
+    const testimonial = await this.findOne(id);
+    await this.testimonialRepository.remove(testimonial);
+    return { message: 'Testimonio eliminado con éxito' };
+  }
+  
+  async updateStatus(id: string, newStatus: TestimonialStatus) {
+    const testimonial = await this.findOne(id);
+
+    testimonial.status = newStatus;
+    
+    return this.testimonialRepository.save(testimonial);
   }
 }

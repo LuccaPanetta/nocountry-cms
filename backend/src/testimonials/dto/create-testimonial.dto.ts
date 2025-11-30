@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUrl, IsUUID, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateTestimonialDto {
@@ -21,4 +21,11 @@ export class CreateTestimonialDto {
   @IsUrl({}, { message: 'La URL debe ser válida' })
   @IsOptional()
   imageUrl?: string;
+
+  @IsUUID() 
+  categoryId: string;
+
+  @IsArray()
+  @IsOptional()
+  tagIds?: string[];
 }
