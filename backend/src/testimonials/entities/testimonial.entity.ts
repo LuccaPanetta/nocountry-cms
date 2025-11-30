@@ -1,3 +1,4 @@
+import { User } from '../../users/entities/user.entity';
 import { 
   Entity, 
   Column, 
@@ -11,6 +12,7 @@ import {
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
+
 
 export enum TestimonialStatus {
   PENDING = 'pending',
@@ -66,4 +68,14 @@ export class Testimonial {
 
   @UpdateDateColumn()
   actualizadoEn: Date;
+
+
+    // Relación opcional con usuario (si el testimonio viene de un usuario registrado)
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'userId' })
+  user?: User;
+
+  @Column({ nullable: true })
+  userId?: string;
+
 }

@@ -12,7 +12,7 @@ export function LoginSwagger() {
 ### Roles disponibles:
 - **👤 Contributor**: Puede crear y gestionar sus propios testimonios
 - **👑 Admin**: Acceso completo al sistema y gestión de usuarios
-- **⚙️ Operator**: Puede moderar y gestionar testimonios de todos los usuarios
+- **⚙️ Editor**: Puede moderar y gestionar testimonios de todos los usuarios
 
 Selecciona un rol del dropdown para cargar automáticamente las credenciales de ejemplo.`
     }),
@@ -24,23 +24,23 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
           description: 'Acceso completo al sistema',
           value: {
             email: 'admin@testimonialcms.com',
-            password: 'admin123!'
+            password: 'password123!'
           }
         },
-        operator: {
-          summary: '⚙️ Operador',
+        editor: {
+          summary: '⚙️ Editor',
           description: 'Puede moderar testimonios de todos los usuarios',
           value: {
-            email: 'operator@testimonialcms.com',
-            password: 'operator123!'
+            email: 'editor@testimonialcms.com',
+            password: 'password123!'
           }
         },
         contributor: {
           summary: '👤 Contribuidor',
           description: 'Puede gestionar sus propios testimonios',
           value: {
-            email: 'contributor@dominio.com',
-            password: 'contributor123!'
+            email: 'juan.perez@gmail.com',
+            password: 'password123!'
           }
         }
       }
