@@ -90,9 +90,9 @@ export class MultimediaController {
 async uploadMedia(
   @Param('testimonioId') testimonioId: string,
   @UploadedFile() file: Express.Multer.File,
-  @Body() body: any // ✅ CAMBIO: Usar 'any' en lugar del DTO
+  @Body() body: any
 ) {
-  // ✅ EXTRAER manualmente los campos del body
+  
   const tipo = body.tipo as MultimediaType;
   const descripcion = body.descripcion;
 
@@ -100,7 +100,6 @@ async uploadMedia(
   console.log('🔍 DEBUG - Tipo recibido:', tipo); // ✅ Debug
   console.log('🔍 DEBUG - File recibido:', file?.originalname); // ✅ Debug
 
-  // ✅ VALIDACIONES manuales
   if (!file) {
     throw new BadRequestException('No se proporcionó archivo');
   }

@@ -8,7 +8,7 @@ import { Multimedia } from '../multimedia/entities/multimedia.entity';
 
 @Module({
   imports: [
-    ConfigModule, // ✅ AGREGAR PARA ACCEDER A VARIABLES DE ENTORNO
+    ConfigModule,
     TypeOrmModule.forFeature([Multimedia]),
   ],
   controllers: [MultimediaController],

@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { Multimedia } from './entities/multimedia.entity';
 import { Testimonial } from '../testimonials/entities/testimonial.entity';
 import { CreateMultimediaDto } from './dto/create-multimedia.dto';
-import { UpdateMultimediaDto } from './dto/update-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { CloudinarySimpleService } from '../cloudinary/cloudinary.service';
 
@@ -65,7 +64,6 @@ export class MultimediaService {
     const tags = [`testimonio-${testimonioId}`, tipo.toLowerCase()];
 
     try {
-      // Subir a Cloudinary según el tipo
       if (tipo === MultimediaType.IMAGE) {
         uploadResult = await this.cloudinaryService.uploadImage(
           file.buffer, 
@@ -82,7 +80,6 @@ export class MultimediaService {
         throw new BadRequestException(`Tipo de multimedia no soportado: ${tipo}`);
       }
 
-      // ✅ CORREGIDO: Usar solo los campos que existen en tu entidad
       const multimediaData = {
         testimonioId,
         tipo,
@@ -90,7 +87,6 @@ export class MultimediaService {
         publicId: uploadResult.public_id,
         descripcion,
         nombreArchivo: file.originalname,
-        // ❌ ELIMINADOS: tamaño, formato, duracion, resolucion (no existen en tu entidad)
       };
 
       const multimedia = this.multimediaRepository.create({
@@ -106,7 +102,6 @@ export class MultimediaService {
       };
 
     } catch (error) {
-      // ✅ CORREGIDO: Ahora uploadResult puede ser null
       if (uploadResult?.public_id) {
         await this.cloudinaryService.deleteResource(
           uploadResult.public_id, 
@@ -125,7 +120,7 @@ export class MultimediaService {
     files: Express.Multer.File[],
     tipo: MultimediaType,
   ): Promise<Array<{ multimedia: Multimedia; cloudinaryData: any }>> {
-    // ✅ CORREGIDO: Especificar el tipo del array
+
     const results: Array<{ multimedia: Multimedia; cloudinaryData: any }> = [];
     
     for (const file of files) {
@@ -133,7 +128,6 @@ export class MultimediaService {
         const result = await this.createWithUpload(testimonioId, file, tipo);
         results.push(result);
       } catch (error) {
-        // Continuar con los demás archivos si uno falla
         console.error(`Error subiendo archivo ${file.originalname}:`, error.message);
       }
     }
@@ -173,7 +167,6 @@ export class MultimediaService {
   async remove(id: string): Promise<{ message: string; deletedMultimedia: any }> {
     const multimedia = await this.findOne(id);
     
-    // ✅ CORREGIDO: Usar solo campos existentes
     const multimediaInfo = {
       id: multimedia.id,
       tipo: multimedia.tipo,
@@ -183,7 +176,6 @@ export class MultimediaService {
       creadoEn: multimedia.creadoEn
     };
     
-    // Eliminar de Cloudinary primero
     try {
       await this.cloudinaryService.deleteResource(
         multimedia.publicId, 
@@ -193,7 +185,6 @@ export class MultimediaService {
       console.warn(`No se pudo eliminar de Cloudinary: ${error.message}`);
     }
 
-    // Eliminar de la base de datos
     await this.multimediaRepository.remove(multimedia);
     
     return { 
@@ -202,9 +193,6 @@ export class MultimediaService {
     };
   }
 
-  /**
-   * Obtener URLs optimizadas para diferentes usos
-   */
   /**
  * Obtener URLs optimizadas para diferentes usos
  */
@@ -216,7 +204,6 @@ async getOptimizedUrls(multimediaId: string): Promise<{
 }> {
   const multimedia = await this.findOne(multimediaId);
   
-  // Inicializar el objeto con todas las propiedades posibles
   const result: {
     original: string;
     optimized: string;
@@ -226,15 +213,12 @@ async getOptimizedUrls(multimediaId: string): Promise<{
     original: multimedia.url,
     optimized: multimedia.url,
     thumbnail: multimedia.url
-    // preview se añadirá solo para videos
   };
 
   if (multimedia.tipo === MultimediaType.IMAGE) {
-    // Para imágenes
     result.optimized = this.cloudinaryService.generateImageUrl(multimedia.publicId, 800, 600);
     result.thumbnail = this.cloudinaryService.generateImageUrl(multimedia.publicId, 300, 200);
   } else if (multimedia.tipo === MultimediaType.VIDEO) {
-    // Para videos
     result.optimized = this.cloudinaryService.generateVideoUrl(multimedia.publicId, 1280, 720);
     result.thumbnail = this.cloudinaryService.generateVideoThumbnail(multimedia.publicId);
     result.preview = this.cloudinaryService.generateVideoUrl(multimedia.publicId, 640, 360);
@@ -267,7 +251,6 @@ async getOptimizedUrls(multimediaId: string): Promise<{
     }
   }
 
-  // ✅ AÑADIR: Métodos adicionales útiles
   async findByTestimonioId(testimonioId: string): Promise<Multimedia[]> {
     return await this.multimediaRepository.find({
       where: { testimonioId },

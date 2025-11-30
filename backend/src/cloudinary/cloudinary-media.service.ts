@@ -1,6 +1,6 @@
 // src/cloudinary/cloudinary-media.service.ts
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config'; // ✅ AGREGAR ESTO
+import { ConfigService } from '@nestjs/config'; 
 import { 
   UploadApiResponse, 
   DeleteApiResponse, 
@@ -13,7 +13,6 @@ import { MultimediaType } from '../multimedia/enums/multimedia-type.enum';
 export class CloudinaryMediaService {
   private readonly logger = new Logger(CloudinaryMediaService.name);
 
-  // ✅ AGREGAR CONSTRUCTOR CON CONFIG SERVICE
   constructor(private configService: ConfigService) {
     this.configureCloudinary(); // ✅ CONFIGURAR AL INICIAR
   }
@@ -32,12 +31,10 @@ export class CloudinaryMediaService {
       this.logger.debug(`🔐 API Key: ${apiKey ? '***' + apiKey.slice(-4) : 'undefined'}`);
       this.logger.debug(`🔐 API Secret: ${apiSecret ? '***' + apiSecret.slice(-4) : 'undefined'}`);
 
-      // ✅ VERIFICAR QUE EXISTAN LAS CREDENCIALES
       if (!cloudName || !apiKey || !apiSecret) {
         throw new Error('Configuración de Cloudinary incompleta. Verifica las variables de entorno.');
       }
 
-      // ✅ CONFIGURAR CLOUDINARY
       cloudinary.config({
         cloud_name: cloudName,
         api_key: apiKey,
