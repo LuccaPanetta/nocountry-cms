@@ -130,7 +130,6 @@ export class TestimonialsService {
     contenido: updateTestimonialDto.contenido,
     autorNombre: updateTestimonialDto.autorNombre,
     videoUrl: updateTestimonialDto.videoUrl,
-    imageUrl: updateTestimonialDto.imageUrl,
     status: updateTestimonialDto.status, // ← Agregar status si se actualiza
   });
 
