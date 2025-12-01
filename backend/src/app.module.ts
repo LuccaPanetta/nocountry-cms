@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
+import { EngagementModule } from './engagement/engagement.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TagsModule } from './tags/tags.module';
     TestimonialsModule,
     CategoriesModule,
     TagsModule,
+    EngagementModule,
   ],
   controllers: [AppController],
   providers: [AppService],

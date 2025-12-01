@@ -39,7 +39,6 @@ export class MainConfig {
 ├── 💻 Desarrollo: ${this.getLocalUrl()}/api/v1/docs  
 └── 🚀 Producción: ${this.getBackendUrl()}/api/v1/docs
 
-⚠️  IMPORTANTE: En producción usa siempre HTTPS
 ==========================================================`);
   }
 }

@@ -20,7 +20,6 @@ export class TestimonialsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   findAll(@Query() filterDto: GetTestimonialsDto, @Request() req) {
     return this.testimonialsService.findAll(filterDto, req.user);
   }
