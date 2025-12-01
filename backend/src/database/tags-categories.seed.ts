@@ -59,19 +59,37 @@ export class TagsCategoriesSeed {
   }
 
   private async createTags(): Promise<Tag[]> {
-    const tagsData: Partial<Tag>[] = [
-      { name: 'tecnología', description: 'Testimonios relacionados con tecnología' },
-      { name: 'servicio', description: 'Testimonios sobre calidad de servicio' },
-      { name: 'soporte', description: 'Testimonios sobre soporte técnico' },
-      { name: 'facilidad-uso', description: 'Testimonios sobre facilidad de uso' },
-      { name: 'recomendación', description: 'Testimonios de recomendación' },
-      { name: 'empresa', description: 'Testimonios empresariales' },
-      { name: 'freelancer', description: 'Testimonios de freelancers' },
-      { name: 'innovación', description: 'Testimonios sobre innovación' },
-    ];
+  const tagsData = [
+    { name: 'tecnología', description: 'Testimonios relacionados con tecnología' },
+    { name: 'servicio', description: 'Testimonios sobre calidad de servicio' },
+    { name: 'soporte', description: 'Testimonios sobre soporte técnico' },
+    { name: 'facilidad-uso', description: 'Testimonios sobre facilidad de uso' },
+    { name: 'recomendación', description: 'Testimonios de recomendación' },
+    { name: 'empresa', description: 'Testimonios empresariales' },
+    { name: 'freelancer', description: 'Testimonios de freelancers' },
+    { name: 'innovación', description: 'Testimonios sobre innovación' },
+  ];
 
-    return this.tagRepository.create(tagsData);
+  // ✅ UPSERT: Crear solo si no existen
+  const tags: Tag[] = [];
+  for (const tagData of tagsData) {
+    let tag = await this.tagRepository.findOne({ 
+      where: { name: tagData.name } 
+    });
+    
+    if (!tag) {
+      tag = this.tagRepository.create(tagData);
+      await this.tagRepository.save(tag);
+      this.logger.log(`✅ Tag creado: ${tagData.name}`);
+    } else {
+      this.logger.log(`✅ Tag ya existe: ${tagData.name}`);
+    }
+    
+    tags.push(tag);
   }
+
+  return tags;
+}
 
   private async createCategories(): Promise<Category[]> {
     const categoriesData: Partial<Category>[] = [
