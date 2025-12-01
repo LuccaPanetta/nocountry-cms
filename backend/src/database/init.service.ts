@@ -1,4 +1,4 @@
-// src/database/init.service.ts
+/* // src/database/init.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
@@ -93,4 +93,4 @@ export class InitService implements OnModuleInit {
   async isInitialized(): Promise<boolean> {
     return this.initialized;
   }
-}
+} */
