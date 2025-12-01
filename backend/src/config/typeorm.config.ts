@@ -21,7 +21,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   ),
   
   // ✅ SYNCHRONIZE: true en desarrollo para recrear tablas
-  synchronize: true, // IMPORTANTE: true para que se creen las tablas
+  synchronize: false, // ¡DEBE SER FALSE EN PRODUCCIÓN!
   
   // SSL para producción
   ssl: isDevelopment ? false : { rejectUnauthorized: false },

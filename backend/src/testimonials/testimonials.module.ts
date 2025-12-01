@@ -1,15 +1,18 @@
+// src/testimonials/testimonials.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm'; 
 import { TestimonialsService } from './testimonials.service';
 import { TestimonialsController } from './testimonials.controller';
 import { Testimonial } from './entities/testimonial.entity';
+import { Category } from '../categories/entities/category.entity';
+import { Tag } from '../tags/entities/tag.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Testimonial]),
+    TypeOrmModule.forFeature([Testimonial, Category, Tag]), // ✅ Agregar Category y Tag
   ],
   controllers: [TestimonialsController],
   providers: [TestimonialsService],
-  exports: [TypeOrmModule] 
+  exports: [TypeOrmModule, TestimonialsService] 
 })
 export class TestimonialsModule {}

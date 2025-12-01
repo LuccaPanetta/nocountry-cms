@@ -35,10 +35,10 @@ export class Testimonial {
   autorNombre: string; 
 
   @Column({ nullable: true })
-  videoUrl: string; // ✅ Mantener por compatibilidad
+  videoUrl: string;
 
   @Column({ nullable: true })
-  imageUrl: string; // ✅ Mantener por compatibilidad
+  imageUrl: string;
 
   @Column({
     type: 'enum',
@@ -47,49 +47,40 @@ export class Testimonial {
   })
   status: TestimonialStatus; 
 
-  // Relación con categoría
-  @ManyToOne(() => Category)
-  @JoinColumn({ name: 'categoryId' })
+  @ManyToOne(() => Category, { eager: true })
+  @JoinColumn({ name: 'category_id' }) // ← Nombre real en la base de datos
   category: Category;
 
-  // Relación ManyToMany con tags
-  @ManyToMany(() => Tag, { cascade: true }) 
+  @ManyToMany(() => Tag, { cascade: true, eager: true }) 
   @JoinTable({
     name: 'testimonial_tags', 
     joinColumn: {
-      name: 'testimonialId',
+      name: 'testimonial_id', 
       referencedColumnName: 'id',
     },
     inverseJoinColumn: {
-      name: 'tagId',
+      name: 'tag_id', 
       referencedColumnName: 'id',
     },
   })
   tags: Tag[]; 
-  
-  // Relación OneToMany con multimedia (nueva estructura)
+
   @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, { 
     cascade: true,
-    onDelete: 'CASCADE',
-    eager: false
+    onDelete: 'CASCADE'
   })
   multimedias: Multimedia[];
 
-  // Relación opcional con usuario (si el testimonio viene de un usuario registrado)
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'userId' })
+  @ManyToOne(() => User, { nullable: true, eager: true })
+  @JoinColumn({ name: 'user_id' }) // ← Nombre real en la base de datos
   user?: User;
 
-  @Column({ nullable: true })
-  userId?: string;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'creado_en' })
   creadoEn: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
 
-  // Métodos helpers para acceder a multimedia
   getImagenPrincipal(): Multimedia | undefined {
     return this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
   }
@@ -102,13 +93,11 @@ export class Testimonial {
     return this.multimedias?.filter(m => m.tipo === MultimediaType.IMAGE) || [];
   }
 
-  // Método para compatibilidad con la estructura anterior
   getVideoUrl(): string | null {
     const video = this.multimedias?.find(m => m.tipo === MultimediaType.VIDEO);
     return video ? video.url : this.videoUrl;
   }
 
-  // Método para compatibilidad con la estructura anterior
   getImageUrl(): string | null {
     const image = this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
     return image ? image.url : this.imageUrl;
