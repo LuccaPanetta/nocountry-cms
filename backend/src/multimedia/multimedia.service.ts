@@ -63,7 +63,6 @@ export class MultimediaService {
 
       // Crear registro en la base de datos
       const multimediaData = {
-        testimonioId,
         tipo,
         url: cloudinaryResult.media.secure_url,
         publicId: cloudinaryResult.media.public_id,
@@ -160,11 +159,6 @@ export class MultimediaService {
     }
   }
 
-  // ... MANTENER TODOS LOS MÉTODOS EXISTENTES SIN CAMBIOS ...
-  // findAll, findOne, remove, getOptimizedUrls, verifyTestimonioExists, 
-  // verifyPublicIdUnique, findByTestimonioId, countByTestimonioId, findByType, findByPublicId
-  // uploadMultiple, etc.
-
   async findAll(testimonioId?: string, tipo?: MultimediaType): Promise<Multimedia[]> {
     const query = this.multimediaRepository
       .createQueryBuilder('multimedia')
@@ -243,18 +237,39 @@ export class MultimediaService {
     };
   }
 
+  // CORREGIDO: Usar la relación testimonio en lugar de testimonioId
   async findByTestimonioId(testimonioId: string): Promise<Multimedia[]> {
     return await this.multimediaRepository.find({
-      where: { testimonioId },
+      where: { testimonio: { id: testimonioId } }, // Usar la relación
       relations: ['testimonio'],
       order: { creadoEn: 'DESC' }
     });
   }
 
+  // CORREGIDO: Usar la relación testimonio en lugar de testimonioId
   async findByType(testimonioId: string, tipo: MultimediaType): Promise<Multimedia[]> {
     return await this.multimediaRepository.find({
-      where: { testimonioId, tipo },
+      where: { 
+        testimonio: { id: testimonioId }, // Usar la relación
+        tipo: tipo 
+      },
+      relations: ['testimonio'],
       order: { creadoEn: 'DESC' }
+    });
+  }
+
+  // CORREGIDO: Buscar por la relación
+  async countByTestimonioId(testimonioId: string): Promise<number> {
+    return await this.multimediaRepository.count({
+      where: { testimonio: { id: testimonioId } } // Usar la relación
+    });
+  }
+
+  // CORREGIDO: Buscar por la relación
+  async findByPublicId(publicId: string): Promise<Multimedia | null> {
+    return await this.multimediaRepository.findOne({
+      where: { publicId },
+      relations: ['testimonio']
     });
   }
 
@@ -278,5 +293,10 @@ export class MultimediaService {
     if (existingMultimedia) {
       throw new ConflictException(`Ya existe un multimedia con el publicId: ${publicId}`);
     }
+  }
+
+  // Método para actualizar CreateMultimediaDto si es necesario
+  async uploadMultiple(testimonioId: string, files: Express.Multer.File[], tipo: MultimediaType, descripcion?: string) {
+    // Implementación según sea necesario
   }
 }

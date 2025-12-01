@@ -6,10 +6,11 @@ import { TestimonialsController } from './testimonials.controller';
 import { Testimonial } from './entities/testimonial.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Tag } from '../tags/entities/tag.entity';
-
+import { MultimediaModule } from '../multimedia/multimedia.module'; // ✅ Importar módulo de multimedia
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Testimonial, Category, Tag]), // ✅ Agregar Category y Tag
+    TypeOrmModule.forFeature([Testimonial, Category, Tag]),
+     MultimediaModule,
   ],
   controllers: [TestimonialsController],
   providers: [TestimonialsService],

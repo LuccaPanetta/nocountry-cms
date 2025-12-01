@@ -50,7 +50,6 @@ export class TestimonialsService {
     contenido: createTestimonialDto.contenido,
     autorNombre: createTestimonialDto.autorNombre,
     videoUrl: createTestimonialDto.videoUrl,
-    imageUrl: createTestimonialDto.imageUrl,
     category: category, // ← Asignar el objeto completo, no solo el ID
     tags: tags,
     user: user,
