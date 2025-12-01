@@ -1,5 +1,5 @@
 // src/app.module.ts (NO CAMBIES ESTE ARCHIVO)
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -43,4 +43,13 @@ import { RolesGuard } from './auth/guards/roles.guard';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  onModuleInit() {
+    console.log('🎯 ORDEN DE INICIALIZACIÓN:');
+    console.log('1. TypeORM se conecta (synchronize: true)');
+    console.log('2. InitService - RESET completo de BD');
+    console.log('3. TypeORM sincroniza tablas (vacías)');
+    console.log('4. DatabaseModule - Ejecuta seeds');
+    console.log('5. Módulos de negocio se inicializan');
+  }
+}
