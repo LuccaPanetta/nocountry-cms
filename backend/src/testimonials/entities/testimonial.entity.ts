@@ -51,7 +51,7 @@ export class Testimonial {
   @JoinColumn({ name: 'category_id' }) // ← Nombre real en la base de datos
   category: Category;
 
-  @ManyToMany(() => Tag, { cascade: true, eager: true }) 
+  @ManyToMany(() => Tag, { eager: true }) 
   @JoinTable({
     name: 'testimonial_tags', 
     joinColumn: {
