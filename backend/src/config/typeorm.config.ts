@@ -3,17 +3,19 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 config();
 
-// Si NO es producción → estamos en desarrollo
-const isDevelopment = process.env.NODE_ENV !== 'production';
+// Ambiente
+const isProduction = process.env.NODE_ENV === 'production';
+
+// 🔥 Variable opcional para resetear BD EN PRODUCCIÓN
+// En Render puedes setear: RESET_DB=true para que se ejecute UNA VEZ
+const shouldResetSchema = process.env.RESET_DB === 'true';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
 
-  // 🔌 Conexión: usa DATABASE_URL o variables locales
+  // 🔌 Conexión: si existe DATABASE_URL la usa (Render)
   ...(process.env.DATABASE_URL
-    ? { 
-        url: process.env.DATABASE_URL 
-      }
+    ? { url: process.env.DATABASE_URL }
     : {
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '5432', 10),
@@ -23,30 +25,35 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
       }
   ),
 
-  // 🔥 Solo sincronizar DB en desarrollo
-  synchronize: isDevelopment,
+  // 🧨 Reglas de sincronización
+  synchronize: !isProduction || shouldResetSchema,
+  dropSchema: shouldResetSchema,
 
-  // 🔐 SSL solo para producción (Render)
-  ssl: isDevelopment ? false : { rejectUnauthorized: false },
-  extra: isDevelopment
-    ? {}
-    : { ssl: { rejectUnauthorized: false } },
+  // SSL solo en producción (Render exige rejectUnauthorized=false)
+  ssl: isProduction
+    ? { rejectUnauthorized: false }
+    : false,
 
-  // 📦 Auto cargar entidades
+  extra: isProduction
+    ? { ssl: { rejectUnauthorized: false } }
+    : {},
+
+  // 🧩 Auto entidades
   autoLoadEntities: true,
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  entities: [__dirname + '/../**/*.entity.{ts,js}'],
 
-  // 📝 logging solo en desarrollo
-  logging: isDevelopment,
+  // Logging solo desarrollo
+  logging: !isProduction,
 
   retryAttempts: 5,
   retryDelay: 3000,
 };
 
-// 🖨️ Log real
-console.log('🔧 CONFIGURACIÓN TYPEORM:', {
+// 🖨️ Log para verificar que todo anda
+console.log('🔧 TYPEORM CONFIG:', {
   environment: process.env.NODE_ENV,
-  synchronize: isDevelopment,   // <-- correcto
   usingDatabaseUrl: !!process.env.DATABASE_URL,
-  sslEnabled: !isDevelopment,
+  synchronize: !isProduction || shouldResetSchema,
+  dropSchema: shouldResetSchema,
+  sslEnabled: isProduction,
 });
