@@ -10,23 +10,48 @@ export class EngagementService {
     private readonly engagementRepository: Repository<EngagementMetric>,
   ) {}
 
-  async registerView(testimonialId: string) {
-    
+  private async findOrCreateMetric(testimonialId: string) {
     let metric = await this.engagementRepository.findOne({
       where: { testimonial: { id: testimonialId } as any },
-      relations: ['testimonial'],
     });
 
     if (!metric) {
       metric = this.engagementRepository.create({
         testimonial: { id: testimonialId } as any,
-        views: 1,
+        views: 0,
         embeds: 0,
       });
-    } else {
-      metric.views += 1;
+    }
+    return metric;
+  }
+
+  async registerView(testimonialId: string) {
+    const metric = await this.findOrCreateMetric(testimonialId);
+    
+    metric.views += 1;
+    
+    return this.engagementRepository.save(metric);
+  }
+
+  async registerEmbed(testimonialId: string) {
+    const metric = await this.findOrCreateMetric(testimonialId);
+    
+    metric.embeds += 1;
+    
+    return this.engagementRepository.save(metric);
+  }
+  
+  async getMetricsByTestimonialId(testimonialId: string) {
+    
+    const metrics = await this.engagementRepository.findOne({
+      where: { testimonial: { id: testimonialId } as any },
+      select: ['views', 'embeds', 'ultimaActualizacion', 'id'], 
+    });
+
+    if (!metrics) {
+      return { views: 0, embeds: 0, testimonialId };
     }
 
-    return this.engagementRepository.save(metric);
+    return metrics;
   }
 }
