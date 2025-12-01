@@ -1,18 +1,20 @@
 // src/multimedia/multimedia.module.ts
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // ✅ AGREGAR ESTO
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MultimediaController } from '../multimedia/multimedia.controller';
+import { MultimediaController } from './multimedia.controller';
+import { ConfigModule } from '@nestjs/config';
+import { MultimediaService } from './multimedia.service';
+import { Multimedia } from './entities/multimedia.entity';
+import { Testimonial } from '../testimonials/entities/testimonial.entity';
 import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
-import { Multimedia } from '../multimedia/entities/multimedia.entity';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Multimedia]),
+    TypeOrmModule.forFeature([Multimedia, Testimonial])
   ],
   controllers: [MultimediaController],
-  providers: [CloudinaryMediaService],
-  exports: [CloudinaryMediaService],
+  providers: [MultimediaService, CloudinaryMediaService],
+  exports: [MultimediaService]
 })
 export class MultimediaModule {}

@@ -1,3 +1,4 @@
+// src/multimedia/multimedia.controller.ts
 import {
   Controller,
   Get,
@@ -9,15 +10,17 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  Body
+  Body,
+  ParseUUIDPipe
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/interfaces/user-role.enum';
-import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
 import { MultimediaType } from './enums/multimedia-type.enum';
+import { MultimediaService } from './multimedia.service';
+import { MultimediaResponseDto } from './dto/multimedia-response.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -52,73 +55,84 @@ class UploadMultimediaDto {
 @Controller('multimedia')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MultimediaController {
-  constructor(private readonly mediaService: CloudinaryMediaService) { }
+  constructor(
+    private readonly multimediaService: MultimediaService  
+  ) { }
 
- @Post('upload/:testimonioId')
-@Roles(UserRole.ADMIN, UserRole.EDITOR)
-@UseInterceptors(FileInterceptor('file'))
-@ApiOperation({
-  summary: 'Subir archivo multimedia para testimonio',
-  description: 'Sube un archivo de imagen o video y lo asocia a un testimonio específico. Los archivos se almacenan en Cloudinary.'
-})
-@ApiConsumes('multipart/form-data')
-@ApiBody({
-  description: 'Formulario para subir archivo multimedia',
-  schema: {
-    type: 'object',
-    required: ['file', 'tipo'],
-    properties: {
-      file: {
-        type: 'string',
-        format: 'binary',
-        description: 'Archivo de imagen (JPEG, PNG, WEBP) o video (MP4, MOV)'
+  @Post('upload/:testimonioId')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR, UserRole.CONTRIBUTOR)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Subir archivo multimedia para testimonio',
+    description: 'Sube un archivo de imagen o video y lo asocia a un testimonio específico. Los archivos se almacenan en Cloudinary y se guardan en la base de datos.'
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Formulario para subir archivo multimedia',
+    schema: {
+      type: 'object',
+      required: ['file', 'tipo'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Archivo de imagen (JPEG, PNG, WEBP) o video (MP4, MOV)'
+        },
+        tipo: {
+          type: 'string',
+          enum: Object.values(MultimediaType),
+          example: MultimediaType.IMAGE,
+          description: 'Tipo de archivo multimedia - IMAGE para imágenes, VIDEO para videos'
+        },
+        descripcion: {
+          type: 'string',
+          description: 'Descripción opcional del archivo multimedia',
+          example: 'Imagen principal del testimonio'
+        }
       },
-      tipo: {
-        type: 'string',
-        enum: Object.values(MultimediaType),
-        example: MultimediaType.IMAGE,
-        description: 'Tipo de archivo multimedia - IMAGE para imágenes, VIDEO para videos'
-      },
-      descripcion: {
-        type: 'string',
-        description: 'Descripción opcional del archivo multimedia',
-        example: 'Imagen principal del testimonio'
-      }
-    },
+    }
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Archivo subido y guardado exitosamente',
+    type: MultimediaResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Archivo inválido o tipo incorrecto'
+  })
+  async uploadMedia(
+    @Param('testimonioId', new ParseUUIDPipe()) testimonioId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UploadMultimediaDto
+  ): Promise<MultimediaResponseDto> {
+    const { tipo, descripcion } = body;
+
+    console.log('🔍 DEBUG - Body recibido:', body);
+    console.log('🔍 DEBUG - Tipo recibido:', tipo);
+    console.log('🔍 DEBUG - File recibido:', file?.originalname);
+
+    if (!file) {
+      throw new BadRequestException('No se proporcionó archivo');
+    }
+
+    if (!tipo) {
+      throw new BadRequestException('El campo "tipo" es requerido');
+    }
+
+    if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
+      throw new BadRequestException(`Tipo debe ser ${MultimediaType.IMAGE} o ${MultimediaType.VIDEO}. Recibido: ${tipo}`);
+    }
+
+    const result = await this.multimediaService.createWithUpload(
+      testimonioId,
+      file,
+      tipo,
+      descripcion
+    );
+
+    return this.multimediaService.toResponseDto(result.multimedia);
   }
-})
-async uploadMedia(
-  @Param('testimonioId') testimonioId: string,
-  @UploadedFile() file: Express.Multer.File,
-  @Body() body: any
-) {
-  
-  const tipo = body.tipo as MultimediaType;
-  const descripcion = body.descripcion;
-
-  console.log('🔍 DEBUG - Body recibido:', body); // ✅ Debug
-  console.log('🔍 DEBUG - Tipo recibido:', tipo); // ✅ Debug
-  console.log('🔍 DEBUG - File recibido:', file?.originalname); // ✅ Debug
-
-  if (!file) {
-    throw new BadRequestException('No se proporcionó archivo');
-  }
-
-  if (!tipo) {
-    throw new BadRequestException('El campo "tipo" es requerido');
-  }
-
-  if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
-    throw new BadRequestException(`Tipo debe ser ${MultimediaType.IMAGE} o ${MultimediaType.VIDEO}. Recibido: ${tipo}`);
-  }
-
-  return this.mediaService.uploadMedia(
-    file.buffer,
-    testimonioId,
-    tipo,
-    descripcion
-  );
-}
 
   @Get('testimonio/:testimonioId')
   @ApiOperation({
@@ -127,7 +141,8 @@ async uploadMedia(
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de archivos multimedia obtenida exitosamente'
+    description: 'Lista de archivos multimedia obtenida exitosamente',
+    type: [MultimediaResponseDto]
   })
   @ApiResponse({
     status: 404,
@@ -145,17 +160,17 @@ async uploadMedia(
     description: 'Filtrar por tipo de multimedia'
   })
   async listTestimonioMedia(
-    @Param('testimonioId') testimonioId: string,
+    @Param('testimonioId', new ParseUUIDPipe()) testimonioId: string,
     @Query('tipo') tipo?: MultimediaType
-  ) {
-    return this.mediaService.listTestimonioMedia(testimonioId, tipo);
+  ): Promise<MultimediaResponseDto[]> {
+    return this.multimediaService.findByTestimonioIdWithFilter(testimonioId, tipo);
   }
 
-  @Delete(':publicId')
+  @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({
     summary: 'Eliminar archivo multimedia',
-    description: 'Elimina un archivo multimedia tanto de Cloudinary como de la base de datos usando su publicId'
+    description: 'Elimina un archivo multimedia tanto de Cloudinary como de la base de datos usando su ID'
   })
   @ApiResponse({
     status: 200,
@@ -166,33 +181,17 @@ async uploadMedia(
     description: 'Archivo multimedia no encontrado'
   })
   @ApiParam({
-    name: 'publicId',
-    description: 'ID público del archivo en Cloudinary',
-    example: 'testimonios/123e4567/image_abc123'
-  })
-  @ApiBody({
-    description: 'Datos necesarios para eliminar el archivo',
-    schema: {
-      type: 'object',
-      required: ['tipo'],
-      properties: {
-        tipo: {
-          type: 'string',
-          enum: Object.values(MultimediaType),
-          example: MultimediaType.IMAGE,
-          description: 'Tipo de archivo multimedia a eliminar'
-        }
-      }
-    }
+    name: 'id',
+    description: 'ID del multimedia en la base de datos',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   async deleteMedia(
-    @Param('publicId') publicId: string,
-    @Body('tipo') tipo: MultimediaType
+    @Param('id', new ParseUUIDPipe()) id: string
   ) {
-    return this.mediaService.deleteMedia(publicId, tipo);
+    return this.multimediaService.remove(id);
   }
 
-  @Get('urls/:publicId')
+  @Get('urls/:id')
   @ApiOperation({
     summary: 'Obtener URLs optimizadas',
     description: 'Genera URLs optimizadas para diferentes usos (original, optimizada, thumbnail) de un archivo multimedia'
@@ -206,73 +205,59 @@ async uploadMedia(
     description: 'Archivo multimedia no encontrado'
   })
   @ApiParam({
-    name: 'publicId',
-    description: 'ID público del archivo en Cloudinary',
-    example: 'testimonios/123e4567/image_abc123'
-  })
-  @ApiBody({
-    description: 'Datos necesarios para generar las URLs',
-    schema: {
-      type: 'object',
-      required: ['tipo'],
-      properties: {
-        tipo: {
-          type: 'string',
-          enum: Object.values(MultimediaType),
-          example: MultimediaType.IMAGE,
-          description: 'Tipo de archivo multimedia'
-        }
-      }
-    }
+    name: 'id',
+    description: 'ID del multimedia en la base de datos',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   async getMediaUrls(
-    @Param('publicId') publicId: string,
-    @Body('tipo') tipo: MultimediaType
+    @Param('id', new ParseUUIDPipe()) id: string
   ) {
-    return this.mediaService.getMediaUrls(publicId, tipo);
+    return this.multimediaService.getOptimizedUrls(id);
   }
 
   @Get('health')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({
-    summary: 'Health check del servicio Cloudinary',
-    description: 'Verifica el estado de la conexión con Cloudinary'
+    summary: 'Health check del servicio multimedia',
+    description: 'Verifica el estado de la conexión con Cloudinary y la base de datos'
   })
   @ApiResponse({
     status: 200,
-    description: 'Servicio Cloudinary funcionando correctamente'
+    description: 'Servicios funcionando correctamente'
   })
   @ApiResponse({
     status: 503,
-    description: 'Servicio Cloudinary no disponible'
+    description: 'Servicio no disponible'
   })
   async healthCheck() {
-    return this.mediaService.healthCheck();
+    // El health check ahora debe estar en MultimediaService
+    return this.multimediaService.healthCheck();
   }
 
+  @Get('config/check')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Verificar configuración de servicios' })
+  async checkConfig() {
+    // Este método puede mantenerse en el controller ya que es específico de configuración
+    const cloudinaryConfig = {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : undefined,
+      api_secret: process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : undefined,
+      configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+    };
 
-  // En tu MultimediaController
-@Get('config/check')
-@ApiOperation({ summary: 'Verificar configuración de servicios' })
-async checkConfig() {
-  const cloudinaryConfig = {
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : undefined,
-    api_secret: process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : undefined,
-    configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
-  };
-
-  return {
-    services: {
-      cloudinary: cloudinaryConfig,
-      database: {
-        has_url: !!process.env.DATABASE_URL,
-        environment: process.env.NODE_ENV
-      }
-    },
-    status: cloudinaryConfig.configured ? '✅ Configurado' : '❌ No configurado',
-    message: cloudinaryConfig.configured 
-      ? 'Todos los servicios están configurados correctamente'
-      : 'Verifica las variables de entorno de Cloudinary'
-  };
-}
+    return {
+      services: {
+        cloudinary: cloudinaryConfig,
+        database: {
+          has_url: !!process.env.DATABASE_URL,
+          environment: process.env.NODE_ENV
+        }
+      },
+      status: cloudinaryConfig.configured ? '✅ Configurado' : '❌ No configurado',
+      message: cloudinaryConfig.configured
+        ? 'Todos los servicios están configurados correctamente'
+        : 'Verifica las variables de entorno de Cloudinary'
+    };
+  }
 }
