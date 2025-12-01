@@ -1,5 +1,7 @@
 // src/multimedia/multimedia.service.ts
-import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, 
+  BadRequestException, Logger, Inject, forwardRef 
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Multimedia } from './entities/multimedia.entity';
@@ -8,6 +10,7 @@ import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { MultimediaResponseDto } from './dto/multimedia-response.dto';
 import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
+import { TestimonialsService } from '../testimonials/testimonials.service';
 
 @Injectable()
 export class MultimediaService {
@@ -19,6 +22,8 @@ export class MultimediaService {
     @InjectRepository(Testimonial)
     private readonly testimonialRepository: Repository<Testimonial>,
     private readonly cloudinaryMediaService: CloudinaryMediaService,
+    @Inject(forwardRef(() => TestimonialsService))
+    private readonly testimonialsService: TestimonialsService,
   ) {}
 
   /**
@@ -48,12 +53,12 @@ export class MultimediaService {
     tipo: MultimediaType,
     descripcion?: string,
   ): Promise<{ multimedia: Multimedia; cloudinaryData: any }> {
-    this.logger.log(`📤 Subiendo ${tipo} para testimonio: ${testimonioId}`);
+    this.logger.log(`Subiendo ${tipo} para testimonio: ${testimonioId}`);
 
     const testimonio = await this.verifyTestimonioExists(testimonioId);
 
     try {
-      // Usar CloudinaryMediaService para subir el archivo
+      // Subir a Cloudinary
       const cloudinaryResult = await this.cloudinaryMediaService.uploadMedia(
         file.buffer,
         testimonioId,
@@ -61,23 +66,17 @@ export class MultimediaService {
         descripcion
       );
 
-      // Crear registro en la base de datos
-      const multimediaData = {
+      // Crear registro en DB
+      const multimedia = this.multimediaRepository.create({
         tipo,
         url: cloudinaryResult.media.secure_url,
         publicId: cloudinaryResult.media.public_id,
         descripcion,
         nombreArchivo: file.originalname,
-      };
-
-      const multimedia = this.multimediaRepository.create({
-        ...multimediaData,
         testimonio: testimonio,
       });
 
       const savedMultimedia = await this.multimediaRepository.save(multimedia);
-
-      this.logger.log(`✅ Multimedia creado exitosamente: ${savedMultimedia.id}`);
 
       return {
         multimedia: savedMultimedia,
@@ -85,7 +84,7 @@ export class MultimediaService {
       };
 
     } catch (error) {
-      this.logger.error(`❌ Error subiendo multimedia: ${error.message}`);
+      this.logger.error(`Error subiendo multimedia: ${error.message}`);
       throw new BadRequestException(`Error subiendo archivo: ${error.message}`);
     }
   }

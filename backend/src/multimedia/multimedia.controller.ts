@@ -1,18 +1,13 @@
+// src/multimedia/multimedia.controller.ts (mantener endpoints de consulta)
 import {
   Controller,
   Get,
-  Post,
   Delete,
   Param,
   Query,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  Body,
   ParseUUIDPipe
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -20,10 +15,8 @@ import { UserRole } from '../users/interfaces/user-role.enum';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { MultimediaService } from './multimedia.service';
 import { MultimediaResponseDto } from './dto/multimedia-response.dto';
-import { UploadMultimediaDto } from './dto/upload-multimedia.dto';
 import {
   MultimediaSwagger,
-  UploadMediaSwagger,
   ListTestimonioMediaSwagger,
   DeleteMediaSwagger,
   GetMediaUrlsSwagger,
@@ -39,43 +32,7 @@ export class MultimediaController {
     private readonly multimediaService: MultimediaService  
   ) { }
 
-  @Post('upload/:testimonioId')
-  @Roles(UserRole.EDITOR, UserRole.CONTRIBUTOR)
-  @UseInterceptors(FileInterceptor('file'))
-  @UploadMediaSwagger()
-  async uploadMedia(
-    @Param('testimonioId', new ParseUUIDPipe()) testimonioId: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: UploadMultimediaDto
-  ): Promise<MultimediaResponseDto> {
-    const { tipo, descripcion } = body;
-
-    console.log('🔍 DEBUG - Body recibido:', body);
-    console.log('🔍 DEBUG - Tipo recibido:', tipo);
-    console.log('🔍 DEBUG - File recibido:', file?.originalname);
-
-    if (!file) {
-      throw new BadRequestException('No se proporcionó archivo');
-    }
-
-    if (!tipo) {
-      throw new BadRequestException('El campo "tipo" es requerido');
-    }
-
-    if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
-      throw new BadRequestException(`Tipo debe ser ${MultimediaType.IMAGE} o ${MultimediaType.VIDEO}. Recibido: ${tipo}`);
-    }
-
-    const result = await this.multimediaService.createWithUpload(
-      testimonioId,
-      file,
-      tipo,
-      descripcion
-    );
-
-    return this.multimediaService.toResponseDto(result.multimedia);
-  }
-
+  // ✅ Mantener endpoints de consulta
   @Get('testimonio/:testimonioId')
   @ListTestimonioMediaSwagger()
   async listTestimonioMedia(
