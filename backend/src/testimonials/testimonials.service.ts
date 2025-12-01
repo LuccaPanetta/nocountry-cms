@@ -27,7 +27,6 @@ export class TestimonialsService {
   ) {}
 
   async create(createTestimonialDto: CreateTestimonialDto, user: User) {
-  // ✅ Verificar que la categoría existe
   const category = await this.categoryRepository.findOne({
     where: { id: createTestimonialDto.categoryId }
   });
@@ -36,20 +35,17 @@ export class TestimonialsService {
     throw new BadRequestException('La categoría especificada no existe');
   }
 
-  // ✅ Buscar los tags si se proporcionan
   let tags: Tag[] = [];
   if (createTestimonialDto.tagIds && createTestimonialDto.tagIds.length > 0) {
     tags = await this.tagRepository.find({
       where: { id: In(createTestimonialDto.tagIds) }
     });
 
-    // ✅ DESCOMENTAR la validación de tags
     if (tags.length !== createTestimonialDto.tagIds.length) {
       throw new BadRequestException('Algunos tags no existen');
     }
   }
 
-  // ✅ Crear el testimonio - ASIGNAR directamente el objeto category
   const testimonial = this.testimonialRepository.create({
     contenido: createTestimonialDto.contenido,
     autorNombre: createTestimonialDto.autorNombre,
@@ -73,7 +69,6 @@ export class TestimonialsService {
       .leftJoinAndSelect('testimonial.tags', 'tag')
       .leftJoinAndSelect('testimonial.user', 'user');
 
-    // ✅ Solo mostrar aprobados para requests públicos
     if (isPublicRequest) {
       queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
         approvedStatus: TestimonialStatus.APPROVED 
@@ -109,8 +104,7 @@ export class TestimonialsService {
 
  async update(id: string, updateTestimonialDto: UpdateTestimonialDto) {
   const testimonial = await this.findOne(id);
-  
-  // ✅ Manejar actualización de categoría si se proporciona
+
   if (updateTestimonialDto.categoryId) {
     const category = await this.categoryRepository.findOne({
       where: { id: updateTestimonialDto.categoryId }
@@ -122,7 +116,6 @@ export class TestimonialsService {
     testimonial.category = category; // ← Asignar el objeto category
   }
 
-  // ✅ Manejar actualización de tags si se proporcionan
   if (updateTestimonialDto.tagIds) {
     const tags = await this.tagRepository.find({
       where: { id: In(updateTestimonialDto.tagIds) }
@@ -134,7 +127,6 @@ export class TestimonialsService {
     testimonial.tags = tags;
   }
 
-  // ✅ Actualizar otros campos
   Object.assign(testimonial, {
     contenido: updateTestimonialDto.contenido,
     autorNombre: updateTestimonialDto.autorNombre,

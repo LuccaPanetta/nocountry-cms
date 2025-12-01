@@ -23,7 +23,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.CONTRIBUTOR, // porque visitante NO se registra
+    default: UserRole.CONTRIBUTOR,
   })
   rol: UserRole;
 

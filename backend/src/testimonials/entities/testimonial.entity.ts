@@ -47,34 +47,30 @@ export class Testimonial {
   })
   status: TestimonialStatus; 
 
-  // ✅ CORREGIDO: Relación con categoría - ESPECIFICAR NOMBRE DE COLUMNA
   @ManyToOne(() => Category, { eager: true })
   @JoinColumn({ name: 'category_id' }) // ← Nombre real en la base de datos
   category: Category;
 
-  // Relación ManyToMany con tags
   @ManyToMany(() => Tag, { cascade: true, eager: true }) 
   @JoinTable({
     name: 'testimonial_tags', 
     joinColumn: {
-      name: 'testimonial_id', // ← Nombre real en la base de datos
+      name: 'testimonial_id', 
       referencedColumnName: 'id',
     },
     inverseJoinColumn: {
-      name: 'tag_id', // ← Nombre real en la base de datos
+      name: 'tag_id', 
       referencedColumnName: 'id',
     },
   })
   tags: Tag[]; 
-  
-  // Relación OneToMany con multimedia
+
   @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, { 
     cascade: true,
     onDelete: 'CASCADE'
   })
   multimedias: Multimedia[];
 
-  // ✅ CORREGIDO: Relación con usuario - ESPECIFICAR NOMBRE DE COLUMNA
   @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'user_id' }) // ← Nombre real en la base de datos
   user?: User;
@@ -85,7 +81,6 @@ export class Testimonial {
   @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
 
-  // Métodos helpers...
   getImagenPrincipal(): Multimedia | undefined {
     return this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
   }
