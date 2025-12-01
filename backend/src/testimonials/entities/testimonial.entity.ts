@@ -1,16 +1,16 @@
 // src/testimonials/entities/testimonial.entity.ts
 import { User } from '../../users/entities/user.entity';
-import { 
-  Entity, 
-  Column, 
-  PrimaryGeneratedColumn, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
   ManyToMany,
-  OneToMany, 
-  JoinColumn, 
-  JoinTable 
+  OneToMany,
+  JoinColumn,
+  JoinTable
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
@@ -23,7 +23,7 @@ export enum TestimonialStatus {
   REJECTED = 'rejected',
 }
 
-@Entity('testimonios') 
+@Entity('testimonios')
 export class Testimonial {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -32,7 +32,7 @@ export class Testimonial {
   contenido: string;
 
   @Column({ nullable: true })
-  autorNombre: string; 
+  autorNombre: string;
 
   @Column({ nullable: true })
   videoUrl: string;
@@ -45,27 +45,24 @@ export class Testimonial {
     enum: TestimonialStatus,
     default: TestimonialStatus.PENDING,
   })
-  status: TestimonialStatus; 
+  status: TestimonialStatus;
 
   @ManyToOne(() => Category, { eager: true })
   @JoinColumn({ name: 'category_id' }) // ← Nombre real en la base de datos
   category: Category;
 
-  @ManyToMany(() => Tag, { eager: true }) 
-  @JoinTable({
-    name: 'testimonial_tags', 
-    joinColumn: {
-      name: 'testimonial_id', 
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'tag_id', 
-      referencedColumnName: 'id',
-    },
+  @ManyToMany(() => Tag, (tag) => tag.testimonials, {
+    cascade: true,
   })
-  tags: Tag[]; 
+  @JoinTable({
+    name: 'testimonial_tags',
+    joinColumn: { name: 'testimonialId' },
+    inverseJoinColumn: { name: 'tagId' },
+  })
+  tags: Tag[];
 
-  @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, { 
+
+  @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, {
     cascade: true,
     onDelete: 'CASCADE'
   })

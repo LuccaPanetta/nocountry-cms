@@ -16,7 +16,7 @@ export class Tag {
   @CreateDateColumn()
   creadoEn: Date;
 
-  // ✅ AGREGAR relación inversa
-  @ManyToMany(() => Testimonial, testimonial => testimonial.tags)
-  testimonials: Testimonial[];
+@ManyToMany(() => Testimonial, (testimonial) => testimonial.tags)
+testimonials: Testimonial[];
+
 }

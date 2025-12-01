@@ -3,14 +3,17 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 config();
 
+// Si NO es producción → estamos en desarrollo
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
-  
-  // Configuración de conexión
-  ...(process.env.DATABASE_URL 
-    ? { url: process.env.DATABASE_URL }
+
+  // 🔌 Conexión: usa DATABASE_URL o variables locales
+  ...(process.env.DATABASE_URL
+    ? { 
+        url: process.env.DATABASE_URL 
+      }
     : {
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '5432', 10),
@@ -19,31 +22,31 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
         database: process.env.DB_NAME || 'testimonial_cms',
       }
   ),
-  
-  // ✅ SYNCHRONIZE: true en desarrollo para recrear tablas
-  synchronize: true, // ¡Debe ser true para desarrollo!
-  
-  // SSL para producción
+
+  // 🔥 Solo sincronizar DB en desarrollo
+  synchronize: isDevelopment,
+
+  // 🔐 SSL solo para producción (Render)
   ssl: isDevelopment ? false : { rejectUnauthorized: false },
-  extra: isDevelopment ? {} : { 
-    ssl: { 
-      rejectUnauthorized: false 
-    } 
-  },
-  
-  // Entidades
+  extra: isDevelopment
+    ? {}
+    : { ssl: { rejectUnauthorized: false } },
+
+  // 📦 Auto cargar entidades
   autoLoadEntities: true,
   entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  
-  // Logging
-  logging: true, // Activar para ver qué está pasando
-  
+
+  // 📝 logging solo en desarrollo
+  logging: isDevelopment,
+
   retryAttempts: 5,
   retryDelay: 3000,
 };
 
+// 🖨️ Log real
 console.log('🔧 CONFIGURACIÓN TYPEORM:', {
-  environment: process.env.NODE_ENV || 'development',
-  synchronize: true, // Debe ser true
+  environment: process.env.NODE_ENV,
+  synchronize: isDevelopment,   // <-- correcto
   usingDatabaseUrl: !!process.env.DATABASE_URL,
+  sslEnabled: !isDevelopment,
 });
