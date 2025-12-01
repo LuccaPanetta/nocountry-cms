@@ -118,14 +118,14 @@ export class UsersSeed {
       {
         nombre: 'Editor',
         apellido: 'Uno',
-        email: 'editor1@testimonialcms.com',
+        email: 'editor@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
       {
         nombre: 'Editor', 
         apellido: 'Dos',
-        email: 'editor2@testimonialcms.com',
+        email: 'edito2@testimonialcms.com',
         rol: UserRole.EDITOR,
         password: hashedPassword,
       },
