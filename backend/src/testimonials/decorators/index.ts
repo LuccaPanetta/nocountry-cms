@@ -18,7 +18,6 @@ export function TestimonialsSwagger() {
 
 export function CreateTestimonialSwagger() {
   return applyDecorators(
-    Roles(UserRole.CONTRIBUTOR, UserRole.EDITOR, UserRole.ADMIN), // ✅ Incluye todos los roles que pueden crear
     ApiOperation({ 
       summary: 'Crear un nuevo testimonio',
       description: 'Crea un nuevo testimonio en el sistema'
@@ -45,7 +44,6 @@ export function CreateTestimonialSwagger() {
 
 export function FindAllTestimonialsSwagger() {
   return applyDecorators(
-    Roles(UserRole.EDITOR, UserRole.ADMIN), // ✅ Solo editor y admin pueden ver la lista completa
     ApiOperation({ 
       summary: 'Obtener todos los testimonios',
       description: 'Retorna una lista de testimonios con filtros y paginación'
@@ -85,7 +83,6 @@ export function FindOneTestimonialSwagger() {
 
 export function UpdateTestimonialSwagger() {
   return applyDecorators(
-    Roles(UserRole.EDITOR, UserRole.ADMIN),
     ApiOperation({ 
       summary: 'Actualizar un testimonio',
       description: 'Actualiza el contenido de un testimonio existente'
@@ -112,7 +109,6 @@ export function UpdateTestimonialSwagger() {
 
 export function DeleteTestimonialSwagger() {
   return applyDecorators(
-    Roles(UserRole.ADMIN),
     ApiOperation({ 
       summary: 'Eliminar un testimonio',
       description: 'Elimina permanentemente un testimonio del sistema (solo administradores)'
@@ -138,7 +134,6 @@ export function DeleteTestimonialSwagger() {
 
 export function UpdateStatusSwagger() {
   return applyDecorators(
-    Roles(UserRole.EDITOR, UserRole.ADMIN),
     ApiOperation({ 
       summary: 'Actualizar estado de un testimonio',
       description: 'Aprueba o rechaza un testimonio (moderación)'
