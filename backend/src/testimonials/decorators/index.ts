@@ -1,244 +1,449 @@
-// src/testimonials/decorators/index.ts
+// src/testimonials/decorators/index.ts - VERSIÓN COMPLETA
 import { applyDecorators } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBody, 
+  ApiBearerAuth, 
+  ApiConsumes,
+  ApiQuery,
+  ApiParam 
+} from '@nestjs/swagger';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../users/interfaces/user-role.enum';
-import { CreateTestimonialDto } from '../dto/create-testimonial.dto';
-import { UpdateTestimonialDto } from '../dto/update-testimonial.dto';
-import { UpdateStatusDto } from '../dto/update-status.dto';
 import { Public } from '../../auth/decorators/public.decorator';
-import { MultimediaType } from 'src/multimedia/enums/multimedia-type.enum';
-// ✅ Decorador principal para el controller (como UsersSwagger)
+import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
+
+// ✅ Decorador principal para el controller
 export function TestimonialsSwagger() {
   return applyDecorators(
-    ApiTags('testimonials'),
-    ApiBearerAuth('JWT-auth') // ✅ ESTE ES EL CLAVE QUE FALTABA
+    ApiTags('📝 Testimonios'),
+    ApiBearerAuth('JWT-auth')
   );
 }
 
 export function CreateTestimonialSwagger() {
   return applyDecorators(
     ApiOperation({
-      summary: 'Crear un nuevo testimonio',
-      description: 'Crea un nuevo testimonio en el sistema. Puede incluir archivo multimedia.'
+      summary: '📝 Crear nuevo testimonio',
+      description: `## 📋 Información importante:
+      
+**Para categorías y tags:**
+1. Primero consulta los endpoints:
+   - \`GET /categories\` → Lista de categorías disponibles
+   - \`GET /tags\` → Lista de tags disponibles
+2. Selecciona los IDs correspondientes
+3. Envía los IDs en el request
+
+**Para archivos multimedia:**
+- Imágenes: JPEG, PNG, WEBP (máx 5MB)
+- Videos: MP4, MOV (máx 50MB)`
     }),
     ApiConsumes('multipart/form-data'),
     ApiBody({
-      description: 'FormData para crear testimonio',
+      description: 'Formulario para crear testimonio',
       schema: {
         type: 'object',
         required: ['contenido', 'categoryId'],
         properties: {
+          contenido: {
+            type: 'string',
+            description: `**📖 Contenido principal**`,
+            example: 'Este servicio superó todas mis expectativas...',
+            minLength: 10,
+            maxLength: 2000
+          },
           titulo: {
             type: 'string',
-            description: 'Título del testimonio (opcional)',
-            example: 'Mi experiencia con el producto X'
+            description: '🏷️ Título breve',
+            example: 'Experiencia increíble con Producto X',
+            maxLength: 200
           },
-
           autorNombre: {
             type: 'string',
-            description: 'Nombre del autor (opcional)',
-            example: 'Juan Pérez'
+            description: '👤 Nombre completo del autor',
+            example: 'María González',
+            maxLength: 100
           },
-
           empresa: {
             type: 'string',
-            description: 'Empresa del autor (opcional)',
-            example: 'Tech Solutions Inc.'
+            description: '🏢 Empresa u organización',
+            example: 'Innovatech Solutions',
+            maxLength: 150
           },
-
           cargo: {
             type: 'string',
-            description: 'Cargo del autor (opcional)',
-            example: 'CEO'
+            description: '💼 Posición o cargo',
+            example: 'Directora de Marketing',
+            maxLength: 100
           },
-
           categoryId: {
             type: 'string',
             format: 'uuid',
-            description: 'ID de la categoría',
+            description: `**📂 Categoría del testimonio** 
+            
+**Requerido.** ID de categoría. Consulta primero: \`GET /categories\``,
             example: '123e4567-e89b-12d3-a456-426614174000'
           },
-
           tagIds: {
             type: 'string',
-            description: 'IDs de tags como JSON array string',
-            example: '["123e4567-e89b-12d3-a456-426614174001"]'
-          },
+            description: `**🏷️ Etiquetas del testimonio** 
+            
+**Formato:** Array JSON de IDs como string.
+Consulta primero: \`GET /tags\`
 
-          contenido: {
+**Ejemplo de valor:**
+\`\`\`json
+["323e4567-e89b-12d3-a456-426614174000", "423e4567-e89b-12d3-a456-426614174000"]
+\`\`\``,
+            example: '["323e4567-e89b-12d3-a456-426614174000", "423e4567-e89b-12d3-a456-426614174000"]'
+          },
+          videoUrl: {
             type: 'string',
-            description: 'Contenido principal del testimonio',
-            example: 'Este es un testimonio increíble...'
+            description: `**🎥 URL de video externo**`,
+            example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
           },
-
           tipo: {
             type: 'string',
             enum: Object.values(MultimediaType),
-            description: 'Tipo de archivo (si se sube archivo)',
-            example: MultimediaType.IMAGE
+            description: `**📹 Tipo de archivo**`,
+            example: MultimediaType.IMAGE,
+            default: MultimediaType.IMAGE
           },
-
           file: {
             type: 'string',
             format: 'binary',
-            description: 'Archivo de imagen (JPEG, PNG, WEBP) o video (MP4, MOV)'
+            description: `**📎 Archivo multimedia** 
+            
+- **Imágenes:** JPEG, PNG, WEBP (máx 5MB)
+- **Videos:** MP4, MOV (máx 50MB)`
           },
-
-
-
-
-          videoUrl: {
-            type: 'string',
-            description: 'URL de video externo (opcional)',
-            example: 'https://www.youtube.com/watch?v=abc123'
-          },
-
           descripcion: {
             type: 'string',
-            description: 'Descripción del archivo (opcional)',
-            example: 'Imagen principal del testimonio'
-          },
-          status: {
-            type: 'string',
-            enum: ['pending', 'approved', 'rejected'],
-            description: 'Estado del testimonio (opcional)',
-            default: 'pending'
+            description: '📝 Descripción del archivo',
+            example: 'Foto del cliente usando nuestro producto',
+            maxLength: 500
           }
         }
       }
     }),
-    ApiResponse({
-      status: 201,
-      description: 'Testimonio creado exitosamente'
+    ApiResponse({ 
+      status: 201, 
+      description: '✅ Testimonio creado exitosamente' 
     }),
-    ApiResponse({
-      status: 400,
-      description: 'Datos del testimonio inválidos'
+    ApiResponse({ 
+      status: 400, 
+      description: '❌ Datos inválidos' 
     }),
-    ApiResponse({
-      status: 401,
-      description: 'No autorizado - Token inválido'
+    ApiResponse({ 
+      status: 401, 
+      description: '🔒 No autorizado' 
     }),
-    ApiResponse({
-      status: 403,
-      description: 'Prohibido - Permisos insuficientes'
+    ApiResponse({ 
+      status: 403, 
+      description: '🚫 Permisos insuficientes' 
     })
   );
 }
 
+// 🔍 Mantener FindAllTestimonialsSwagger
 export function FindAllTestimonialsSwagger() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'Obtener todos los testimonios',
-      description: 'Retorna una lista de testimonios con filtros y paginación'
+    ApiOperation({ 
+      summary: '📋 Listar testimonios',
+      description: 'Obtiene todos los testimonios con filtros opcionales.'
     }),
-    ApiResponse({
-      status: 200,
-      description: 'Lista de testimonios obtenida exitosamente'
+    ApiQuery({
+      name: 'status',
+      required: false,
+      description: 'Filtrar por estado',
+      enum: ['pending', 'approved', 'rejected'],
+      example: 'approved'
     }),
-    ApiResponse({
-      status: 401,
-      description: 'No autorizado - Token inválido'
+    ApiQuery({
+      name: 'categoryId',
+      required: false,
+      description: 'Filtrar por ID de categoría',
+      example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({
-      status: 403,
-      description: 'Prohibido - Permisos insuficientes'
+    ApiQuery({
+      name: 'tags',
+      required: false,
+      description: 'Filtrar por tags (nombres separados por comas)',
+      example: 'tecnologia,servicio'
+    }),
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Lista obtenida exitosamente' 
+    }),
+    ApiResponse({ 
+      status: 401, 
+      description: '🔒 No autorizado' 
+    }),
+    ApiResponse({ 
+      status: 403, 
+      description: '🚫 Permisos insuficientes' 
     })
   );
 }
 
+// 🔍 Mantener FindOneTestimonialSwagger
 export function FindOneTestimonialSwagger() {
   return applyDecorators(
-    Public(), // ✅ Este endpoint es público
-    ApiOperation({
-      summary: 'Obtener un testimonio específico',
-      description: 'Retorna un testimonio específico por ID (acceso público)'
+    Public(),
+    ApiOperation({ 
+      summary: '🔍 Obtener testimonio específico',
+      description: 'Obtiene un testimonio por su ID. **Acceso público**.'
     }),
-    ApiResponse({
-      status: 200,
-      description: 'Testimonio obtenido exitosamente'
+    ApiParam({
+      name: 'id',
+      description: 'ID del testimonio',
+      example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({
-      status: 404,
-      description: 'Testimonio no encontrado'
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Testimonio obtenido' 
+    }),
+    ApiResponse({ 
+      status: 404, 
+      description: '❌ No encontrado' 
     })
   );
 }
 
+// ✏️ Mantener UpdateTestimonialSwagger
 export function UpdateTestimonialSwagger() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'Actualizar un testimonio',
-      description: 'Actualiza el contenido de un testimonio existente'
+    ApiOperation({ 
+      summary: '✏️ Actualizar testimonio',
+      description: 'Actualiza un testimonio existente.'
     }),
-    ApiBody({ type: UpdateTestimonialDto }),
-    ApiResponse({
-      status: 200,
-      description: 'Testimonio actualizado exitosamente'
+    ApiConsumes('multipart/form-data'),
+    ApiParam({
+      name: 'id',
+      description: 'ID del testimonio a actualizar',
+      example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({
-      status: 404,
-      description: 'Testimonio no encontrado'
+    ApiBody({
+      description: 'Campos a actualizar (todos opcionales)',
+      schema: {
+        type: 'object',
+        properties: {
+          contenido: { type: 'string' },
+          titulo: { type: 'string' },
+          autorNombre: { type: 'string' },
+          empresa: { type: 'string' },
+          cargo: { type: 'string' },
+          videoUrl: { type: 'string' },
+          categoryId: { 
+            type: 'string', 
+            format: 'uuid',
+            description: 'Nueva categoría',
+          },
+          tagIds: { 
+            type: 'string',
+            description: 'Nuevos tags como JSON array',
+          },
+          file: { 
+            type: 'string', 
+            format: 'binary',
+            description: 'Nuevo archivo',
+          },
+          tipo: { 
+            type: 'string', 
+            enum: Object.values(MultimediaType),
+          },
+          descripcion: { type: 'string' },
+          status: { 
+            type: 'string', 
+            enum: ['pending', 'approved', 'rejected'],
+          }
+        }
+      }
     }),
-    ApiResponse({
-      status: 401,
-      description: 'No autorizado - Token inválido'
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Testimonio actualizado' 
     }),
-    ApiResponse({
-      status: 403,
-      description: 'Prohibido - Permisos insuficientes'
+    ApiResponse({ 
+      status: 404, 
+      description: '❌ No encontrado' 
+    }),
+    ApiResponse({ 
+      status: 401, 
+      description: '🔒 No autorizado' 
+    }),
+    ApiResponse({ 
+      status: 403, 
+      description: '🚫 Permisos insuficientes' 
     })
   );
 }
 
+// 🗑️ Mantener DeleteTestimonialSwagger
 export function DeleteTestimonialSwagger() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'Eliminar un testimonio',
-      description: 'Elimina permanentemente un testimonio del sistema (solo administradores)'
+    ApiOperation({ 
+      summary: '🗑️ Eliminar testimonio',
+      description: 'Elimina permanentemente un testimonio. **Solo administradores**.'
     }),
-    ApiResponse({
-      status: 200,
-      description: 'Testimonio eliminado exitosamente'
+    ApiParam({
+      name: 'id',
+      description: 'ID del testimonio a eliminar',
+      example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({
-      status: 404,
-      description: 'Testimonio no encontrado'
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Testimonio eliminado' 
     }),
-    ApiResponse({
-      status: 401,
-      description: 'No autorizado - Token inválido'
+    ApiResponse({ 
+      status: 404, 
+      description: '❌ No encontrado' 
     }),
-    ApiResponse({
-      status: 403,
-      description: 'Prohibido - Se requieren permisos de administrador'
+    ApiResponse({ 
+      status: 401, 
+      description: '🔒 No autorizado' 
+    }),
+    ApiResponse({ 
+      status: 403, 
+      description: '🚫 Se requieren permisos de administrador' 
     })
   );
 }
 
+// 📊 Mantener UpdateStatusSwagger
 export function UpdateStatusSwagger() {
   return applyDecorators(
-    ApiOperation({
-      summary: 'Actualizar estado de un testimonio',
-      description: 'Aprueba o rechaza un testimonio (moderación)'
+    ApiOperation({ 
+      summary: '📊 Moderar testimonio',
+      description: 'Aprueba o rechaza un testimonio.'
     }),
-    ApiBody({ type: UpdateStatusDto }),
+    ApiParam({
+      name: 'id',
+      description: 'ID del testimonio',
+      example: '123e4567-e89b-12d3-a456-426614174000'
+    }),
+    ApiBody({ 
+      description: 'Nuevo estado',
+      schema: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['pending', 'approved', 'rejected'],
+            description: '📊 Nuevo estado',
+            example: 'approved'
+          }
+        }
+      }
+    }),
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Estado actualizado' 
+    }),
+    ApiResponse({ 
+      status: 404, 
+      description: '❌ No encontrado' 
+    }),
+    ApiResponse({ 
+      status: 401, 
+      description: '🔒 No autorizado' 
+    }),
+    ApiResponse({ 
+      status: 403, 
+      description: '🚫 Permisos insuficientes' 
+    })
+  );
+}
+
+// 🆕 Opcional: Decorador para multimedia específico
+export function UpdateTestimonialMultimediaSwagger() {
+  return applyDecorators(
+    ApiOperation({ 
+      summary: '🖼️ Actualizar solo multimedia',
+      description: 'Actualiza solo el archivo multimedia de un testimonio.'
+    }),
+    ApiConsumes('multipart/form-data'),
+    ApiParam({
+      name: 'id',
+      description: 'ID del testimonio',
+      example: '123e4567-e89b-12d3-a456-426614174000'
+    }),
+    ApiBody({
+      description: 'Nuevo archivo multimedia',
+      schema: {
+        type: 'object',
+        required: ['file', 'tipo'],
+        properties: {
+          file: {
+            type: 'string',
+            format: 'binary',
+            description: '📎 Nuevo archivo'
+          },
+          tipo: {
+            type: 'string',
+            enum: Object.values(MultimediaType),
+            description: '📹 Tipo de archivo'
+          },
+          descripcion: {
+            type: 'string',
+            description: '📝 Descripción'
+          }
+        }
+      }
+    }),
+    ApiResponse({ 
+      status: 200, 
+      description: '✅ Multimedia actualizado' 
+    }),
+    ApiResponse({ 
+      status: 404, 
+      description: '❌ No encontrado' 
+    })
+  );
+}
+
+// 🆕 Opcional: Para formularios frontend
+export function TestimonialFormDataSwagger() {
+  return applyDecorators(
+    ApiOperation({
+      summary: '📋 Datos para formulario',
+      description: 'Devuelve estructura y datos para construir formulario frontend.'
+    }),
     ApiResponse({
       status: 200,
-      description: 'Estado del testimonio actualizado exitosamente'
-    }),
-    ApiResponse({
-      status: 404,
-      description: 'Testimonio no encontrado'
-    }),
-    ApiResponse({
-      status: 401,
-      description: 'No autorizado - Token inválido'
-    }),
-    ApiResponse({
-      status: 403,
-      description: 'Prohibido - Permisos insuficientes'
+      description: 'Datos del formulario',
+      schema: {
+        type: 'object',
+        properties: {
+          categories: {
+            type: 'array',
+            description: 'Categorías para selectbox',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                nombre: { type: 'string' },
+                descripcion: { type: 'string' }
+              }
+            }
+          },
+          tags: {
+            type: 'array',
+            description: 'Tags para multi-select',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                nombre: { type: 'string' },
+                color: { type: 'string' }
+              }
+            }
+          }
+        }
+      }
     })
   );
 }
