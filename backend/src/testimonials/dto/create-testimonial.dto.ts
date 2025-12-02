@@ -105,7 +105,7 @@ export class CreateTestimonialDto {
   @IsUUID('4', { each: true })
   tagIds?: string[];
 
-  @ApiProperty({
+ /*  @ApiProperty({
     description: 'Estado del testimonio',
     enum: TestimonialStatus,
     default: TestimonialStatus.PENDING,
@@ -113,5 +113,5 @@ export class CreateTestimonialDto {
   })
   @IsOptional()
   @IsEnum(TestimonialStatus)
-  status?: TestimonialStatus;
+  status?: TestimonialStatus; */
 }

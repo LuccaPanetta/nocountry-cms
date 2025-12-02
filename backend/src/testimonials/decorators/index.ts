@@ -1,14 +1,14 @@
 // src/testimonials/decorators/index.ts - VERSIÓN COMPLETA
 import { applyDecorators } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBody, 
-  ApiBearerAuth, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
   ApiConsumes,
   ApiQuery,
-  ApiParam 
+  ApiParam
 } from '@nestjs/swagger';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../users/interfaces/user-role.enum';
@@ -128,21 +128,21 @@ Consulta primero: \`GET /tags\`
         }
       }
     }),
-    ApiResponse({ 
-      status: 201, 
-      description: '✅ Testimonio creado exitosamente' 
+    ApiResponse({
+      status: 201,
+      description: '✅ Testimonio creado exitosamente'
     }),
-    ApiResponse({ 
-      status: 400, 
-      description: '❌ Datos inválidos' 
+    ApiResponse({
+      status: 400,
+      description: '❌ Datos inválidos'
     }),
-    ApiResponse({ 
-      status: 401, 
-      description: '🔒 No autorizado' 
+    ApiResponse({
+      status: 401,
+      description: '🔒 No autorizado'
     }),
-    ApiResponse({ 
-      status: 403, 
-      description: '🚫 Permisos insuficientes' 
+    ApiResponse({
+      status: 403,
+      description: '🚫 Permisos insuficientes'
     })
   );
 }
@@ -150,7 +150,7 @@ Consulta primero: \`GET /tags\`
 // 🔍 Mantener FindAllTestimonialsSwagger
 export function FindAllTestimonialsSwagger() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: '📋 Listar testimonios',
       description: 'Obtiene todos los testimonios con filtros opcionales.'
     }),
@@ -173,17 +173,17 @@ export function FindAllTestimonialsSwagger() {
       description: 'Filtrar por tags (nombres separados por comas)',
       example: 'tecnologia,servicio'
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Lista obtenida exitosamente' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Lista obtenida exitosamente'
     }),
-    ApiResponse({ 
-      status: 401, 
-      description: '🔒 No autorizado' 
+    ApiResponse({
+      status: 401,
+      description: '🔒 No autorizado'
     }),
-    ApiResponse({ 
-      status: 403, 
-      description: '🚫 Permisos insuficientes' 
+    ApiResponse({
+      status: 403,
+      description: '🚫 Permisos insuficientes'
     })
   );
 }
@@ -192,7 +192,7 @@ export function FindAllTestimonialsSwagger() {
 export function FindOneTestimonialSwagger() {
   return applyDecorators(
     Public(),
-    ApiOperation({ 
+    ApiOperation({
       summary: '🔍 Obtener testimonio específico',
       description: 'Obtiene un testimonio por su ID. **Acceso público**.'
     }),
@@ -201,13 +201,13 @@ export function FindOneTestimonialSwagger() {
       description: 'ID del testimonio',
       example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Testimonio obtenido' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Testimonio obtenido'
     }),
-    ApiResponse({ 
-      status: 404, 
-      description: '❌ No encontrado' 
+    ApiResponse({
+      status: 404,
+      description: '❌ No encontrado'
     })
   );
 }
@@ -215,7 +215,7 @@ export function FindOneTestimonialSwagger() {
 // ✏️ Mantener UpdateTestimonialSwagger
 export function UpdateTestimonialSwagger() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: '✏️ Actualizar testimonio',
       description: 'Actualiza un testimonio existente.'
     }),
@@ -236,47 +236,53 @@ export function UpdateTestimonialSwagger() {
           empresa: { type: 'string' },
           cargo: { type: 'string' },
           videoUrl: { type: 'string' },
-          categoryId: { 
-            type: 'string', 
+          categoryId: {
+            type: 'string',
             format: 'uuid',
             description: 'Nueva categoría',
           },
-          tagIds: { 
+         tagIds: {
+  type: 'string',
+  description: `**🏷️ Etiquetas del testimonio** 
+  
+**Formato:** 
+1. JSON array: \`["uuid1","uuid2"]\`
+2. Lista separada por comas: \`uuid1,uuid2\`
+3. Un solo ID: \`uuid1\``,
+  example: '3d09faca-1bef-49da-ae64-08c211cc98a8,cda3620b-0e3e-4b7b-8eb8-d676b6dbf290'
+},
+          file: {
             type: 'string',
-            description: 'Nuevos tags como JSON array',
-          },
-          file: { 
-            type: 'string', 
             format: 'binary',
             description: 'Nuevo archivo',
           },
-          tipo: { 
-            type: 'string', 
+          tipo: {
+            type: 'string',
             enum: Object.values(MultimediaType),
           },
           descripcion: { type: 'string' },
-          status: { 
-            type: 'string', 
+          status: {
+            type: 'string',
             enum: ['pending', 'approved', 'rejected'],
           }
         }
       }
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Testimonio actualizado' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Testimonio actualizado'
     }),
-    ApiResponse({ 
-      status: 404, 
-      description: '❌ No encontrado' 
+    ApiResponse({
+      status: 404,
+      description: '❌ No encontrado'
     }),
-    ApiResponse({ 
-      status: 401, 
-      description: '🔒 No autorizado' 
+    ApiResponse({
+      status: 401,
+      description: '🔒 No autorizado'
     }),
-    ApiResponse({ 
-      status: 403, 
-      description: '🚫 Permisos insuficientes' 
+    ApiResponse({
+      status: 403,
+      description: '🚫 Permisos insuficientes'
     })
   );
 }
@@ -284,7 +290,7 @@ export function UpdateTestimonialSwagger() {
 // 🗑️ Mantener DeleteTestimonialSwagger
 export function DeleteTestimonialSwagger() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: '🗑️ Eliminar testimonio',
       description: 'Elimina permanentemente un testimonio. **Solo administradores**.'
     }),
@@ -293,21 +299,21 @@ export function DeleteTestimonialSwagger() {
       description: 'ID del testimonio a eliminar',
       example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Testimonio eliminado' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Testimonio eliminado'
     }),
-    ApiResponse({ 
-      status: 404, 
-      description: '❌ No encontrado' 
+    ApiResponse({
+      status: 404,
+      description: '❌ No encontrado'
     }),
-    ApiResponse({ 
-      status: 401, 
-      description: '🔒 No autorizado' 
+    ApiResponse({
+      status: 401,
+      description: '🔒 No autorizado'
     }),
-    ApiResponse({ 
-      status: 403, 
-      description: '🚫 Se requieren permisos de administrador' 
+    ApiResponse({
+      status: 403,
+      description: '🚫 Se requieren permisos de administrador'
     })
   );
 }
@@ -315,7 +321,7 @@ export function DeleteTestimonialSwagger() {
 // 📊 Mantener UpdateStatusSwagger
 export function UpdateStatusSwagger() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: '📊 Moderar testimonio',
       description: 'Aprueba o rechaza un testimonio.'
     }),
@@ -324,7 +330,7 @@ export function UpdateStatusSwagger() {
       description: 'ID del testimonio',
       example: '123e4567-e89b-12d3-a456-426614174000'
     }),
-    ApiBody({ 
+    ApiBody({
       description: 'Nuevo estado',
       schema: {
         type: 'object',
@@ -339,21 +345,21 @@ export function UpdateStatusSwagger() {
         }
       }
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Estado actualizado' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Estado actualizado'
     }),
-    ApiResponse({ 
-      status: 404, 
-      description: '❌ No encontrado' 
+    ApiResponse({
+      status: 404,
+      description: '❌ No encontrado'
     }),
-    ApiResponse({ 
-      status: 401, 
-      description: '🔒 No autorizado' 
+    ApiResponse({
+      status: 401,
+      description: '🔒 No autorizado'
     }),
-    ApiResponse({ 
-      status: 403, 
-      description: '🚫 Permisos insuficientes' 
+    ApiResponse({
+      status: 403,
+      description: '🚫 Permisos insuficientes'
     })
   );
 }
@@ -361,7 +367,7 @@ export function UpdateStatusSwagger() {
 // 🆕 Opcional: Decorador para multimedia específico
 export function UpdateTestimonialMultimediaSwagger() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: '🖼️ Actualizar solo multimedia',
       description: 'Actualiza solo el archivo multimedia de un testimonio.'
     }),
@@ -394,13 +400,13 @@ export function UpdateTestimonialMultimediaSwagger() {
         }
       }
     }),
-    ApiResponse({ 
-      status: 200, 
-      description: '✅ Multimedia actualizado' 
+    ApiResponse({
+      status: 200,
+      description: '✅ Multimedia actualizado'
     }),
-    ApiResponse({ 
-      status: 404, 
-      description: '❌ No encontrado' 
+    ApiResponse({
+      status: 404,
+      description: '❌ No encontrado'
     })
   );
 }

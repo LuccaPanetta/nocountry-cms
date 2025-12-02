@@ -1,15 +1,17 @@
-// src/testimonials/testimonials.controller.ts
+// src/testimonials/testimonials.controller.ts - VERSIÓN CORREGIDA
 import { 
   Controller, Get, Post, Body, Patch, Param, Delete, 
   Request, Query, UseInterceptors, UploadedFile, 
-  ParseUUIDPipe, BadRequestException, UseGuards 
+  ParseUUIDPipe, BadRequestException, UseGuards,
+  UsePipes, ValidationPipe 
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TestimonialsService } from './testimonials.service';
-import { CreateTestimonialDto } from './dto/create-testimonial.dto';
+import { CreateTestimonialFormDto } from './dto/create-testimonial-form.dto'; // ✅ Nuevo DTO
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { TransformFormDataInterceptor } from '../common/interceptors/transform-form-data.interceptor'; // ✅ Interceptor
 import {
   TestimonialsSwagger,
   CreateTestimonialSwagger,
@@ -33,42 +35,95 @@ export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
   @Post()
-  @CreateTestimonialSwagger()
-  @Roles(UserRole.CONTRIBUTOR)
-  @UseInterceptors(FileInterceptor('file'))
-  async create(
-    @Body() createTestimonialDto: CreateTestimonialDto,
-    @UploadedFile() file: Express.Multer.File,
-    @Request() req: any
-  ) {
-    // Si hay archivo, extraer tipo y descripción del body
-    let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
-    
-    if (file) {
-      // Obtener tipo del body o inferirlo del mimetype
-      const tipoFromBody = (createTestimonialDto as any).tipo;
-      const tipo = tipoFromBody || (file.mimetype.startsWith('image/') 
-        ? MultimediaType.IMAGE 
-        : MultimediaType.VIDEO);
-      
-      if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
-        throw new BadRequestException('Tipo de archivo no válido');
-      }
-      
-      multimediaData = {
-        tipo,
-        descripcion: (createTestimonialDto as any).descripcion || file.originalname
-      };
+@CreateTestimonialSwagger()
+@Roles(UserRole.CONTRIBUTOR)
+@UseInterceptors(
+  FileInterceptor('file'),
+  TransformFormDataInterceptor
+)
+@UsePipes(new ValidationPipe({ 
+  transform: true, 
+  whitelist: true,
+  forbidNonWhitelisted: false
+}))
+async create(
+  @Body() createTestimonialFormDto: CreateTestimonialFormDto,
+  @UploadedFile() file: Express.Multer.File,
+  @Request() req: any
+) {
+  console.log('---------------------------------------------------');
+  console.log('📥 INICIO: CREATE TESTIMONIAL');
+  console.log('📋 DTO crudo recibido (antes de validar):', createTestimonialFormDto);
+  console.log('📁 Archivo recibido:', file ? file.originalname : 'Ninguno');
+  console.log('👤 Usuario:', req.user?.id);
+
+  try {
+    // LOG 1: VALIDACIONES
+    console.log('🔎 Validando campos requeridos...');
+
+    if (!createTestimonialFormDto.contenido) {
+      console.error('❌ ERROR: contenido es requerido');
+      throw new BadRequestException('El campo "contenido" es requerido');
     }
 
-    return this.testimonialsService.createWithMedia(
+    if (!createTestimonialFormDto.categoryId) {
+      console.error('❌ ERROR: categoryId es requerido');
+      throw new BadRequestException('El campo "categoryId" es requerido');
+    }
+
+    // LOG 2: DETECTANDO TIPO DE MULTIMEDIA
+    let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+
+    if (file) {
+      const tipo = createTestimonialFormDto.tipo || 
+                   (file.mimetype.startsWith('image/') 
+                     ? MultimediaType.IMAGE 
+                     : MultimediaType.VIDEO);
+
+      console.log('🎬 Tipo multimedia detectado:', tipo);
+
+      if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
+        console.error('❌ ERROR: tipo inválido ->', tipo);
+        throw new BadRequestException(`Tipo de archivo no válido: ${tipo}`);
+      }
+
+      multimediaData = {
+        tipo,
+        descripcion: createTestimonialFormDto.descripcion || file.originalname
+      };
+
+      console.log('📦 Datos multimedia generados:', multimediaData);
+    }
+
+    // LOG 3: TRANSFORMACIÓN DE DTO
+    console.log('🔄 Transformando CreateTestimonialFormDto → CreateTestimonialDto...');
+    const createTestimonialDto = createTestimonialFormDto.toCreateTestimonialDto();
+
+    console.log('📘 DTO final transformado:', createTestimonialDto);
+
+    // LOG 4: LLAMADO AL SERVICE
+    console.log('🚀 Enviando DTO al service...');
+    const result = await this.testimonialsService.createWithMedia(
       createTestimonialDto,
       req.user,
       file,
       multimediaData
     );
-  }
 
+    console.log('✅ Testimonio creado correctamente');
+    console.log('---------------------------------------------------');
+    return result;
+
+  } catch (error) {
+    console.error('❌ ERROR EN CREATE TESTIMONIAL:', error.message);
+    console.error('📌 Stack:', error.stack);
+    console.log('---------------------------------------------------');
+
+    throw error; // vuelve a lanzar el error original
+  }
+}
+
+  // ... resto de métodos permanecen igual
   @Get()
   @FindAllTestimonialsSwagger()
   @Roles(UserRole.EDITOR, UserRole.ADMIN)
@@ -86,7 +141,10 @@ export class TestimonialsController {
   @Patch(':id')
   @UpdateTestimonialSwagger()
   @Roles(UserRole.EDITOR, UserRole.ADMIN)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file'),
+    TransformFormDataInterceptor // ✅ También para update
+  )
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateTestimonialDto: UpdateTestimonialDto,

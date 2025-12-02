@@ -75,7 +75,7 @@ export class TestimonialsService {
         category: category,
         tags: tags,
         user: user,
-        status: createTestimonialDto.status || TestimonialStatus.PENDING,
+        status: TestimonialStatus.PENDING,
       });
 
       const savedTestimonial = await this.testimonialRepository.save(testimonial);
@@ -173,8 +173,7 @@ export class TestimonialsService {
         autorNombre: updateTestimonialDto.autorNombre,
         empresa: updateTestimonialDto.empresa,
         cargo: updateTestimonialDto.cargo,
-        videoUrl: updateTestimonialDto.videoUrl,
-        status: updateTestimonialDto.status,
+        videoUrl: updateTestimonialDto.videoUrl
       });
 
       const updatedTestimonial = await this.testimonialRepository.save(testimonial);
