@@ -51,29 +51,29 @@ export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
   @Post()
-  @CreateTestimonialSwagger()
-  @Roles(UserRole.CONTRIBUTOR)
-  @UseInterceptors(
-    FileInterceptor('file'),
-    TransformFormDataInterceptor
-  )
-  @UsePipes(new ValidationPipe({ 
-    transform: true, 
-    whitelist: true,
-    forbidNonWhitelisted: false
-  }))
-  async create(
-    @Body() createTestimonialFormDto: CreateTestimonialFormDto,
-    @UploadedFile() file: Express.Multer.File,
-    @Request() req: any
-  ): Promise<CreateTestimonialResponseDto> {
-    console.log('---------------------------------------------------');
-    console.log('📥 INICIO: CREATE TESTIMONIAL');
-    console.log('📋 DTO crudo recibido (antes de validar):', createTestimonialFormDto);
-    console.log('📁 Archivo recibido:', file ? file.originalname : 'Ninguno');
-    console.log('👤 Usuario:', req.user?.id);
+@CreateTestimonialSwagger()
+@Roles(UserRole.CONTRIBUTOR)
+@UseInterceptors(
+  FileInterceptor('file'),
+  TransformFormDataInterceptor
+)
+@UsePipes(new ValidationPipe({ 
+  transform: true, 
+  whitelist: true,
+  forbidNonWhitelisted: false
+}))
+async create(
+  @Body() createTestimonialFormDto: CreateTestimonialFormDto,
+  @UploadedFile() file: Express.Multer.File,
+  @Request() req: any
+): Promise<TestimonialResponseDto> { // ✅ CAMBIAR tipo de retorno
+  console.log('---------------------------------------------------');
+  console.log('📥 INICIO: CREATE TESTIMONIAL');
+  console.log('📋 DTO crudo recibido (antes de validar):', createTestimonialFormDto);
+  console.log('📁 Archivo recibido:', file ? file.originalname : 'Ninguno');
+  console.log('👤 Usuario:', req.user?.id);
 
-    try {
+  try {
       // LOG 1: VALIDACIONES
       console.log('🔎 Validando campos requeridos...');
 
@@ -118,13 +118,13 @@ export class TestimonialsController {
       console.log('📘 DTO final transformado:', createTestimonialDto);
 
       // LOG 4: LLAMADO AL SERVICE
-      console.log('🚀 Enviando DTO al service...');
-      const result = await this.testimonialsService.createWithMedia(
-        createTestimonialDto,
-        req.user,
-        file,
-        multimediaData
-      );
+     console.log('🚀 Enviando DTO al service...');
+    const result = await this.testimonialsService.createWithMedia(
+      createTestimonialDto,
+      req.user,
+      file,
+      multimediaData
+    );
 
       console.log('✅ Testimonio creado correctamente');
       console.log('---------------------------------------------------');
@@ -140,14 +140,14 @@ export class TestimonialsController {
   }
 
   @Get()
-  @FindAllTestimonialsSwagger()
-  @Roles(UserRole.EDITOR, UserRole.ADMIN, UserRole.CONTRIBUTOR)
-  findAll(
-    @Query() filterDto: GetTestimonialsDto, 
-    @Request() req: any
-  ): Promise<TestimonialResponseDto[]> {
-    return this.testimonialsService.findAll(filterDto, req.user);
-  }
+@FindAllTestimonialsSwagger()
+@Roles(UserRole.EDITOR, UserRole.ADMIN, UserRole.CONTRIBUTOR)
+findAll(
+  @Query() filterDto: GetTestimonialsDto, 
+  @Request() req: any
+): Promise<TestimonialResponseDto[]> {
+  return this.testimonialsService.findAll(filterDto, req.user);
+}
   
   @Get(':id')
   @FindOneTestimonialSwagger()
@@ -158,39 +158,39 @@ export class TestimonialsController {
     return this.testimonialsService.findOne(id);
   }
 
-  @Patch(':id')
-  @UpdateTestimonialSwagger()
-  @Roles(UserRole.EDITOR, UserRole.ADMIN)
-  @UseInterceptors(
-    FileInterceptor('file'),
-    TransformFormDataInterceptor
-  )
-  async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateTestimonialDto: UpdateTestimonialDto,
-    @UploadedFile() file?: Express.Multer.File
-  ): Promise<CreateTestimonialResponseDto> {
-    let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+ @Patch(':id')
+@UpdateTestimonialSwagger()
+@Roles(UserRole.EDITOR, UserRole.ADMIN)
+@UseInterceptors(
+  FileInterceptor('file'),
+  TransformFormDataInterceptor
+)
+async update(
+  @Param('id', ParseUUIDPipe) id: string,
+  @Body() updateTestimonialDto: UpdateTestimonialDto,
+  @UploadedFile() file?: Express.Multer.File
+): Promise<TestimonialResponseDto> { // ✅ CAMBIAR tipo de retorno
+  let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+  
+  if (file) {
+    const tipoFromBody = (updateTestimonialDto as any).tipo;
+    const tipo = tipoFromBody || (file.mimetype.startsWith('image/') 
+      ? MultimediaType.IMAGE 
+      : MultimediaType.VIDEO);
     
-    if (file) {
-      const tipoFromBody = (updateTestimonialDto as any).tipo;
-      const tipo = tipoFromBody || (file.mimetype.startsWith('image/') 
-        ? MultimediaType.IMAGE 
-        : MultimediaType.VIDEO);
-      
-      multimediaData = {
-        tipo,
-        descripcion: (updateTestimonialDto as any).descripcion || file.originalname
-      };
-    }
-
-    return this.testimonialsService.updateWithMedia(
-      id,
-      updateTestimonialDto,
-      file,
-      multimediaData
-    );
+    multimediaData = {
+      tipo,
+      descripcion: (updateTestimonialDto as any).descripcion || file.originalname
+    };
   }
+
+  return this.testimonialsService.updateWithMedia(
+    id,
+    updateTestimonialDto,
+    file,
+    multimediaData
+  );
+}
   
   @Delete(':id')
   @DeleteTestimonialSwagger()

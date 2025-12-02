@@ -14,8 +14,10 @@ import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
 import { Multimedia } from '../multimedia/entities/multimedia.entity';
 import { 
+  TestimonialDataDto,
+  TestimonialResponseDto,
   CreateTestimonialResponseDto,
-  TestimonialResponseDto 
+  TestimonialsListResponseDto
 } from './dto/testimonial-response.dto';
 import { Testimonial, TestimonialStatus } from './entities/testimonial.entity';
 import { User } from '../users/entities/user.entity'; 
@@ -91,7 +93,7 @@ export class TestimonialsService {
       const savedTestimonial = await this.testimonialRepository.save(testimonial);
 
       // 4. Si hay archivo, procesar multimedia
-      let multimedia: any = null;
+      let multimedia: Multimedia | null = null;
       if (file && multimediaData) {
         const { tipo, descripcion } = multimediaData;
         
@@ -122,10 +124,10 @@ export class TestimonialsService {
       }
 
       // 6. Transformar a DTO de respuesta usando el mapper
-      return TestimonialMapper.toCreateResponseDto(
-        testimonialCompleto,
-        multimedia
-      );
+     return TestimonialMapper.toCreateResponseDto(
+  testimonialCompleto, 
+  multimedia || undefined // ✅ Convertir null a undefined
+);
 
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -211,7 +213,7 @@ export class TestimonialsService {
       const updatedTestimonial = await this.testimonialRepository.save(testimonial);
 
       // 4. Si hay archivo nuevo, procesarlo
-      let multimedia: any = null;
+      let multimedia: Multimedia | null = null;
       if (file && multimediaData) {
         const { tipo, descripcion } = multimediaData;
 
@@ -268,41 +270,42 @@ export class TestimonialsService {
     return this.updateWithMedia(id, updateTestimonialDto);
   }
 
-  // En testimonials.service.ts - modificar el método findAll
-async findAll(
-  filterDto: GetTestimonialsDto, 
-  user?: User
-): Promise<TestimonialResponseDto[]> {
-  const { status, categoryId, tags } = filterDto;
-  const isPublicRequest = !user || (user.rol !== UserRole.ADMIN && user.rol !== UserRole.EDITOR);
-  
-  const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
-    .leftJoinAndSelect('testimonial.category', 'category')
-    .leftJoinAndSelect('testimonial.tags', 'tag')
-    .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
-    .orderBy('testimonial.creadoEn', 'DESC');
+  async findAll(
+    filterDto: GetTestimonialsDto, 
+    user?: User
+  ): Promise<TestimonialResponseDto[]> {
+    const { status, categoryId, tags } = filterDto;
+    const isPublicRequest = !user || (user.rol !== UserRole.ADMIN && user.rol !== UserRole.EDITOR);
+    
+    const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
+      .leftJoinAndSelect('testimonial.category', 'category')
+      .leftJoinAndSelect('testimonial.tags', 'tag')
+      .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
+      .orderBy('testimonial.creadoEn', 'DESC');
 
-  if (isPublicRequest) {
-    queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
-      approvedStatus: TestimonialStatus.APPROVED 
-    });
-  } else if (status) {
-    queryBuilder.andWhere('testimonial.status = :status', { status });
-  }
+    if (isPublicRequest) {
+      queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
+        approvedStatus: TestimonialStatus.APPROVED 
+      });
+    } else if (status) {
+      queryBuilder.andWhere('testimonial.status = :status', { status });
+    }
 
-  if (categoryId) {
-    queryBuilder.andWhere('category.id = :categoryId', { categoryId });
-  }
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
 
-  if (tags && tags.length > 0) {
-    queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+    if (tags && tags.length > 0) {
+      queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+    }
+    
+    const testimonials = await queryBuilder.getMany();
+    
+    // Usar el método del mapper para arrays
+    return testimonials.map(testimonial => 
+      TestimonialMapper.toResponseDto(testimonial)
+    );
   }
-  
-  const testimonials = await queryBuilder.getMany();
-  
-  // Usar el método del mapper para arrays
-  return TestimonialMapper.toResponseDtoArray(testimonials);
-}
 
   async findOne(id: string): Promise<TestimonialResponseDto> {
     const testimonial = await this.testimonialRepository.findOne({
@@ -355,6 +358,45 @@ async findAll(
     
     // Transformar a DTO
     return TestimonialMapper.toResponseDto(updatedTestimonial);
+  }
+
+  // Opcional: Método para obtener lista paginada
+  async findAllPaginated(
+    filterDto: GetTestimonialsDto & { page?: number; limit?: number },
+    user?: User
+  ): Promise<TestimonialsListResponseDto> {
+    const { page = 1, limit = 10, status, categoryId, tags } = filterDto;
+    const skip = (page - 1) * limit;
+    const isPublicRequest = !user || (user.rol !== UserRole.ADMIN && user.rol !== UserRole.EDITOR);
+    
+    const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
+      .leftJoinAndSelect('testimonial.category', 'category')
+      .leftJoinAndSelect('testimonial.tags', 'tag')
+      .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
+      .orderBy('testimonial.creadoEn', 'DESC');
+
+    if (isPublicRequest) {
+      queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
+        approvedStatus: TestimonialStatus.APPROVED 
+      });
+    } else if (status) {
+      queryBuilder.andWhere('testimonial.status = :status', { status });
+    }
+
+    if (categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+    }
+
+    if (tags && tags.length > 0) {
+      queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+    }
+    
+    const [testimonials, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+    
+    return TestimonialMapper.toListResponseDto(testimonials, total, page, limit);
   }
 
   // Método interno para obtener la entidad completa (usado internamente)

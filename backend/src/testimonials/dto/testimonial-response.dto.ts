@@ -31,8 +31,8 @@ export class MultimediaResponseDto {
   descripcion: string;
 }
 
-// Luego definir TestimonialResponseDto que usa MultimediaResponseDto
-export class TestimonialResponseDto {
+// TestimonialDataDto - contiene los datos del testimonio (para uso interno)
+export class TestimonialDataDto {
   @ApiProperty({ 
     description: 'ID único del testimonio',
     example: '238b7b76-d72c-4d23-b682-39acfa8175a3' 
@@ -100,7 +100,7 @@ export class TestimonialResponseDto {
 
   @ApiProperty({ 
     description: 'Multimedia asociada',
-    type: () => MultimediaResponseDto, // ✅ Referencia correcta con función arrow
+    type: () => MultimediaResponseDto,
     required: false 
   })
   multimedia?: MultimediaResponseDto;
@@ -118,18 +118,54 @@ export class TestimonialResponseDto {
   actualizadoEn: Date;
 }
 
-// Finalmente CreateTestimonialResponseDto
+// DTO principal para respuestas GET (uno solo)
+export class TestimonialResponseDto {
+  @ApiProperty({ 
+    description: 'Datos del testimonio',
+    type: () => TestimonialDataDto 
+  })
+  testimonial: TestimonialDataDto;
+}
+
+// DTO para respuestas POST/PATCH (puede incluir multimedia separada)
 export class CreateTestimonialResponseDto {
   @ApiProperty({ 
-    description: 'Testimonio creado',
-    type: () => TestimonialResponseDto // ✅ Referencia con función arrow
+    description: 'Datos del testimonio',
+    type: () => TestimonialDataDto 
   })
-  testimonial: TestimonialResponseDto;
+  testimonial: TestimonialDataDto;
 
   @ApiProperty({ 
     description: 'Multimedia creada (si se subió archivo)',
-    type: () => MultimediaResponseDto, // ✅ Referencia con función arrow
+    type: () => MultimediaResponseDto,
     required: false 
   })
   multimedia?: MultimediaResponseDto;
+}
+
+// DTO para respuestas de lista
+export class TestimonialsListResponseDto {
+  @ApiProperty({ 
+    description: 'Lista de testimonios',
+    type: [TestimonialDataDto] 
+  })
+  testimonials: TestimonialDataDto[];
+
+  @ApiProperty({ 
+    description: 'Total de testimonios',
+    example: 25
+  })
+  total: number;
+
+  @ApiProperty({ 
+    description: 'Página actual',
+    example: 1
+  })
+  page: number;
+
+  @ApiProperty({ 
+    description: 'Límite por página',
+    example: 10
+  })
+  limit: number;
 }
