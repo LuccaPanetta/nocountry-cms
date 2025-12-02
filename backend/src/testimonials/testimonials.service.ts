@@ -1,13 +1,22 @@
 // src/testimonials/testimonials.service.ts
 import { 
-  Injectable, NotFoundException, BadRequestException,
-  Inject, forwardRef, Logger 
+  Injectable, 
+  NotFoundException, 
+  BadRequestException,
+  Inject, 
+  forwardRef, 
+  Logger 
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { GetTestimonialsDto } from './dto/get-testimonials.dto';
+import { Multimedia } from '../multimedia/entities/multimedia.entity';
+import { 
+  CreateTestimonialResponseDto,
+  TestimonialResponseDto 
+} from './dto/testimonial-response.dto';
 import { Testimonial, TestimonialStatus } from './entities/testimonial.entity';
 import { User } from '../users/entities/user.entity'; 
 import { UserRole } from '../users/interfaces/user-role.enum'; 
@@ -15,6 +24,7 @@ import { Category } from '../categories/entities/category.entity';
 import { Tag } from '../tags/entities/tag.entity';
 import { MultimediaService } from '../multimedia/multimedia.service';
 import { MultimediaType } from '../multimedia/enums/multimedia-type.enum';
+import { TestimonialMapper } from './mappers/testimonial.mapper';
 
 @Injectable()
 export class TestimonialsService {
@@ -37,7 +47,7 @@ export class TestimonialsService {
     user: User,
     file?: Express.Multer.File,
     multimediaData?: { tipo: MultimediaType; descripcion?: string }
-  ) {
+  ): Promise<CreateTestimonialResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -81,6 +91,7 @@ export class TestimonialsService {
       const savedTestimonial = await this.testimonialRepository.save(testimonial);
 
       // 4. Si hay archivo, procesar multimedia
+      let multimedia: any = null;
       if (file && multimediaData) {
         const { tipo, descripcion } = multimediaData;
         
@@ -94,14 +105,15 @@ export class TestimonialsService {
         // Asociar multimedia al testimonio
         savedTestimonial.multimedia = multimediaResult.multimedia;
         await this.testimonialRepository.save(savedTestimonial);
+        multimedia = multimediaResult.multimedia;
       }
 
       await queryRunner.commitTransaction();
 
-      // 5. Cargar relaciones completas - CORREGIDO: Validar que existe
+      // 5. Cargar relaciones completas
       const testimonialCompleto = await this.testimonialRepository.findOne({
         where: { id: savedTestimonial.id },
-        relations: ['category', 'tags', 'user', 'multimedia']
+        relations: ['category', 'tags', 'multimedia']
       });
 
       // Validar que el testimonio fue encontrado
@@ -109,12 +121,11 @@ export class TestimonialsService {
         throw new NotFoundException('Testimonio no encontrado después de la creación');
       }
 
-      return {
-        testimonial: testimonialCompleto,
-        multimedia: testimonialCompleto.multimedia 
-          ? this.multimediaService.toResponseDto(testimonialCompleto.multimedia) 
-          : null
-      };
+      // 6. Transformar a DTO de respuesta usando el mapper
+      return TestimonialMapper.toCreateResponseDto(
+        testimonialCompleto,
+        multimedia
+      );
 
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -125,7 +136,10 @@ export class TestimonialsService {
     }
   }
 
-  async create(createTestimonialDto: CreateTestimonialDto, user: User) {
+  async create(
+    createTestimonialDto: CreateTestimonialDto, 
+    user: User
+  ): Promise<CreateTestimonialResponseDto> {
     return this.createWithMedia(createTestimonialDto, user);
   }
 
@@ -134,13 +148,21 @@ export class TestimonialsService {
     updateTestimonialDto: UpdateTestimonialDto,
     file?: Express.Multer.File,
     multimediaData?: { tipo: MultimediaType; descripcion?: string }
-  ) {
+  ): Promise<CreateTestimonialResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const testimonial = await this.findOne(id);
+      // Obtener testimonio con relaciones
+      const testimonial = await this.testimonialRepository.findOne({
+        where: { id },
+        relations: ['category', 'tags', 'multimedia']
+      });
+
+      if (!testimonial) {
+        throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+      }
 
       // 1. Actualizar categoría si se proporciona
       if (updateTestimonialDto.categoryId) {
@@ -167,18 +189,29 @@ export class TestimonialsService {
       }
 
       // 3. Actualizar campos básicos
-      Object.assign(testimonial, {
-        contenido: updateTestimonialDto.contenido,
-        titulo: updateTestimonialDto.titulo,
-        autorNombre: updateTestimonialDto.autorNombre,
-        empresa: updateTestimonialDto.empresa,
-        cargo: updateTestimonialDto.cargo,
-        videoUrl: updateTestimonialDto.videoUrl
-      });
+      if (updateTestimonialDto.contenido !== undefined) {
+        testimonial.contenido = updateTestimonialDto.contenido;
+      }
+      if (updateTestimonialDto.titulo !== undefined) {
+        testimonial.titulo = updateTestimonialDto.titulo;
+      }
+      if (updateTestimonialDto.autorNombre !== undefined) {
+        testimonial.autorNombre = updateTestimonialDto.autorNombre;
+      }
+      if (updateTestimonialDto.empresa !== undefined) {
+        testimonial.empresa = updateTestimonialDto.empresa;
+      }
+      if (updateTestimonialDto.cargo !== undefined) {
+        testimonial.cargo = updateTestimonialDto.cargo;
+      }
+      if (updateTestimonialDto.videoUrl !== undefined) {
+        testimonial.videoUrl = updateTestimonialDto.videoUrl;
+      }
 
       const updatedTestimonial = await this.testimonialRepository.save(testimonial);
 
       // 4. Si hay archivo nuevo, procesarlo
+      let multimedia: any = null;
       if (file && multimediaData) {
         const { tipo, descripcion } = multimediaData;
 
@@ -198,26 +231,26 @@ export class TestimonialsService {
         // Asociar nueva multimedia
         updatedTestimonial.multimedia = multimediaResult.multimedia;
         await this.testimonialRepository.save(updatedTestimonial);
+        multimedia = multimediaResult.multimedia;
       }
 
       await queryRunner.commitTransaction();
 
-      // CORREGIDO: Validar que existe después de la actualización
+      // Cargar relaciones actualizadas
       const testimonialCompleto = await this.testimonialRepository.findOne({
         where: { id },
-        relations: ['category', 'tags', 'user', 'multimedia']
+        relations: ['category', 'tags', 'multimedia']
       });
 
       if (!testimonialCompleto) {
         throw new NotFoundException(`Testimonio con ID ${id} no encontrado después de la actualización`);
       }
 
-      return {
-        testimonial: testimonialCompleto,
-        multimedia: testimonialCompleto.multimedia 
-          ? this.multimediaService.toResponseDto(testimonialCompleto.multimedia) 
-          : null
-      };
+      // Transformar a DTO de respuesta
+      return TestimonialMapper.toCreateResponseDto(
+        testimonialCompleto,
+        multimedia || testimonialCompleto.multimedia
+      );
 
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -228,55 +261,72 @@ export class TestimonialsService {
     }
   }
 
-  async update(id: string, updateTestimonialDto: UpdateTestimonialDto) {
+  async update(
+    id: string, 
+    updateTestimonialDto: UpdateTestimonialDto
+  ): Promise<CreateTestimonialResponseDto> {
     return this.updateWithMedia(id, updateTestimonialDto);
   }
 
-  async findAll(filterDto: GetTestimonialsDto, user?: User) {
-    const { status, categoryId, tags } = filterDto;
-    const isPublicRequest = !user || (user.rol !== UserRole.ADMIN && user.rol !== UserRole.EDITOR);
-    
-    const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
-      .leftJoinAndSelect('testimonial.category', 'category')
-      .leftJoinAndSelect('testimonial.tags', 'tag')
-      .leftJoinAndSelect('testimonial.user', 'user')
-      .leftJoinAndSelect('testimonial.multimedia', 'multimedia');
+  // En testimonials.service.ts - modificar el método findAll
+async findAll(
+  filterDto: GetTestimonialsDto, 
+  user?: User
+): Promise<TestimonialResponseDto[]> {
+  const { status, categoryId, tags } = filterDto;
+  const isPublicRequest = !user || (user.rol !== UserRole.ADMIN && user.rol !== UserRole.EDITOR);
+  
+  const queryBuilder = this.testimonialRepository.createQueryBuilder('testimonial')
+    .leftJoinAndSelect('testimonial.category', 'category')
+    .leftJoinAndSelect('testimonial.tags', 'tag')
+    .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
+    .orderBy('testimonial.creadoEn', 'DESC');
 
-    if (isPublicRequest) {
-      queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
-        approvedStatus: TestimonialStatus.APPROVED 
-      });
-    } else if (status) {
-      queryBuilder.andWhere('testimonial.status = :status', { status });
-    }
-
-    if (categoryId) {
-      queryBuilder.andWhere('category.id = :categoryId', { categoryId });
-    }
-
-    if (tags && tags.length > 0) {
-      queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
-    }
-    
-    return await queryBuilder
-      .orderBy('testimonial.creadoEn', 'DESC')
-      .getMany();
+  if (isPublicRequest) {
+    queryBuilder.andWhere('testimonial.status = :approvedStatus', { 
+      approvedStatus: TestimonialStatus.APPROVED 
+    });
+  } else if (status) {
+    queryBuilder.andWhere('testimonial.status = :status', { status });
   }
 
-  async findOne(id: string): Promise<Testimonial> {
+  if (categoryId) {
+    queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+  }
+
+  if (tags && tags.length > 0) {
+    queryBuilder.andWhere('tag.name IN (:...tags)', { tags });
+  }
+  
+  const testimonials = await queryBuilder.getMany();
+  
+  // Usar el método del mapper para arrays
+  return TestimonialMapper.toResponseDtoArray(testimonials);
+}
+
+  async findOne(id: string): Promise<TestimonialResponseDto> {
     const testimonial = await this.testimonialRepository.findOne({
       where: { id },
-      relations: ['category', 'tags', 'user', 'multimedia']
+      relations: ['category', 'tags', 'multimedia']
     });
 
     if (!testimonial) {
       throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
     }
-    return testimonial;
+    
+    // Transformar a DTO de respuesta
+    return TestimonialMapper.toResponseDto(testimonial);
   }
 
   async remove(id: string) {
-    const testimonial = await this.findOne(id);
+    const testimonial = await this.testimonialRepository.findOne({
+      where: { id },
+      relations: ['multimedia']
+    });
+
+    if (!testimonial) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+    }
     
     // Eliminar multimedia asociada si existe
     if (testimonial.multimedia) {
@@ -287,10 +337,36 @@ export class TestimonialsService {
     return { message: 'Testimonio eliminado con éxito' };
   }
   
-  async updateStatus(id: string, newStatus: TestimonialStatus) {
-    const testimonial = await this.findOne(id);
-    testimonial.status = newStatus;
+  async updateStatus(
+    id: string, 
+    newStatus: TestimonialStatus
+  ): Promise<TestimonialResponseDto> {
+    const testimonial = await this.testimonialRepository.findOne({
+      where: { id },
+      relations: ['category', 'tags', 'multimedia']
+    });
     
-    return await this.testimonialRepository.save(testimonial);
+    if (!testimonial) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+    }
+    
+    testimonial.status = newStatus;
+    const updatedTestimonial = await this.testimonialRepository.save(testimonial);
+    
+    // Transformar a DTO
+    return TestimonialMapper.toResponseDto(updatedTestimonial);
+  }
+
+  // Método interno para obtener la entidad completa (usado internamente)
+  async findOneEntity(id: string): Promise<Testimonial> {
+    const testimonial = await this.testimonialRepository.findOne({
+      where: { id },
+      relations: ['category', 'tags', 'user', 'multimedia']
+    });
+
+    if (!testimonial) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+    }
+    return testimonial;
   }
 }
