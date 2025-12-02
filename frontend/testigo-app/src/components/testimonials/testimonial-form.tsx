@@ -51,6 +51,40 @@ export function TestimonialForm() {
   };
 
   const onSubmit = (data: TestimonialFormData) => {
+  // Generar IDs únicos
+  const testimonialId = `tst-${Date.now()}`;
+  const multimediaId = data.contentType !== 'text' ? `m-${Date.now()}` : null;
+  
+  // Construir objeto multimedia solo si no es tipo texto
+  const multimedia = data.contentType !== 'text' ? {
+    id: multimediaId,
+    testimonio_id: testimonialId,
+    tipo: data.contentType,
+    url: data.contentType === 'video' ? data.videoUrl : 
+         data.contentType === 'image' && data.imageFile?.[0] ? 
+         URL.createObjectURL(data.imageFile[0]) : '',
+    descripcion: data.contentType === 'video' ? data.videoDescription : 
+                data.contentType === 'image' ? data.imageDescription : ''
+  } : null;
+  
+  // Construir el objeto final en el formato de Marina
+  const testimonialData = {
+    id: testimonialId,
+    titulo: data.title,
+    autor: data.author,
+    empresa: data.company,
+    cargo: data.position || '',
+    contenido: data.testimonialContent || '',
+    categoria: data.category.toLowerCase(),
+    creado_en: new Date().toISOString(),
+    tags: tags,
+    ...(multimedia && { multimedia })
+  };
+  
+  console.log('Testimonio formateado:', JSON.stringify(testimonialData, null, 2));
+};
+
+  {/*const onSubmit = (data: TestimonialFormData) => {
     const formDataWithTags = {
       ...data,
       tags,
@@ -75,6 +109,7 @@ export function TestimonialForm() {
     
     console.log('Form data completo:', formDataWithTags);
   };
+  */}
 
   const handleCancel = () => {
     console.log('Form cancelled');
