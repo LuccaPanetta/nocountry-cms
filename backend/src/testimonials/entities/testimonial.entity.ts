@@ -8,10 +8,10 @@ import {
   UpdateDateColumn,
   ManyToOne,
   ManyToMany,
-  OneToMany,
+  OneToOne,
   JoinColumn,
   JoinTable
-} from 'typeorm';
+} from 'typeorm'; // Cambiado: OneToMany → OneToOne
 import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
 import { Multimedia } from '../../multimedia/entities/multimedia.entity';
@@ -35,10 +35,19 @@ export class Testimonial {
   autorNombre: string;
 
   @Column({ nullable: true })
+  titulo: string;
+
+  @Column({ nullable: true })
   videoUrl: string;
 
   @Column({ nullable: true })
-  imageUrl: string;
+  empresa: string;
+
+  @Column({ nullable: true })
+  cargo: string;
+  
+/*   @Column({ nullable: true })
+  imageUrl: string; */
 
   @Column({
     type: 'enum',
@@ -48,7 +57,7 @@ export class Testimonial {
   status: TestimonialStatus;
 
   @ManyToOne(() => Category, { eager: true })
-  @JoinColumn({ name: 'category_id' }) // ← Nombre real en la base de datos
+  @JoinColumn({ name: 'category_id' })
   category: Category;
 
   @ManyToMany(() => Tag, (tag) => tag.testimonials, {
@@ -61,15 +70,18 @@ export class Testimonial {
   })
   tags: Tag[];
 
-
-  @OneToMany(() => Multimedia, multimedia => multimedia.testimonio, {
+  // ✅ CAMBIO: De OneToMany a OneToOne
+  @OneToOne(() => Multimedia, multimedia => multimedia.testimonio, {
     cascade: true,
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
+    nullable: true, // Un testimonio puede no tener multimedia
+    eager: true, // Para cargar automáticamente
   })
-  multimedias: Multimedia[];
+  @JoinColumn({ name: 'multimedia_id' }) // Nueva columna en la tabla testimonios
+  multimedia?: Multimedia;
 
   @ManyToOne(() => User, { nullable: true, eager: true })
-  @JoinColumn({ name: 'user_id' }) // ← Nombre real en la base de datos
+  @JoinColumn({ name: 'user_id' })
   user?: User;
 
   @CreateDateColumn({ name: 'creado_en' })
@@ -78,25 +90,24 @@ export class Testimonial {
   @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
 
+  // ✅ ACTUALIZA los métodos helpers para usar la nueva relación OneToOne
   getImagenPrincipal(): Multimedia | undefined {
-    return this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
+    return this.multimedia?.tipo === MultimediaType.IMAGE ? this.multimedia : undefined;
   }
 
   getVideos(): Multimedia[] {
-    return this.multimedias?.filter(m => m.tipo === MultimediaType.VIDEO) || [];
+    return this.multimedia?.tipo === MultimediaType.VIDEO ? [this.multimedia] : [];
   }
 
   getImagenes(): Multimedia[] {
-    return this.multimedias?.filter(m => m.tipo === MultimediaType.IMAGE) || [];
+    return this.multimedia?.tipo === MultimediaType.IMAGE ? [this.multimedia] : [];
   }
 
   getVideoUrl(): string | null {
-    const video = this.multimedias?.find(m => m.tipo === MultimediaType.VIDEO);
-    return video ? video.url : this.videoUrl;
+    return this.multimedia?.tipo === MultimediaType.VIDEO ? this.multimedia.url : this.videoUrl;
   }
 
-  getImageUrl(): string | null {
-    const image = this.multimedias?.find(m => m.tipo === MultimediaType.IMAGE);
-    return image ? image.url : this.imageUrl;
-  }
+  /* getImageUrl(): string | null {
+    return this.multimedia?.tipo === MultimediaType.IMAGE ? this.multimedia.url : this.imageUrl;
+  } */
 }

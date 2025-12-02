@@ -1,5 +1,7 @@
 // src/multimedia/multimedia.service.ts
-import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, 
+  BadRequestException, Logger, Inject, forwardRef 
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Multimedia } from './entities/multimedia.entity';
@@ -8,6 +10,7 @@ import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { MultimediaResponseDto } from './dto/multimedia-response.dto';
 import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
+import { TestimonialsService } from '../testimonials/testimonials.service';
 
 @Injectable()
 export class MultimediaService {
@@ -19,6 +22,8 @@ export class MultimediaService {
     @InjectRepository(Testimonial)
     private readonly testimonialRepository: Repository<Testimonial>,
     private readonly cloudinaryMediaService: CloudinaryMediaService,
+    @Inject(forwardRef(() => TestimonialsService))
+    private readonly testimonialsService: TestimonialsService,
   ) {}
 
   /**
@@ -48,12 +53,12 @@ export class MultimediaService {
     tipo: MultimediaType,
     descripcion?: string,
   ): Promise<{ multimedia: Multimedia; cloudinaryData: any }> {
-    this.logger.log(`📤 Subiendo ${tipo} para testimonio: ${testimonioId}`);
+    this.logger.log(`Subiendo ${tipo} para testimonio: ${testimonioId}`);
 
     const testimonio = await this.verifyTestimonioExists(testimonioId);
 
     try {
-      // Usar CloudinaryMediaService para subir el archivo
+      // Subir a Cloudinary
       const cloudinaryResult = await this.cloudinaryMediaService.uploadMedia(
         file.buffer,
         testimonioId,
@@ -61,24 +66,17 @@ export class MultimediaService {
         descripcion
       );
 
-      // Crear registro en la base de datos
-      const multimediaData = {
-        testimonioId,
+      // Crear registro en DB
+      const multimedia = this.multimediaRepository.create({
         tipo,
         url: cloudinaryResult.media.secure_url,
         publicId: cloudinaryResult.media.public_id,
         descripcion,
         nombreArchivo: file.originalname,
-      };
-
-      const multimedia = this.multimediaRepository.create({
-        ...multimediaData,
         testimonio: testimonio,
       });
 
       const savedMultimedia = await this.multimediaRepository.save(multimedia);
-
-      this.logger.log(`✅ Multimedia creado exitosamente: ${savedMultimedia.id}`);
 
       return {
         multimedia: savedMultimedia,
@@ -86,7 +84,7 @@ export class MultimediaService {
       };
 
     } catch (error) {
-      this.logger.error(`❌ Error subiendo multimedia: ${error.message}`);
+      this.logger.error(`Error subiendo multimedia: ${error.message}`);
       throw new BadRequestException(`Error subiendo archivo: ${error.message}`);
     }
   }
@@ -159,11 +157,6 @@ export class MultimediaService {
       };
     }
   }
-
-  // ... MANTENER TODOS LOS MÉTODOS EXISTENTES SIN CAMBIOS ...
-  // findAll, findOne, remove, getOptimizedUrls, verifyTestimonioExists, 
-  // verifyPublicIdUnique, findByTestimonioId, countByTestimonioId, findByType, findByPublicId
-  // uploadMultiple, etc.
 
   async findAll(testimonioId?: string, tipo?: MultimediaType): Promise<Multimedia[]> {
     const query = this.multimediaRepository
@@ -243,18 +236,39 @@ export class MultimediaService {
     };
   }
 
+  // CORREGIDO: Usar la relación testimonio en lugar de testimonioId
   async findByTestimonioId(testimonioId: string): Promise<Multimedia[]> {
     return await this.multimediaRepository.find({
-      where: { testimonioId },
+      where: { testimonio: { id: testimonioId } }, // Usar la relación
       relations: ['testimonio'],
       order: { creadoEn: 'DESC' }
     });
   }
 
+  // CORREGIDO: Usar la relación testimonio en lugar de testimonioId
   async findByType(testimonioId: string, tipo: MultimediaType): Promise<Multimedia[]> {
     return await this.multimediaRepository.find({
-      where: { testimonioId, tipo },
+      where: { 
+        testimonio: { id: testimonioId }, // Usar la relación
+        tipo: tipo 
+      },
+      relations: ['testimonio'],
       order: { creadoEn: 'DESC' }
+    });
+  }
+
+  // CORREGIDO: Buscar por la relación
+  async countByTestimonioId(testimonioId: string): Promise<number> {
+    return await this.multimediaRepository.count({
+      where: { testimonio: { id: testimonioId } } // Usar la relación
+    });
+  }
+
+  // CORREGIDO: Buscar por la relación
+  async findByPublicId(publicId: string): Promise<Multimedia | null> {
+    return await this.multimediaRepository.findOne({
+      where: { publicId },
+      relations: ['testimonio']
     });
   }
 
@@ -278,5 +292,10 @@ export class MultimediaService {
     if (existingMultimedia) {
       throw new ConflictException(`Ya existe un multimedia con el publicId: ${publicId}`);
     }
+  }
+
+  // Método para actualizar CreateMultimediaDto si es necesario
+  async uploadMultiple(testimonioId: string, files: Express.Multer.File[], tipo: MultimediaType, descripcion?: string) {
+    // Implementación según sea necesario
   }
 }

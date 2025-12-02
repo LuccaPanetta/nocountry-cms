@@ -1,16 +1,13 @@
-// multimedia/multimedia.module.ts
+// src/cloudinary/cloudinary.module.ts - ¡CORREGIDO!
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { MultimediaController } from '../multimedia/multimedia.controller';
-import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service'; 
-import { Multimedia } from '../multimedia/entities/multimedia.entity';
+import { ConfigModule } from '@nestjs/config'; // Para variables de entorno
+import { CloudinaryMediaService } from './cloudinary-media.service'; // Import relativo
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Multimedia]), 
-  ],
-  controllers: [MultimediaController],
-  providers: [CloudinaryMediaService], 
-  exports: [CloudinaryMediaService], 
+  imports: [ConfigModule], // Para acceder a process.env
+  providers: [CloudinaryMediaService],
+  exports: [CloudinaryMediaService], // Para que otros módulos lo usen
+  // ❌ NO TIENE controllers ❌
+  // MultimediaController pertenece a MultimediaModule
 })
-export class MultimediaModule {}
+export class CloudinaryModule {}

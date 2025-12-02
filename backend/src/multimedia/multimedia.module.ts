@@ -1,20 +1,23 @@
 // src/multimedia/multimedia.module.ts
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MultimediaController } from './multimedia.controller';
-import { ConfigModule } from '@nestjs/config';
 import { MultimediaService } from './multimedia.service';
+import { MultimediaController } from './multimedia.controller';
 import { Multimedia } from './entities/multimedia.entity';
 import { Testimonial } from '../testimonials/entities/testimonial.entity';
-import { CloudinaryMediaService as CloudinaryService } from '../cloudinary/cloudinary-media.service';
+import { TestimonialsModule } from '../testimonials/testimonials.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module'; // ← CORREGIDO
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Multimedia, Testimonial])
+    TypeOrmModule.forFeature([Multimedia, Testimonial]),
+    forwardRef(() => TestimonialsModule), // Inyección circular
+    CloudinaryModule, // ← CORREGIDO
   ],
- controllers: [MultimediaController],
-  providers: [MultimediaService, CloudinaryService],
-  exports: [MultimediaService, CloudinaryService]
+  controllers: [MultimediaController],
+  providers: [MultimediaService],
+  exports: [MultimediaService, TypeOrmModule],
 })
 export class MultimediaModule {}

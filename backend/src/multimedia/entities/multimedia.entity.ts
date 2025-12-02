@@ -1,43 +1,55 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
-import { Testimonial } from '../../testimonials/entities/testimonial.entity';
+// src/multimedia/entities/multimedia.entity.ts
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+  JoinColumn
+} from 'typeorm';
 import { MultimediaType } from '../enums/multimedia-type.enum';
+import { Testimonial } from '../../testimonials/entities/testimonial.entity';
 
 @Entity('multimedias')
 export class Multimedia {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'testimonio_id', type: 'uuid' })
-  testimonioId: string;
+  @Column()
+  url: string;
 
-  @ManyToOne(() => Testimonial, testimonial => testimonial.multimedias, {
-    onDelete: 'CASCADE'
-  })
-  @JoinColumn({ name: 'testimonio_id' })
-  testimonio: Testimonial;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  descripcion?: string;
 
   @Column({
     type: 'enum',
     enum: MultimediaType,
-    default: MultimediaType.IMAGE
+    default: MultimediaType.IMAGE,
   })
   tipo: MultimediaType;
 
-  @Column({ type: 'text' })
-  url: string;
+  @Column({ nullable: true })
+  publicId: string; // ID de Cloudinary
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  descripcion: string;
+  // ✅ AGREGAR ESTE CAMPO:
+  @Column({ 
+    name: 'nombre_archivo', // Nombre de columna en la base de datos
+    nullable: true 
+  })
+  nombreArchivo?: string; // Nombre original del archivo
 
-  @Column({ name: 'public_id', type: 'varchar', nullable: true })
-  publicId: string; // ID público de Cloudinary
+  // ✅ RELACIÓN OneToOne (inversa)
+  @OneToOne(() => Testimonial, testimonio => testimonio.multimedia, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'testimonio_id' })
+  testimonio?: Testimonial;
 
   @CreateDateColumn({ name: 'creado_en' })
   creadoEn: Date;
 
   @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
-
-  @Column({ name: 'nombre_archivo', type: 'varchar', nullable: true })
-  nombreArchivo: string;
 }
