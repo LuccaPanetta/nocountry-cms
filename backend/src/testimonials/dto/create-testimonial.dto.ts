@@ -1,3 +1,23 @@
+<<<<<<< HEAD
+import { IsString, IsOptional, IsUUID, IsArray, IsNotEmpty } from 'class-validator';
+
+export class CreateTestimonialDto {
+  
+  @IsString()
+  @IsNotEmpty()
+  contenido: string; 
+
+  @IsString()
+  @IsOptional()
+  autorNombre?: string;
+
+  @IsUUID() 
+  @IsNotEmpty()
+  categoryId: string; 
+  
+  @IsArray() 
+  @IsUUID('4', { each: true }) 
+=======
 // src/testimonials/dto/create-testimonial.dto.ts
 import { 
   IsString, IsNotEmpty, IsOptional, IsUrl, IsUUID, 
@@ -100,6 +120,7 @@ export class CreateTestimonialDto {
     required: false,
     type: [String]
   })
+>>>>>>> develop-backend
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })

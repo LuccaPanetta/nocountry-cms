@@ -140,6 +140,11 @@ async create(
   }
 
   @Get()
+<<<<<<< HEAD
+  findAll(@Query() filterDto: GetTestimonialsDto, @Request() req) {
+    return this.testimonialsService.findAll(filterDto, req.user);
+  }
+=======
 @FindAllTestimonialsSwagger()
 @Roles(UserRole.EDITOR, UserRole.ADMIN, UserRole.CONTRIBUTOR)
 findAll(
@@ -148,6 +153,7 @@ findAll(
 ): Promise<TestimonialResponseDto[]> {
   return this.testimonialsService.findAll(filterDto, req.user);
 }
+>>>>>>> develop-backend
   
   @Get(':id')
   @FindOneTestimonialSwagger()
