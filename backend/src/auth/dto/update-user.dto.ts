@@ -37,9 +37,9 @@ export class UpdateUserDto {
   password?: string;
 
   @ApiProperty({
-    example: 'OPERATOR',
+    example: 'EDITOR',
     description: 'Nuevo rol del usuario',
-    enum: ['ADMIN', 'OPERATOR', 'CONTRIBUTOR'],
+    enum: ['ADMIN', 'EDITOR', 'CONTRIBUTOR'],
     required: false
   })
   @IsOptional()

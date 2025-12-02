@@ -1,3 +1,4 @@
+// src/auth/jwt/jwt.strategy.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
@@ -20,16 +21,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    console.log('🔐 JWT Payload recibido:', payload); // ✅ Debug
+
     if (!payload.sub) {
       throw new UnauthorizedException('Token inválido');
     }
 
-    const roleDelToken = payload.role || payload.rol;
+    // ✅ Usa SOLO 'rol' (en español) para consistencia
+    const userRol = payload.rol;
+
+    if (!userRol) {
+      throw new UnauthorizedException('Token no contiene información de rol');
+    }
 
     return { 
       id: payload.sub, 
       email: payload.email, 
-      rol: roleDelToken 
+      rol: userRol // ← Asegúrate que sea 'rol'
     };
   }
 }

@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+// src/tags/entities/tag.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany } from 'typeorm';
+import { Testimonial } from '../../testimonials/entities/testimonial.entity';
 
 @Entity('tags')
 export class Tag {
@@ -13,4 +15,8 @@ export class Tag {
   
   @CreateDateColumn()
   creadoEn: Date;
+
+@ManyToMany(() => Testimonial, (testimonial) => testimonial.tags)
+testimonials: Testimonial[];
+
 }
