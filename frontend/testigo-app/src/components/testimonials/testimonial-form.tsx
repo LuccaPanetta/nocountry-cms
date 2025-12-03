@@ -1,8 +1,23 @@
 'use client';
 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import { Badge } from "@/components/ui/badge";
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, Upload, MessageCircle, CirclePlay, Image } from 'lucide-react';
+import { X, Upload, ChevronsUpDown, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
 type ContentType = 'text' | 'image' | 'video';
 
@@ -25,6 +40,8 @@ export function TestimonialForm() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
+  const [open, setOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -39,11 +56,13 @@ export function TestimonialForm() {
 
   const contentType = watch('contentType');
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
+  const handleAddTag = (tag?: string) => {
+  const tagToAdd = tag || tagInput.trim();
+  if (tagToAdd && !tags.includes(tagToAdd)) {
+    setTags([...tags, tagToAdd]);
+    setTagInput('');
+    setOpen(false); // Cerrar el popover después de agregar
+  }
   };
 
   const handleRemoveTag = (index: number) => {
@@ -427,6 +446,78 @@ export function TestimonialForm() {
         )}
 
         <div className="space-y-2">
+  <label className="block text-sm font-medium text-gray-900">
+    Tags
+  </label>
+  
+  <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild>
+      <button
+        type="button"
+        className="w-full flex items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <span className="text-gray-600">
+          {tagInput || "Selecciona o escribe un tag..."}
+        </span>
+        <ChevronsUpDown className="h-4 w-4 text-gray-400" />
+      </button>
+    </PopoverTrigger>
+    
+    <PopoverContent className="w-[400px] p-0" align="start">
+      <Command>
+        <CommandInput 
+          placeholder="Buscar o agregar tag..." 
+          value={tagInput}
+          onValueChange={setTagInput}
+        />
+        <CommandEmpty>
+          <button
+            type="button"
+            onClick={() => handleAddTag()}
+            className="w-full p-2 text-sm text-blue-600 hover:bg-blue-50 text-left"
+          >
+            Agregar "{tagInput}"
+          </button>
+        </CommandEmpty>
+        <CommandGroup>
+          {['Educación', 'Capacitación', 'Comunidad', 'Calidad', 'Innovación', 
+            'Flexibilidad', 'Eficiencia']
+            .filter(tag => !tags.includes(tag)) // Ocultar tags ya agregados
+            .map((tag) => (
+            <CommandItem
+              key={tag}
+              onSelect={() => handleAddTag(tag)}
+              className="cursor-pointer"
+            >
+              {tag}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </Command>
+    </PopoverContent>
+  </Popover>
+  
+  {tags.length > 0 && (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {tags.map((tag, index) => (
+        <Badge 
+          key={index} 
+          variant="secondary" 
+          className="gap-1 bg-blue-100 text-blue-900 hover:bg-blue-200"
+        >
+          {tag}
+          <X 
+            size={14} 
+            className="cursor-pointer hover:text-red-600"
+            onClick={() => handleRemoveTag(index)}
+          />
+        </Badge>
+      ))}
+    </div>
+  )}
+</div>
+
+        {/*<div className="space-y-2">
           <label htmlFor="tags" className="block text-sm font-medium text-gray-900">
             Tags
           </label>
@@ -453,6 +544,7 @@ export function TestimonialForm() {
             <option value="Eficiencia">Eficiencia</option>
 
             </select>
+            */}
             {/*
             
             <input
@@ -475,7 +567,7 @@ export function TestimonialForm() {
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
               Agregar
-            </button>*/}
+            </button>
           </div>
           {tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -496,7 +588,7 @@ export function TestimonialForm() {
               ))}
             </div>
           )}
-        </div>
+        </div> */ }
 
         <div className="flex gap-4 pt-4">
           <button
