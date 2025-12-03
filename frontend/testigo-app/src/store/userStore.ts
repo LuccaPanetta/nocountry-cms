@@ -1,7 +1,7 @@
 // Store global de usuario usando Zustand y persistencia local
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { userSchema, User } from "@/schemas/user";
+import { userSchema, User } from "@/schemas/user-schema";
 
 // Interfaz del estado global de usuario
 interface UserState extends Partial<User> {

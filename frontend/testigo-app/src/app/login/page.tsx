@@ -1,9 +1,10 @@
-import LoginForm from "@/components/loginForm";
+import LayoutAuth from "@/components/login-register/LayoutAuth";
+import LoginForm from "@/components/login-register/loginForm";
 
 export default function LoginPage() {
   return (
-    <main>
+    <LayoutAuth title="Iniciá sesión" subtitle="Ingresá tus credenciales para acceder">
       <LoginForm />
-    </main>
+    </LayoutAuth>
   );
 }
