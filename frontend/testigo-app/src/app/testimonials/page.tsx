@@ -2,12 +2,10 @@
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SelectItem } from "@radix-ui/react-select"
+import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select"
 import { ArrowDown, ArrowUp, Search, SearchIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 import data from "@/constants/testimonials.json"
-
 import { useRouter } from "next/navigation"
 import CardTestimony from "@/components/testimonials/CardTestimony"
 
@@ -29,22 +27,35 @@ const page = () => {
   const options = [
     { value: "asc-order", label: "Fecha Asc", icon: ArrowUp },
     { value: "desc-order", label: "Fecha Desc", icon: ArrowDown },
-    { value: "asc-rating", label: "Rating Asc", icon: ArrowUp },
-    { value: "desc-rating", label: "Rating Desc", icon: ArrowDown },
+    /*     { value: "asc-rating", label: "Rating Asc", icon: ArrowUp },
+        { value: "desc-rating", label: "Rating Desc", icon: ArrowDown }, */
   ]
 
- 
+
   const filteredTestimonials = useMemo(() => {
     return testimonials.filter((testimony) => {
       const matchesCategory = filteredCategory === '' || testimony.categoria === filteredCategory;
-      const matchesSearch  = testimony.contenido.toLowerCase().includes(keyword.toLowerCase()) || testimony.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()));
-      return matchesCategory && matchesSearch ;
+      const matchesSearch = testimony.contenido.toLowerCase().includes(keyword.toLowerCase()) || testimony.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()));
+      return matchesCategory && matchesSearch;
     });
   }, [filteredCategory, keyword]);
 
+
+  const handleSort = (filteredTestimonials: typeof testimonials) => {
+    switch (orderValue) {
+      case 'asc-order': 
+        return [...filteredTestimonials].sort((a, b) => new Date(a.creado_en).getTime() - new Date(b.creado_en).getTime());
+      case 'desc-order': 
+        return [...filteredTestimonials].sort((a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());     
+      default:
+        return filteredTestimonials;
+    } 
+  }
+  const sortedTestimonials = handleSort(filteredTestimonials);
+
   return (
     <Container>
-      <Button onClick={()=>router.push('/testimonials/create')} className="w-38 flex self-end">Crear testimonio</Button>
+      <Button onClick={() => router.push('/testimonials/create')} className="w-38 flex self-end">Crear testimonio</Button>
       <h2 className="text-lg text-secondary font-bold mt-5">Explora testimonios reales</h2>
       <p className="font-light mt-3">Descubrí experiencias auténticas compartidas por nuestra comunidad. Usá el buscador o navegá por las páginas para encontrar los testimonios que mejor reflejen el impacto de nuestros proyectos y servicios.</p>
       <section className="flex flex-col lg:flex-row lg:items-baseline-last lg:justify-between gap-4 mt-4 lg:mt-10">
@@ -74,11 +85,11 @@ const page = () => {
           ))}
         </div>
       </section>
-      <div className="flex flex-col md:flex-row mt-6 w-full md:items-center">
+      <div className="flex flex-col md:flex-row mt-6 w-full md:items-center md:justify-between">
         <div className="grid grid-cols-2 justify-end items-center gap-3 md:order-2 w-full md:w-auto">
-          <span className="col-span-1">Ordenar por:</span>
+          <span className="col-span-1 md:text-end">Ordenar por:</span>
           <Select value={orderValue} onValueChange={setOrderValue}>
-            <SelectTrigger className="w-full col-span-1">
+            <SelectTrigger className="w-full col-span-1 md:w-38 lg:w-50">
               <SelectValue placeholder="Selecciona" />
             </SelectTrigger>
             <SelectContent>
@@ -94,10 +105,10 @@ const page = () => {
         <span className="text-sm text-muted-foreground mt-5 md:mt-0">Mostrando {filteredTestimonials.length} de {testimonials.length} testimonios</span>
       </div>
 
-      {filteredTestimonials.length > 0 ? (
+      {sortedTestimonials.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 my-12">
-          {filteredTestimonials.map(testimony => (
-           <CardTestimony key={testimony.id} testimony={testimony} />
+          {sortedTestimonials.map(testimony => (
+            <CardTestimony key={testimony.id} testimony={testimony} />
           ))}
         </div>
       ) : (
@@ -109,7 +120,7 @@ const page = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Intente ajustar su búsqueda o eliminar algunos filtros.
           </p>
-         {/*  {hasActiveFilters && (
+          {/*  {hasActiveFilters && (
             <Button variant="outline" onClick={clearAllFilters}>
               Borrar filtros
             </Button>
