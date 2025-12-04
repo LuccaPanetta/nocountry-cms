@@ -141,7 +141,7 @@ export default function RegisterForm() {
         </div>
       </form>
       <p className="text-center mt-4 text-sm">¿Ya tenés cuenta?
-        <Link href="/login" className="text-secondary ml-1">
+        <Link href="/login" className="text-secondary ml-1 font-semibold">
         Iniciar sesión
         </Link></p>
     </Form>);

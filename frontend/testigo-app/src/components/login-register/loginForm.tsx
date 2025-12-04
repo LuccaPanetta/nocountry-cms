@@ -14,7 +14,6 @@ import { Eye, EyeClosed } from "lucide-react";
 
 
 
-
 export default function LoginForm() {
 
   const router = useRouter();
@@ -85,7 +84,7 @@ export default function LoginForm() {
         </div>
       </form>
       <p className="text-center mt-4 text-sm">¿Aún no tenés cuenta?
-        <Link href="/register" className="text-secondary ml-1">
+        <Link href="/register" className="text-secondary ml-1 font-semibold">
         Registrate
       </Link></p>
     </Form>
