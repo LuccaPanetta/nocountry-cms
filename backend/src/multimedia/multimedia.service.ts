@@ -10,7 +10,7 @@ import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { MultimediaResponseDto } from './dto/multimedia-response.dto';
 import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
-import { TestimonialsService } from '../testimonials/testimonials.service';
+import { TestimonialsService } from '../testimonials/services/testimonials.service';
 
 @Injectable()
 export class MultimediaService {
@@ -109,6 +109,34 @@ export class MultimediaService {
     // Mapear a DTO de response
     return multimedias.map(multimedia => this.toResponseDto(multimedia));
   }
+
+  // En src/multimedia/multimedia.service.ts
+async createWithUrl(
+  testimonialId: string,
+  url: string,
+  tipo: MultimediaType,
+  descripcion?: string
+): Promise<Multimedia> {
+  const testimonial = await this.testimonialRepository.findOne({
+    where: { id: testimonialId }
+  });
+
+  if (!testimonial) {
+    throw new NotFoundException(`Testimonio con ID ${testimonialId} no encontrado`);
+  }
+
+  // Crear registro de multimedia para URL externa
+  const multimedia = this.multimediaRepository.create({
+    url: url,
+    tipo: tipo,
+    descripcion: descripcion,
+    testimonio: testimonial,
+    // No hay publicId porque no es de Cloudinary
+    // No hay nombreArchivo porque es URL externa
+  });
+
+  return await this.multimediaRepository.save(multimedia);
+}
 
   /**
    * Convertir entidad Multimedia a DTO de response (HACER PÚBLICO)
