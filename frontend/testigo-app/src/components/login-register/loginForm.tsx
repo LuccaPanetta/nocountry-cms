@@ -39,12 +39,12 @@ export default function LoginForm() {
 
   return (
     <Form {...form} >
-      <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid lg:grid-cols-2 gap-4 w-full mx-auto">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem className="">
+            <FormItem className="lg:col-start-1 lg:row-start-1 self-start">
               <FormLabel htmlFor="email">Correo electronico</FormLabel>
               <FormControl >
                 <Input className="pl-5 bg-[#F2F4F7] placeholder:text-sm" type="email" placeholder="nombre@gmail.com" id="email"   {...field} />
@@ -58,7 +58,7 @@ export default function LoginForm() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="relative">
+              <FormItem className="relative lg:col-start-2 lg:row-start-1 self-start">
                 <FormLabel htmlFor="password">Contraseña</FormLabel>
                 {
                   inputsViewpassword ?
@@ -80,7 +80,9 @@ export default function LoginForm() {
             {(mutationPostLogin.error as Error).message}
           </p>
         )}
-        <Button type="submit" className="cursor-pointer mt-3 w-1/2 mx-auto">Iniciar sesión</Button>
+        <div className="lg:col-span-2 mx-auto w-1/2">
+        <Button type="submit" className="cursor-pointer mt-3 w-full mx-auto">Iniciar sesión</Button>
+        </div>
       </form>
       <p className="text-center mt-4 text-sm">¿Aún no tenés cuenta?
         <Link href="/register" className="text-secondary ml-1">

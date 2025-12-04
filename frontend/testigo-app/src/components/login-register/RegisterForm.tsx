@@ -50,12 +50,12 @@ export default function RegisterForm() {
 
   return (
     <Form {...form} >
-      <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid lg:grid-cols-2 gap-4 w-full mx-auto">
         <FormField
           control={form.control}
           name="nombre"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="lg:col-start-1 lg:row-start-1 self-start">
               <FormLabel htmlFor="nombre">Nombre</FormLabel>
               <FormControl>
                 <Input type="text" className="pl-5 bg-[#F2F4F7] placeholder:text-sm" placeholder="Ingresa tu nombre" id="nombre"  {...field} />
@@ -68,7 +68,7 @@ export default function RegisterForm() {
           control={form.control}
           name="apellido"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="lg:col-start-1 lg:row-start-2 self-start">
               <FormLabel htmlFor="apellido">Apellido</FormLabel>
               <FormControl>
                 <Input type="text" className="pl-5 bg-[#F2F4F7] placeholder:text-sm" placeholder="Ingresa tu apellido" id="apellido"  {...field} />
@@ -81,7 +81,7 @@ export default function RegisterForm() {
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="lg:col-start-1 lg:row-start-3 self-start">
               <FormLabel htmlFor="email">Correo electronico</FormLabel>
               <FormControl>
                 <Input className="pl-5 bg-[#F2F4F7] placeholder:text-sm" type="email" placeholder="nombre@gmail.com" id="email"   {...field} />
@@ -94,7 +94,7 @@ export default function RegisterForm() {
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem className="relative">
+            <FormItem className="relative lg:col-start-2 lg:row-start-1 self-start">
               <FormLabel htmlFor="password">Contraseña*</FormLabel>
               {
                 inputsViewpassword ?
@@ -113,7 +113,7 @@ export default function RegisterForm() {
           control={form.control}
           name="confirmpassword"
           render={({ field }) => (
-            <FormItem className="relative">
+            <FormItem className="relative lg:col-start-2 lg:row-start-2 self-start">
               <FormLabel htmlFor="password">Confirmar contraseña</FormLabel>
               {
                 inputsViewconfpassword ?
@@ -125,17 +125,20 @@ export default function RegisterForm() {
                 <Input className="pl-5 bg-[#F2F4F7] placeholder:text-sm" type={`${inputsViewconfpassword ? "password" : "text"}`}
                   placeholder="Confirma tu contraseña" id="confirmpassword"  {...field} />
               </FormControl>
-              <FormMessage className="text-xs" ><span className="text-foreground text-[10px]">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula,
-                1 número y 1 caracter especial</span></FormMessage>
+              <FormMessage className="text-xs" ></FormMessage>
             </FormItem>
           )}
         />
+        <span className="text-foreground text-[10px] ">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula,
+                1 número y 1 caracter especial</span>
         {mutationPostRegister.isError && (
           <p className="text-destructive text-sm">
             {(mutationPostRegister.error as Error).message}
           </p>
         )}
-        <Button type="submit" className="cursor-pointer mt-4 w-1/2 mx-auto">Registrar</Button>
+        <div className="lg:col-span-2 mx-auto w-1/2">
+        <Button type="submit" className="cursor-pointer mt-4 w-full mx-auto">Registrar</Button>
+        </div>
       </form>
       <p className="text-center mt-4 text-sm">¿Ya tenés cuenta?
         <Link href="/login" className="text-secondary ml-1">
