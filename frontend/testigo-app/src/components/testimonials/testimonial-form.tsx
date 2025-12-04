@@ -39,7 +39,7 @@ interface TestimonialFormData {
 export function TestimonialForm() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-
+  const [videoSource, setVideoSource] = useState<'url' | 'file' | null>(null);
   const [open, setOpen] = useState(false);
 
   const {
@@ -57,12 +57,12 @@ export function TestimonialForm() {
   const contentType = watch('contentType');
 
   const handleAddTag = (tag?: string) => {
-  const tagToAdd = tag || tagInput.trim();
-  if (tagToAdd && !tags.includes(tagToAdd)) {
-    setTags([...tags, tagToAdd]);
-    setTagInput('');
-    setOpen(false); // Cerrar el popover después de agregar
-  }
+    const tagToAdd = tag || tagInput.trim();
+    if (tagToAdd && !tags.includes(tagToAdd)) {
+      setTags([...tags, tagToAdd]);
+      setTagInput('');
+      setOpen(false); // Cerrar el popover después de agregar
+    }
   };
 
   const handleRemoveTag = (index: number) => {
@@ -70,23 +70,23 @@ export function TestimonialForm() {
   };
 
   const onSubmit = (data: TestimonialFormData) => {
-  // Generar IDs únicos
   const testimonialId = `tst-${Date.now()}`;
   const multimediaId = data.contentType !== 'text' ? `m-${Date.now()}` : null;
   
-  // Construir objeto multimedia solo si no es tipo texto
+  // Construir objeto multimedia
   const multimedia = data.contentType !== 'text' ? {
     id: multimediaId,
     testimonio_id: testimonialId,
     tipo: data.contentType,
-    url: data.contentType === 'video' ? data.videoUrl : 
-         data.contentType === 'image' && data.imageFile?.[0] ? 
-         URL.createObjectURL(data.imageFile[0]) : '',
+    url: data.contentType === 'video' 
+      ? (data.videoUrl || (data.videoFile?.[0] ? URL.createObjectURL(data.videoFile[0]) : ''))
+      : data.contentType === 'image' && data.imageFile?.[0] 
+      ? URL.createObjectURL(data.imageFile[0]) 
+      : '',
     descripcion: data.contentType === 'video' ? data.videoDescription : 
                 data.contentType === 'image' ? data.imageDescription : ''
   } : null;
   
-  // Construir el objeto final en el formato de Marina
   const testimonialData = {
     id: testimonialId,
     titulo: data.title,
@@ -101,6 +101,9 @@ export function TestimonialForm() {
   };
   
   console.log('Testimonio formateado:', JSON.stringify(testimonialData, null, 2));
+  
+  // Limpiar el estado de videoSource después del submit
+  setVideoSource(null);
 };
 
   {/*const onSubmit = (data: TestimonialFormData) => {
@@ -371,90 +374,132 @@ export function TestimonialForm() {
         )}
 
         {contentType === 'video' && (
-          <div className="space-y-4">
-            {/* Campo de URL de video */}
-            <div className="space-y-2">
-              <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-900">
-                URL del video <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="videoUrl"
-                type="text"
-                {...register('videoUrl', {
-                  required: contentType === 'video' ? 'La URL del video es obligatoria' : false,
-                })}
-                placeholder="https://youtube.com/watch?v=..."
-                className={`w-full rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-                  errors.videoUrl
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
-              {errors.videoUrl && (
-                <p className="text-sm text-red-500">{errors.videoUrl.message}</p>
-              )}
-            </div>
+  <div className="space-y-4">
+    {/* Campo de URL de video */}
+    <div className="space-y-2">
+      <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-900">
+        URL del video {!videoSource || videoSource === 'url' ? <span className="text-red-500">*</span> : ''}
+      </label>
+      <input
+        id="videoUrl"
+        type="text"
+        disabled={videoSource === 'file'}
+        {...register('videoUrl', {
+          required: contentType === 'video' && videoSource !== 'file' ? 'La URL del video es obligatoria' : false,
+        })}
+        onChange={(e) => {
+          if (e.target.value.trim()) {
+            setVideoSource('url');
+            setValue('videoFile', undefined); // Limpiar el archivo
+          } else if (!e.target.value.trim() && videoSource === 'url') {
+            setVideoSource(null);
+          }
+        }}
+        placeholder="https://youtube.com/watch?v=..."
+        className={`w-full rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+          videoSource === 'file' 
+            ? 'bg-gray-100 cursor-not-allowed' 
+            : errors.videoUrl
+            ? 'border-red-500 focus:ring-red-500'
+            : 'border-gray-300 focus:ring-blue-500'
+        }`}
+      />
+      {errors.videoUrl && (
+        <p className="text-sm text-red-500">{errors.videoUrl.message}</p>
+      )}
+    </div>
 
-            {/* Campo de archivo de video con diseño personalizado */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-900">
-                Archivo de video
-              </label>
-              <div className="relative">
-                <input
-                  id="videoFile"
-                  type="file"
-                  accept="video/mp4,video/quicktime"
-                  {...register('videoFile')}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                />
-                <div className="border-2 border-dashed border-gray-300 rounded-md px-6 py-8 text-center hover:border-blue-500 transition-colors">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-sm text-gray-600">
-                    Arrastra un video o haz click para seleccionar
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    MP4, MOV hasta 100MB
-                  </p>
-                </div>
-              </div>
-            </div>
+    {/* Separador visual */}
+    <div className="flex items-center gap-3">
+      <div className="flex-1 border-t border-gray-300"></div>
+      <span className="text-sm text-gray-500">O</span>
+      <div className="flex-1 border-t border-gray-300"></div>
+    </div>
 
-            {/* Campo de descripción de video */}
-            <div className="space-y-2">
-              <label htmlFor="videoDescription" className="block text-sm font-medium text-gray-900">
-                Descripción <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                id="videoDescription"
-                {...register('videoDescription', {
-                  required: contentType === 'video' ? 'La descripción es obligatoria' : false,
-                })}
-                placeholder="Escribe una descripción para el video..."
-                rows={4}
-                className={`w-full rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-                  errors.videoDescription
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-              />
-              {errors.videoDescription && (
-                <p className="text-sm text-red-500">{errors.videoDescription.message}</p>
-              )}
-            </div>
-          </div>
-        )}
+    {/* Campo de archivo de video */}
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-900">
+        Archivo de video {videoSource === 'file' ? <span className="text-red-500">*</span> : ''}
+      </label>
+      <div className="relative">
+        <input
+          id="videoFile"
+          type="file"
+          accept="video/mp4,video/quicktime"
+          disabled={videoSource === 'url'}
+          {...register('videoFile')}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              setVideoSource('file');
+              setValue('videoUrl', ''); // Limpiar la URL
+            } else if (!e.target.files?.length && videoSource === 'file') {
+              setVideoSource(null);
+            }
+          }}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+        />
+        <div className={`border-2 border-dashed rounded-md px-6 py-8 text-center transition-colors ${
+          videoSource === 'url'
+            ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+            : 'border-gray-300 hover:border-blue-500'
+        }`}>
+          <Upload className={`mx-auto h-12 w-12 mb-3 ${
+            videoSource === 'url' ? 'text-gray-300' : 'text-gray-400'
+          }`} />
+          <p className={`text-sm ${
+            videoSource === 'url' ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            {videoSource === 'url' 
+              ? 'Deshabilitado (usando URL)' 
+              : 'Arrastra un video o haz click para seleccionar'}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            MP4, MOV hasta 100MB
+          </p>
+        </div>
+      </div>
+      {videoSource === 'file' && watch('videoFile') && watch('videoFile').length > 0 && (
+        <p className="text-sm text-green-600">
+          Archivo seleccionado: {watch('videoFile')[0].name}
+        </p>
+      )}
+    </div>
 
-        <div className="space-y-2">
-  <label className="block text-sm font-medium text-gray-900">
-    Tags
-  </label>
+    {/* Campo de descripción de video */}
+    <div className="space-y-2">
+      <label htmlFor="videoDescription" className="block text-sm font-medium text-gray-900">
+        Descripción <span className="text-red-500">*</span>
+      </label>
+      <textarea
+        id="videoDescription"
+        {...register('videoDescription', {
+          required: contentType === 'video' ? 'La descripción es obligatoria' : false,
+        })}
+        placeholder="Escribe una descripción para el video..."
+        rows={4}
+        className={`w-full rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+          errors.videoDescription
+            ? 'border-red-500 focus:ring-red-500'
+            : 'border-gray-300 focus:ring-blue-500'
+        }`}
+      />
+      {errors.videoDescription && (
+        <p className="text-sm text-red-500">{errors.videoDescription.message}</p>
+      )}
+    </div>
+  </div>
+)}
+
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-gray-900">
+      Tags
+    </label>
   
-  <Popover open={open} onOpenChange={setOpen}>
+  <Popover open={open} onOpenChange={setOpen} >
     <PopoverTrigger asChild>
       <button
         type="button"
-        className="w-full flex items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full flex items-center justify-between z-10 rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <span className="text-gray-600">
           {tagInput || "Selecciona o escribe un tag..."}
@@ -463,7 +508,7 @@ export function TestimonialForm() {
       </button>
     </PopoverTrigger>
     
-    <PopoverContent className="w-[400px] p-0" align="start">
+    <PopoverContent className="w-[400px] z-10 bg-white p-0" align="start">
       <Command>
         <CommandInput 
           placeholder="Buscar o agregar tag..." 
@@ -506,11 +551,13 @@ export function TestimonialForm() {
           className="gap-1 bg-blue-100 text-blue-900 hover:bg-blue-200"
         >
           {tag}
-          <X 
-            size={14} 
-            className="cursor-pointer hover:text-red-600"
+          <button
+            type="button"
             onClick={() => handleRemoveTag(index)}
-          />
+            className="ml-1 hover:text-red-600 focus:outline-none"
+          >
+            <X size={14} />
+          </button>
         </Badge>
       ))}
     </div>
