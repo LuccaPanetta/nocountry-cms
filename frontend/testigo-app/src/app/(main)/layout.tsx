@@ -1,10 +1,9 @@
-import Index from "@/components/home/Index";
 import LayoutGeneral from "@/components/layout/LayoutGeneral";
 
-export default function Home() {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <LayoutGeneral>
-      <Index />
+      {children}
     </LayoutGeneral>
   );
 }
