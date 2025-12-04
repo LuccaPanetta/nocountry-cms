@@ -69,10 +69,6 @@ export class TestimonialsController {
   ): Promise<TestimonialResponseDto[]> {
     return this.testimonialsService.findAll(filterDto, req.user);
   }
-
-  findAll(@Query() filterDto: GetTestimonialsDto, @Request() req) {
-    return this.testimonialsService.findAll(filterDto, req.user);
-  }
   
   @Get(':id')
   @FindOneTestimonialSwagger()
