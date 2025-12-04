@@ -45,98 +45,91 @@ export class TestimonialsService {
   ) {}
 
   async createWithMedia(
-    createTestimonialDto: CreateTestimonialDto,
-    user: User,
-    file?: Express.Multer.File,
-    multimediaData?: { tipo: MultimediaType; descripcion?: string }
-  ): Promise<CreateTestimonialResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  createTestimonialDto: CreateTestimonialDto,
+  user: User,
+  file?: Express.Multer.File,
+  multimediaData?: { tipo: MultimediaType; descripcion?: string }
+): Promise<CreateTestimonialResponseDto> {
+  const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-    try {
-      // 1. Validar y obtener categoría
-      const category = await this.categoryRepository.findOne({
-        where: { id: createTestimonialDto.categoryId }
-      });
+  try {
+    // Validar categoría
+    const category = await this.categoryRepository.findOne({
+      where: { id: createTestimonialDto.categoryId }
+    });
 
-      if (!category) {
-        throw new BadRequestException('La categoría especificada no existe');
-      }
-
-      // 2. Validar tags
-      let tags: Tag[] = [];
-      if (createTestimonialDto.tagIds && createTestimonialDto.tagIds.length > 0) {
-        tags = await this.tagRepository.find({
-          where: { id: In(createTestimonialDto.tagIds) }
-        });
-
-        if (tags.length !== createTestimonialDto.tagIds.length) {
-          throw new BadRequestException('Algunos tags no existen');
-        }
-      }
-
-      // 3. Crear testimonio
-      const testimonial = this.testimonialRepository.create({
-        contenido: createTestimonialDto.contenido,
-        titulo: createTestimonialDto.titulo,
-        autorNombre: createTestimonialDto.autorNombre,
-        empresa: createTestimonialDto.empresa,
-        cargo: createTestimonialDto.cargo,
-        videoUrl: createTestimonialDto.videoUrl,
-        category: category,
-        tags: tags,
-        user: user,
-        status: TestimonialStatus.PENDING,
-      });
-
-      const savedTestimonial = await this.testimonialRepository.save(testimonial);
-
-      // 4. Si hay archivo, procesar multimedia
-      let multimedia: Multimedia | null = null;
-      if (file && multimediaData) {
-        const { tipo, descripcion } = multimediaData;
-        
-        const multimediaResult = await this.multimediaService.createWithUpload(
-          savedTestimonial.id,
-          file,
-          tipo,
-          descripcion
-        );
-
-        // Asociar multimedia al testimonio
-        savedTestimonial.multimedia = multimediaResult.multimedia;
-        await this.testimonialRepository.save(savedTestimonial);
-        multimedia = multimediaResult.multimedia;
-      }
-
-      await queryRunner.commitTransaction();
-
-      // 5. Cargar relaciones completas
-      const testimonialCompleto = await this.testimonialRepository.findOne({
-        where: { id: savedTestimonial.id },
-        relations: ['category', 'tags', 'multimedia']
-      });
-
-      // Validar que el testimonio fue encontrado
-      if (!testimonialCompleto) {
-        throw new NotFoundException('Testimonio no encontrado después de la creación');
-      }
-
-      // 6. Transformar a DTO de respuesta usando el mapper
-     return TestimonialMapper.toCreateResponseDto(
-  testimonialCompleto, 
-  multimedia || undefined // ✅ Convertir null a undefined
-);
-
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error(`Error creando testimonio: ${error.message}`);
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!category) {
+      throw new BadRequestException('La categoría especificada no existe');
     }
+
+    // Validar tags
+    let tags: Tag[] = [];
+    if (createTestimonialDto.tagIds && createTestimonialDto.tagIds.length > 0) {
+      tags = await this.tagRepository.find({
+        where: { id: In(createTestimonialDto.tagIds) }
+      });
+
+      if (tags.length !== createTestimonialDto.tagIds.length) {
+        throw new BadRequestException('Algunos tags no existen');
+      }
+    }
+
+    // Crear testimonio - usar multimediaUrl como videoUrl para compatibilidad
+    const testimonial = this.testimonialRepository.create({
+      contenido: createTestimonialDto.contenido,
+      titulo: createTestimonialDto.titulo,
+      autorNombre: createTestimonialDto.autorNombre,
+      empresa: createTestimonialDto.empresa,
+      cargo: createTestimonialDto.cargo, // Asignar multimediaUrl a videoUrl
+      category: category,
+      tags: tags,
+      user: user,
+      status: TestimonialStatus.PENDING,
+    });
+
+    const savedTestimonial = await this.testimonialRepository.save(testimonial);
+
+    // Procesar archivo si existe
+    let multimedia: Multimedia | undefined;
+    if (file && multimediaData) {
+      const { tipo, descripcion } = multimediaData;
+      
+      const multimediaResult = await this.multimediaService.createWithUpload(
+        savedTestimonial.id,
+        file,
+        tipo,
+        descripcion
+      );
+
+      savedTestimonial.multimedia = multimediaResult.multimedia;
+      await this.testimonialRepository.save(savedTestimonial);
+      multimedia = multimediaResult.multimedia;
+    }
+
+    await queryRunner.commitTransaction();
+
+    // Cargar relaciones
+    const testimonialCompleto = await this.testimonialRepository.findOne({
+      where: { id: savedTestimonial.id },
+      relations: ['category', 'tags', 'multimedia']
+    });
+
+    if (!testimonialCompleto) {
+      throw new NotFoundException('Testimonio no encontrado después de la creación');
+    }
+
+    return TestimonialMapper.toCreateResponseDto(testimonialCompleto, multimedia);
+
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    this.logger.error(`Error creando testimonio: ${error.message}`);
+    throw error;
+  } finally {
+    await queryRunner.release();
   }
+}
 
   async create(
     createTestimonialDto: CreateTestimonialDto, 
@@ -145,41 +138,45 @@ export class TestimonialsService {
     return this.createWithMedia(createTestimonialDto, user);
   }
 
-  async updateWithMedia(
-    id: string,
-    updateTestimonialDto: UpdateTestimonialDto,
-    file?: Express.Multer.File,
-    multimediaData?: { tipo: MultimediaType; descripcion?: string }
-  ): Promise<CreateTestimonialResponseDto> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+ async updateWithMedia(
+  id: string,
+  updateTestimonialDto: UpdateTestimonialDto,
+  file?: Express.Multer.File,
+  multimediaData?: { tipo: MultimediaType; descripcion?: string }
+): Promise<CreateTestimonialResponseDto> {
+  const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-    try {
-      // Obtener testimonio con relaciones
-      const testimonial = await this.testimonialRepository.findOne({
-        where: { id },
-        relations: ['category', 'tags', 'multimedia']
+  try {
+    // Obtener testimonio con relaciones
+    const testimonial = await this.testimonialRepository.findOne({
+      where: { id },
+      relations: ['category', 'tags', 'multimedia']
+    });
+
+    if (!testimonial) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+    }
+
+    // 1. Actualizar categoría si se proporciona
+    if (updateTestimonialDto.categoryId !== undefined) {
+      const category = await this.categoryRepository.findOne({
+        where: { id: updateTestimonialDto.categoryId }
       });
 
-      if (!testimonial) {
-        throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
+      if (!category) {
+        throw new BadRequestException('La categoría especificada no existe');
       }
+      testimonial.category = category;
+    }
 
-      // 1. Actualizar categoría si se proporciona
-      if (updateTestimonialDto.categoryId) {
-        const category = await this.categoryRepository.findOne({
-          where: { id: updateTestimonialDto.categoryId }
-        });
-
-        if (!category) {
-          throw new BadRequestException('La categoría especificada no existe');
-        }
-        testimonial.category = category;
-      }
-
-      // 2. Actualizar tags si se proporcionan
-      if (updateTestimonialDto.tagIds) {
+    // 2. Actualizar tags si se proporcionan
+    if (updateTestimonialDto.tagIds !== undefined) {
+      // Si es un array vacío, limpiar todos los tags
+      if (updateTestimonialDto.tagIds.length === 0) {
+        testimonial.tags = [];
+      } else {
         const tags = await this.tagRepository.find({
           where: { id: In(updateTestimonialDto.tagIds) }
         });
@@ -189,79 +186,169 @@ export class TestimonialsService {
         }
         testimonial.tags = tags;
       }
+    }
 
-      // 3. Actualizar campos básicos
-      if (updateTestimonialDto.contenido !== undefined) {
-        testimonial.contenido = updateTestimonialDto.contenido;
-      }
-      if (updateTestimonialDto.titulo !== undefined) {
-        testimonial.titulo = updateTestimonialDto.titulo;
-      }
-      if (updateTestimonialDto.autorNombre !== undefined) {
-        testimonial.autorNombre = updateTestimonialDto.autorNombre;
-      }
-      if (updateTestimonialDto.empresa !== undefined) {
-        testimonial.empresa = updateTestimonialDto.empresa;
-      }
-      if (updateTestimonialDto.cargo !== undefined) {
-        testimonial.cargo = updateTestimonialDto.cargo;
-      }
-      if (updateTestimonialDto.videoUrl !== undefined) {
-        testimonial.videoUrl = updateTestimonialDto.videoUrl;
+    // 3. Actualizar campos básicos (solo si se proporcionan)
+    if (updateTestimonialDto.contenido !== undefined) {
+      testimonial.contenido = updateTestimonialDto.contenido;
+    }
+    if (updateTestimonialDto.titulo !== undefined) {
+      testimonial.titulo = updateTestimonialDto.titulo;
+    }
+    if (updateTestimonialDto.autorNombre !== undefined) {
+      testimonial.autorNombre = updateTestimonialDto.autorNombre;
+    }
+    if (updateTestimonialDto.empresa !== undefined) {
+      testimonial.empresa = updateTestimonialDto.empresa;
+    }
+    if (updateTestimonialDto.cargo !== undefined) {
+      testimonial.cargo = updateTestimonialDto.cargo;
+    }
+
+    // 4. Manejar multimedia
+    let nuevaMultimedia: Multimedia | null = null;
+
+    // 4.1. Si se envía un archivo (subir nuevo archivo)
+    if (file && multimediaData) {
+      const { tipo, descripcion } = multimediaData;
+
+      // Validar que el tipo esté presente
+      if (!tipo) {
+        throw new BadRequestException('El tipo de multimedia es requerido al subir un archivo');
       }
 
-      const updatedTestimonial = await this.testimonialRepository.save(testimonial);
+      // Si ya existe multimedia, eliminarla
+      if (testimonial.multimedia) {
+        await this.multimediaService.remove(testimonial.multimedia.id);
+      }
 
-      // 4. Si hay archivo nuevo, procesarlo
-      let multimedia: Multimedia | null = null;
-      if (file && multimediaData) {
-        const { tipo, descripcion } = multimediaData;
+      // Crear nueva multimedia
+      const multimediaResult = await this.multimediaService.createWithUpload(
+        id,
+        file,
+        tipo,
+        descripcion
+      );
 
-        // Si ya existe multimedia, eliminarla
+      // Asociar nueva multimedia al testimonio
+      testimonial.multimedia = multimediaResult.multimedia;
+      nuevaMultimedia = multimediaResult.multimedia;
+    } 
+    // 4.2. Si se envía multimediaUrl (URL externa)
+    else if (updateTestimonialDto.multimediaUrl !== undefined) {
+      
+      // Si la URL viene vacía o null, eliminar multimedia existente
+      if (!updateTestimonialDto.multimediaUrl || updateTestimonialDto.multimediaUrl.trim() === '') {
+        // Limpiar multimedia (eliminar archivo si existe)
+        if (testimonial.multimedia) {
+          await this.multimediaService.remove(testimonial.multimedia.id);
+          testimonial.multimedia = undefined;
+        }
+      } 
+      // Si se envía una URL válida, crear un registro de Multimedia para la URL externa
+      else {
+        // Validar URL
+        try {
+          new URL(updateTestimonialDto.multimediaUrl);
+        } catch {
+          throw new BadRequestException('La URL proporcionada no es válida');
+        }
+
+        // Si ya existe multimedia, eliminarla primero
         if (testimonial.multimedia) {
           await this.multimediaService.remove(testimonial.multimedia.id);
         }
 
-        // Crear nueva multimedia
-        const multimediaResult = await this.multimediaService.createWithUpload(
+        // Determinar tipo basado en la URL o usar el proporcionado
+        const tipo = multimediaData?.tipo || this.determinarTipoPorUrl(updateTestimonialDto.multimediaUrl);
+        
+        // Crear registro de Multimedia para la URL externa
+        const multimediaResult = await this.multimediaService.createWithUrl(
           id,
-          file,
+          updateTestimonialDto.multimediaUrl,
           tipo,
-          descripcion
+          multimediaData?.descripcion || 'URL externa de multimedia'
         );
 
-        // Asociar nueva multimedia
-        updatedTestimonial.multimedia = multimediaResult.multimedia;
-        await this.testimonialRepository.save(updatedTestimonial);
-        multimedia = multimediaResult.multimedia;
+        testimonial.multimedia = multimediaResult;
+        nuevaMultimedia = multimediaResult;
       }
-
-      await queryRunner.commitTransaction();
-
-      // Cargar relaciones actualizadas
-      const testimonialCompleto = await this.testimonialRepository.findOne({
-        where: { id },
-        relations: ['category', 'tags', 'multimedia']
-      });
-
-      if (!testimonialCompleto) {
-        throw new NotFoundException(`Testimonio con ID ${id} no encontrado después de la actualización`);
-      }
-
-      // Transformar a DTO de respuesta
-      return TestimonialMapper.toCreateResponseDto(
-        testimonialCompleto,
-        multimedia || testimonialCompleto.multimedia
-      );
-
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error(`Error actualizando testimonio: ${error.message}`);
-      throw error;
-    } finally {
-      await queryRunner.release();
     }
+    // 4.3. Si no se envía ni file ni multimediaUrl → mantener lo existente
+
+    // Guardar cambios en el testimonio
+    const updatedTestimonial = await this.testimonialRepository.save(testimonial);
+    await queryRunner.commitTransaction();
+
+    // Cargar relaciones actualizadas
+    const testimonialCompleto = await this.testimonialRepository.findOne({
+      where: { id },
+      relations: ['category', 'tags', 'multimedia']
+    });
+
+    if (!testimonialCompleto) {
+      throw new NotFoundException(`Testimonio con ID ${id} no encontrado después de la actualización`);
+    }
+
+    // Transformar a DTO de respuesta
+    return TestimonialMapper.toCreateResponseDto(
+      testimonialCompleto,
+      nuevaMultimedia || testimonialCompleto.multimedia || undefined
+    );
+
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    this.logger.error(`Error actualizando testimonio: ${error.message}`);
+    throw error;
+  } finally {
+    await queryRunner.release();
   }
+}
+
+// Método auxiliar para determinar tipo por URL
+private determinarTipoPorUrl(url: string): MultimediaType {
+  const urlLower = url.toLowerCase();
+  
+  // Detectar si es video (YouTube, Vimeo, etc.)
+  if (urlLower.includes('youtube.com') || 
+      urlLower.includes('youtu.be') || 
+      urlLower.includes('vimeo.com') ||
+      urlLower.includes('video') ||
+      urlLower.endsWith('.mp4') || 
+      urlLower.endsWith('.mov') || 
+      urlLower.endsWith('.avi')) {
+    return MultimediaType.VIDEO;
+  }
+  
+  // Por defecto asumir imagen
+  return MultimediaType.IMAGE;
+}
+
+// Método auxiliar para determinar tipo de multimedia basado en URL
+private determinarTipoMultimedia(url: string): MultimediaType {
+  // Detectar si es video (YouTube, Vimeo, etc.)
+  const videoPatterns = [
+    /youtube\.com|youtu\.be/i,
+    /vimeo\.com/i,
+    /\.mp4$|\.webm$|\.ogv$/i
+  ];
+  
+  // Detectar si es imagen
+  const imagePatterns = [
+    /\.jpg$|\.jpeg$|\.png$|\.gif$|\.webp$|\.svg$/i,
+    /imgur\.com/i,
+    /unsplash\.com/i
+  ];
+  
+  if (videoPatterns.some(pattern => pattern.test(url))) {
+    return MultimediaType.VIDEO;
+  } else if (imagePatterns.some(pattern => pattern.test(url))) {
+    return MultimediaType.IMAGE;
+  }
+  
+  // Por defecto, asumir que es imagen
+  return MultimediaType.IMAGE;
+}
 
   async update(
     id: string, 

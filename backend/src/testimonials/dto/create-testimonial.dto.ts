@@ -1,32 +1,9 @@
-// src/testimonials/dto/create-testimonial.dto.ts
 import { 
   IsString, IsNotEmpty, IsOptional, IsUrl, IsUUID, 
-  IsArray, IsEnum, MaxLength, ValidateNested 
+  IsArray, IsEnum, MaxLength, MinLength 
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { TestimonialStatus } from '../entities/testimonial.entity';
 import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
-
-// DTO para archivo en FormData (NO base64)
-export class CreateMultimediaFileDto {
-  @ApiProperty({ 
-    description: 'Tipo de archivo multimedia',
-    enum: MultimediaType,
-    example: MultimediaType.IMAGE
-  })
-  @IsEnum(MultimediaType)
-  tipo: MultimediaType;
-
-  @ApiProperty({ 
-    description: 'Descripción opcional',
-    required: false,
-    example: 'Imagen principal del testimonio'
-  })
-  @IsOptional()
-  @IsString()
-  descripcion?: string;
-}
 
 export class CreateTestimonialDto {
   @ApiProperty({ 
@@ -35,6 +12,7 @@ export class CreateTestimonialDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MinLength(10)
   contenido: string;
 
   @ApiProperty({ 
@@ -78,13 +56,13 @@ export class CreateTestimonialDto {
   cargo?: string;
 
   @ApiProperty({ 
-    description: 'URL de video externo', 
+    description: 'URL externa de multimedia (imagen o video)', 
     required: false,
     example: 'https://www.youtube.com/watch?v=abc123'
   })
   @IsOptional()
   @IsUrl()
-  videoUrl?: string;
+  multimediaUrl?: string; // Cambiado de videoUrl a multimediaUrl
 
   @ApiProperty({ 
     description: 'ID de la categoría',
@@ -105,13 +83,23 @@ export class CreateTestimonialDto {
   @IsUUID('4', { each: true })
   tagIds?: string[];
 
- /*  @ApiProperty({
-    description: 'Estado del testimonio',
-    enum: TestimonialStatus,
-    default: TestimonialStatus.PENDING,
-    required: false
+  @ApiProperty({ 
+    description: 'Tipo de archivo multimedia (solo si se sube archivo)',
+    enum: MultimediaType,
+    required: false,
+    example: MultimediaType.IMAGE
   })
   @IsOptional()
-  @IsEnum(TestimonialStatus)
-  status?: TestimonialStatus; */
+  @IsEnum(MultimediaType)
+  tipo?: MultimediaType;
+
+  @ApiProperty({ 
+    description: 'Descripción del archivo multimedia (solo si se sube archivo)',
+    required: false,
+    example: 'Imagen principal del testimonio'
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  descripcion?: string;
 }

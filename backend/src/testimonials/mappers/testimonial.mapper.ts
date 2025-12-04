@@ -11,34 +11,28 @@ import {
 
 export class TestimonialMapper {
   // Mapear a TestimonialDataDto (datos del testimonio)
-  static toTestimonialDataDto(testimonial: Testimonial): TestimonialDataDto {
-    const dto = new TestimonialDataDto();
-    
-    // Mapear propiedades directas - manejar valores undefined
-    dto.id = testimonial.id;
-    dto.titulo = testimonial.titulo || '';
-    dto.autor = testimonial.autorNombre || '';
-    dto.empresa = testimonial.empresa || undefined;
-    dto.cargo = testimonial.cargo || undefined;
-    dto.contenido = testimonial.contenido || '';
-    dto.status = testimonial.status;
-    dto.videoUrl = testimonial.videoUrl || undefined;
-    dto.creadoEn = testimonial.creadoEn;
-    dto.actualizadoEn = testimonial.actualizadoEn;
-    
-    // Transformar category de objeto a string - manejar undefined
-    dto.category = testimonial.category?.name || '';
-    
-    // Transformar tags de array de objetos a array de strings - manejar undefined
-    dto.tags = testimonial.tags?.map(tag => tag.name).filter(name => name) || [];
-    
-    // Transformar multimedia si existe
-    if (testimonial.multimedia) {
-      dto.multimedia = this.toMultimediaResponseDto(testimonial.multimedia);
-    }
-    
-    return dto;
+ static toTestimonialDataDto(testimonial: Testimonial): TestimonialDataDto {
+  const dto = new TestimonialDataDto();
+  
+  dto.id = testimonial.id;
+  dto.titulo = testimonial.titulo || '';
+  dto.autor = testimonial.autorNombre || '';
+  dto.empresa = testimonial.empresa || undefined;
+  dto.cargo = testimonial.cargo || undefined;
+  dto.contenido = testimonial.contenido || '';
+  dto.status = testimonial.status;
+  dto.creadoEn = testimonial.creadoEn;
+  dto.actualizadoEn = testimonial.actualizadoEn;
+  
+  dto.category = testimonial.category?.name || '';
+  dto.tags = testimonial.tags?.map(tag => tag.name).filter(name => name) || [];
+  
+  if (testimonial.multimedia) {
+    dto.multimedia = this.toMultimediaResponseDto(testimonial.multimedia);
   }
+  
+  return dto;
+}
 
   static toMultimediaResponseDto(multimedia: Multimedia): MultimediaResponseDto {
     const dto = new MultimediaResponseDto();

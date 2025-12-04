@@ -1,11 +1,10 @@
-// src/testimonials/dto/create-testimonial-form.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { 
   IsString, IsNotEmpty, IsOptional, IsUrl, IsUUID, 
   IsEnum, MaxLength, MinLength, Matches, IsArray, 
-  ValidateIf, IsBoolean, IsNumber, ArrayMinSize, ArrayMaxSize
+  ValidateIf, ArrayMaxSize
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
 
 export class CreateTestimonialFormDto {
@@ -65,17 +64,14 @@ export class CreateTestimonialFormDto {
   cargo?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de video externo (YouTube, Vimeo, etc.)',
+    description: 'URL externa de multimedia (imagen o video)',
     example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
   })
   @IsOptional()
   @IsUrl({}, { 
-    message: 'La URL del video debe ser válida (ej: https://www.youtube.com/watch?v=...)' 
+    message: 'La URL de multimedia debe ser válida' 
   })
-  @Matches(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\/.+$/, {
-    message: 'La URL debe ser de YouTube o Vimeo'
-  })
-  videoUrl?: string;
+  multimediaUrl?: string; // Cambiado de videoUrl a multimediaUrl
 
   @ApiProperty({
     description: 'ID de la categoría (UUID válido)',
@@ -93,17 +89,14 @@ export class CreateTestimonialFormDto {
   @Transform(({ value }) => {
     if (!value) return [];
     
-    // Si ya es un array (fue transformado por el interceptor)
     if (Array.isArray(value)) {
       return value;
     }
     
-    // Si es string
     if (typeof value === 'string') {
       const trimmed = value.trim();
       if (!trimmed) return [];
       
-      // Si es JSON array
       if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
         try {
           const parsed = JSON.parse(trimmed);
@@ -115,16 +108,13 @@ export class CreateTestimonialFormDto {
         }
       }
       
-      // Si es lista separada por comas
       if (trimmed.includes(',')) {
         return trimmed.split(',').map((id: string) => id.trim());
       }
       
-      // Si es un solo ID
       return [trimmed];
     }
     
-    // Si es otro tipo
     throw new Error(`Formato inválido para tags. Se esperaba string o array, se recibió: ${typeof value}`);
   })
   @IsArray({ message: 'Los tags deben ser un array de IDs' })
@@ -133,21 +123,13 @@ export class CreateTestimonialFormDto {
   tagIds: string[] = [];
 
   @ApiPropertyOptional({
-    description: 'Tipo de archivo multimedia',
+    description: 'Tipo de archivo multimedia (solo si se sube archivo)',
     enum: MultimediaType,
     example: MultimediaType.IMAGE
   })
   @IsOptional()
   @IsEnum(MultimediaType, { 
     message: `El tipo debe ser ${MultimediaType.IMAGE} o ${MultimediaType.VIDEO}` 
-  })
-  @ValidateIf(o => o.file !== undefined)
-  @Transform(({ value }) => {
-    if (!value) return value;
-    if (typeof value === 'string') {
-      return value.toUpperCase();
-    }
-    return value;
   })
   tipo?: MultimediaType;
 
@@ -162,16 +144,17 @@ export class CreateTestimonialFormDto {
   descripcion?: string;
 
   toCreateTestimonialDto() {
-    // Ahora tagIds ya es un array, así que podemos retornarlo directamente
     return {
       contenido: this.contenido,
       titulo: this.titulo,
       autorNombre: this.autorNombre,
       empresa: this.empresa,
       cargo: this.cargo,
-      videoUrl: this.videoUrl,
+      multimediaUrl: this.multimediaUrl, // Cambiado aquí también
       categoryId: this.categoryId,
       tagIds: this.tagIds || [],
+      tipo: this.tipo,
+      descripcion: this.descripcion
     };
   }
 }

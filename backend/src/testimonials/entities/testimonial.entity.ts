@@ -38,16 +38,10 @@ export class Testimonial {
   titulo: string;
 
   @Column({ nullable: true })
-  videoUrl: string;
-
-  @Column({ nullable: true })
   empresa: string;
 
   @Column({ nullable: true })
   cargo: string;
-  
-/*   @Column({ nullable: true })
-  imageUrl: string; */
 
   @Column({
     type: 'enum',
@@ -103,9 +97,7 @@ export class Testimonial {
     return this.multimedia?.tipo === MultimediaType.IMAGE ? [this.multimedia] : [];
   }
 
-  getVideoUrl(): string | null {
-    return this.multimedia?.tipo === MultimediaType.VIDEO ? this.multimedia.url : this.videoUrl;
-  }
+ 
 
   /* getImageUrl(): string | null {
     return this.multimedia?.tipo === MultimediaType.IMAGE ? this.multimedia.url : this.imageUrl;

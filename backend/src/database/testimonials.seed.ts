@@ -109,7 +109,7 @@ export class TestimonialsSeed {
           empresa: 'TechCorp Solutions',
           cargo: 'Director de IT',
           status: TestimonialStatus.APPROVED,
-          videoUrl: 'https://example.com/videos/testimonio1.mp4',
+         /*  videoUrl: 'https://example.com/videos/testimonio1.mp4', */
           user: users[0],
           category: findCategory('servicios'),
           tags: findTags('servicio', 'soporte', 'recomendación'),
@@ -132,7 +132,7 @@ export class TestimonialsSeed {
           empresa: 'Silva Construcciones',
           cargo: 'Gerente General',
           status: TestimonialStatus.APPROVED,
-          videoUrl: 'https://example.com/videos/testimonio3.mp4',
+          /* videoUrl: 'https://example.com/videos/testimonio3.mp4', */
           user: users[2],
           category: findCategory('consultoría'),
           tags: findTags('empresa', 'innovación', 'recomendación'),

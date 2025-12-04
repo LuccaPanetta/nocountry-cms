@@ -50,7 +50,7 @@ import { MultimediaType } from '../multimedia/enums/multimedia-type.enum';
 export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
-  @Post()
+ @Post()
 @CreateTestimonialSwagger()
 @Roles(UserRole.CONTRIBUTOR)
 @UseInterceptors(
@@ -64,80 +64,70 @@ export class TestimonialsController {
 }))
 async create(
   @Body() createTestimonialFormDto: CreateTestimonialFormDto,
-  @UploadedFile() file: Express.Multer.File,
-  @Request() req: any
-): Promise<TestimonialResponseDto> { // ✅ CAMBIAR tipo de retorno
-  console.log('---------------------------------------------------');
-  console.log('📥 INICIO: CREATE TESTIMONIAL');
-  console.log('📋 DTO crudo recibido (antes de validar):', createTestimonialFormDto);
+  @Request() req: any,
+  @UploadedFile() file?: Express.Multer.File, // ✅ Solo agregar '?' aquí
+  
+): Promise<CreateTestimonialResponseDto> {
+  console.log('📥 CREATE TESTIMONIAL - Inicio');
+  console.log('📋 DTO recibido:', createTestimonialFormDto);
   console.log('📁 Archivo recibido:', file ? file.originalname : 'Ninguno');
-  console.log('👤 Usuario:', req.user?.id);
 
   try {
-      // LOG 1: VALIDACIONES
-      console.log('🔎 Validando campos requeridos...');
+    // VALIDACIÓN: No permitir file y multimediaUrl al mismo tiempo
+    if (file && createTestimonialFormDto.multimediaUrl) {
+      console.error('❌ ERROR: No se puede enviar archivo y URL externa simultáneamente');
+      throw new BadRequestException(
+        'No se puede enviar tanto archivo como URL externa. Elige solo una opción.'
+      );
+    }
 
-      if (!createTestimonialFormDto.contenido) {
-        console.error('❌ ERROR: contenido es requerido');
-        throw new BadRequestException('El campo "contenido" es requerido');
+    // Si hay archivo pero no tipo, detectar automáticamente
+    let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+    
+    if (file) {
+      const tipo = createTestimonialFormDto.tipo || 
+                   (file.mimetype.startsWith('image/') 
+                     ? MultimediaType.IMAGE 
+                     : MultimediaType.VIDEO);
+
+      console.log('🎬 Tipo multimedia detectado:', tipo);
+
+      if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
+        console.error('❌ ERROR: tipo inválido ->', tipo);
+        throw new BadRequestException(`Tipo de archivo no válido: ${tipo}`);
       }
 
-      if (!createTestimonialFormDto.categoryId) {
-        console.error('❌ ERROR: categoryId es requerido');
-        throw new BadRequestException('El campo "categoryId" es requerido');
-      }
+      multimediaData = {
+        tipo,
+        descripcion: createTestimonialFormDto.descripcion || file.originalname
+      };
+    }
 
-      // LOG 2: DETECTANDO TIPO DE MULTIMEDIA
-      let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+    // Transformar DTO
+    const createTestimonialDto = createTestimonialFormDto.toCreateTestimonialDto();
 
-      if (file) {
-        const tipo = createTestimonialFormDto.tipo || 
-                     (file.mimetype.startsWith('image/') 
-                       ? MultimediaType.IMAGE 
-                       : MultimediaType.VIDEO);
+    // Si hay URL pero no archivo, limpiar datos de archivo en el DTO
+    if (createTestimonialDto.multimediaUrl && !file) {
+      createTestimonialDto.tipo = undefined;
+      createTestimonialDto.descripcion = undefined;
+    }
 
-        console.log('🎬 Tipo multimedia detectado:', tipo);
-
-        if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
-          console.error('❌ ERROR: tipo inválido ->', tipo);
-          throw new BadRequestException(`Tipo de archivo no válido: ${tipo}`);
-        }
-
-        multimediaData = {
-          tipo,
-          descripcion: createTestimonialFormDto.descripcion || file.originalname
-        };
-
-        console.log('📦 Datos multimedia generados:', multimediaData);
-      }
-
-      // LOG 3: TRANSFORMACIÓN DE DTO
-      console.log('🔄 Transformando CreateTestimonialFormDto → CreateTestimonialDto...');
-      const createTestimonialDto = createTestimonialFormDto.toCreateTestimonialDto();
-
-      console.log('📘 DTO final transformado:', createTestimonialDto);
-
-      // LOG 4: LLAMADO AL SERVICE
-     console.log('🚀 Enviando DTO al service...');
+    console.log('🚀 Enviando al service...');
     const result = await this.testimonialsService.createWithMedia(
       createTestimonialDto,
       req.user,
-      file,
+      file, // ✅ Ahora puede ser undefined
       multimediaData
     );
 
-      console.log('✅ Testimonio creado correctamente');
-      console.log('---------------------------------------------------');
-      return result;
+    console.log('✅ Testimonio creado correctamente');
+    return result;
 
-    } catch (error) {
-      console.error('❌ ERROR EN CREATE TESTIMONIAL:', error.message);
-      console.error('📌 Stack:', error.stack);
-      console.log('---------------------------------------------------');
-
-      throw error;
-    }
+  } catch (error) {
+    console.error('❌ ERROR EN CREATE TESTIMONIAL:', error.message);
+    throw error;
   }
+}
 
   @Get()
 @FindAllTestimonialsSwagger()
@@ -158,38 +148,109 @@ findAll(
     return this.testimonialsService.findOne(id);
   }
 
- @Patch(':id')
+@Patch(':id')
 @UpdateTestimonialSwagger()
 @Roles(UserRole.EDITOR, UserRole.ADMIN)
 @UseInterceptors(
   FileInterceptor('file'),
   TransformFormDataInterceptor
 )
+@UsePipes(new ValidationPipe({ 
+  transform: true, 
+  whitelist: true,
+  forbidNonWhitelisted: false, // Cambiado a true para detectar campos no permitidos
+  exceptionFactory: (errors) => {
+    console.log('❌ Errores de validación:', errors);
+    const errorMessages = errors.map(error => ({
+      field: error.property,
+      value: error.value,
+      errors: Object.values(error.constraints || {}).map(message => ({
+        code: message.split(' ')[0],
+        message
+      }))
+    }));
+    throw new BadRequestException({
+      statusCode: 400,
+      message: 'Errores de validación en la solicitud',
+      errors: errorMessages,
+    });
+  }
+}))
 async update(
   @Param('id', ParseUUIDPipe) id: string,
   @Body() updateTestimonialDto: UpdateTestimonialDto,
-  @UploadedFile() file?: Express.Multer.File
-): Promise<TestimonialResponseDto> { // ✅ CAMBIAR tipo de retorno
-  let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
-  
-  if (file) {
-    const tipoFromBody = (updateTestimonialDto as any).tipo;
-    const tipo = tipoFromBody || (file.mimetype.startsWith('image/') 
-      ? MultimediaType.IMAGE 
-      : MultimediaType.VIDEO);
-    
-    multimediaData = {
-      tipo,
-      descripcion: (updateTestimonialDto as any).descripcion || file.originalname
-    };
-  }
+  @UploadedFile() file?: Express.Multer.File,
+  @Request() req?: any
+): Promise<CreateTestimonialResponseDto> {
+  console.log('✏️ ACTUALIZANDO TESTIMONIO:', id);
+  console.log('📋 DTO recibido:', updateTestimonialDto);
+  console.log('📁 Archivo recibido:', file ? file.originalname : 'Ninguno');
 
-  return this.testimonialsService.updateWithMedia(
-    id,
-    updateTestimonialDto,
-    file,
-    multimediaData
-  );
+  try {
+    // VALIDACIÓN: No permitir file y multimediaUrl al mismo tiempo
+    if (file && updateTestimonialDto.multimediaUrl) {
+      console.error('❌ ERROR: No se puede enviar archivo y URL externa simultáneamente');
+      throw new BadRequestException(
+        'No se puede enviar tanto archivo como URL externa. Elige solo una opción.'
+      );
+    }
+
+    // VALIDACIÓN: Si se envía status, rechazar la solicitud
+    // Esto asegura que status solo se actualice por la ruta específica
+    if ('status' in updateTestimonialDto && updateTestimonialDto.status !== undefined) {
+      console.error('❌ ERROR: El campo status no se puede actualizar aquí');
+      throw new BadRequestException(
+        'El campo "status" no se puede actualizar en esta ruta. ' +
+        'Use la ruta PATCH /testimonials/:id/status para cambiar el estado.'
+      );
+    }
+
+    // Preparar datos de multimedia solo si hay archivo
+    let multimediaData: { tipo: MultimediaType; descripcion?: string } | undefined;
+    
+    if (file) {
+      const tipo = updateTestimonialDto.tipo || 
+                   (file.mimetype.startsWith('image/') 
+                     ? MultimediaType.IMAGE 
+                     : MultimediaType.VIDEO);
+
+      console.log('🎬 Tipo multimedia detectado:', tipo);
+
+      if (![MultimediaType.IMAGE, MultimediaType.VIDEO].includes(tipo)) {
+        console.error('❌ ERROR: tipo inválido ->', tipo);
+        throw new BadRequestException(`Tipo de archivo no válido: ${tipo}`);
+      }
+
+      multimediaData = {
+        tipo,
+        descripcion: updateTestimonialDto.descripcion || file.originalname
+      };
+    }
+
+    // Si hay URL pero no archivo, limpiar datos de archivo en el DTO
+    if (updateTestimonialDto.multimediaUrl && !file) {
+      updateTestimonialDto.tipo = undefined;
+      updateTestimonialDto.descripcion = undefined;
+    }
+
+    // También limpiar campos multimedia si no hay ni archivo ni URL
+    if (!file && !updateTestimonialDto.multimediaUrl) {
+      updateTestimonialDto.tipo = undefined;
+      updateTestimonialDto.descripcion = undefined;
+    }
+
+    console.log('🚀 Enviando al service...');
+    return await this.testimonialsService.updateWithMedia(
+      id,
+      updateTestimonialDto,
+      file,
+      multimediaData
+    );
+
+  } catch (error) {
+    console.error('❌ ERROR EN UPDATE TESTIMONIAL:', error.message);
+    throw error;
+  }
 }
   
   @Delete(':id')
