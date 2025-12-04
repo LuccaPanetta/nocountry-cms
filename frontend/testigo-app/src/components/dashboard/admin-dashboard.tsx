@@ -11,7 +11,7 @@ export function AdminDashboard() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('moderacion');
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="max-w-2xl md:max-w-5xl bg-gray-50 p-8">
 
       <div className="mb-8 grid grid-cols-4 gap-6">
         <TestimonialCard
@@ -40,10 +40,10 @@ export function AdminDashboard() {
         />
       </div>
 
-      <div className="mb-6 flex justify-between">
+      <div className="mb-6 grid grid-cols-4 gap-x-4">
         <button
           onClick={() => setActiveSection('moderacion')}
-          className={`flex items-center rounded-sm gap-2  px-12 py-2 font-medium transition-colors ${
+          className={`text-center rounded-sm gap-2 py-2 font-medium transition-colors ${
             activeSection === 'moderacion'
               ? 'bg-Primary text-white'
               : 'border border-Primary bg-white text-Primary hover:bg-gray-50'
@@ -53,7 +53,7 @@ export function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveSection('usuarios')}
-          className={`flex items-center rounded-sm gap-2 px-12 py-2 font-medium transition-colors ${
+          className={`text-center rounded-sm gap-2 py-2 font-medium transition-colors ${
             activeSection === 'usuarios'
               ? 'bg-Primary text-white'
               : 'border border-Primary bg-white text-Primary hover:bg-gray-50'
@@ -63,7 +63,7 @@ export function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveSection('configuraciones')}
-          className={`flex items-center rounded-sm gap-2 px-12 py-2 font-medium transition-colors ${
+          className={`text-center rounded-sm gap-2  py-2 font-medium transition-colors ${
             activeSection === 'configuraciones'
               ? 'bg-Primary text-white'
               : 'border border-Primary bg-white text-Primary hover:bg-gray-50'
@@ -73,7 +73,7 @@ export function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveSection('metricas')}
-          className={`flex items-center rounded-sm gap-2 px-12 py-2 font-medium transition-colors ${
+          className={`text-center rounded-sm gap-2 py-2 font-medium transition-colors ${
             activeSection === 'metricas'
               ? 'bg-Primary text-white'
               : 'border border-Primary bg-white text-Primary hover:bg-gray-50'

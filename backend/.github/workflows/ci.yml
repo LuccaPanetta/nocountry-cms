@@ -1,0 +1,43 @@
+# .github/workflows/ci.yml
+name: CI para Backend NestJS
+
+on:
+  push:
+    branches: [ "main" ]
+    # Filtra para que solo se ejecute cuando hay cambios en el backend/
+    paths:
+      - 'backend/**' 
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    
+    # Define el directorio de trabajo dentro de la carpeta 'backend'
+    defaults:
+      run:
+        working-directory: backend 
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Dependencies
+      # Instala las dependencias dentro de la carpeta 'backend'
+      run: npm ci 
+
+    #- name: Run Unit & Integration Tests
+      # Asume que tienes un script de pruebas en package.json (ej: "test")
+     # run: npm run test:ci
+
+    - name: Build NestJS Application
+      # Compila el proyecto. Esto es una verificación final antes del despliegue.
+      run: npm run build
