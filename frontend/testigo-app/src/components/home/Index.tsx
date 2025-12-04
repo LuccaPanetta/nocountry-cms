@@ -15,7 +15,7 @@ const Index = () => {
     2000
   );
   const typewriterText = (
-    <span className="bg-clip-text text-secondary">
+    <span className="inline-block whitespace-nowrap min-w-[20ch] text-center bg-clip-text text-secondary">
       {text}
     </span>
   );
