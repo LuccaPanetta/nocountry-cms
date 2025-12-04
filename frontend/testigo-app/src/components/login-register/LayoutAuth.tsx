@@ -11,8 +11,8 @@ interface LayoutAuthProps {
 
 const LayoutAuth = ({ title, subtitle, children }: LayoutAuthProps) => {
     return (
-        <div className="grid min-h-screen w-full " >
-            <div className="flex flex-col max-w-[300px] justify-center items-center px-4 py-2 bg-primary-foreground shadow-md rounded-lg my-40 mx-auto">
+        <div className="grid w-full py-16" >
+            <div className="flex flex-col max-w-[300px] justify-center items-center px-4 py-8 bg-primary-foreground shadow-md rounded-lg mx-auto">
                 <Link href="/" aria-label="Ir a inicio">
                     <Image
                         src='/testiGo_iso.svg'

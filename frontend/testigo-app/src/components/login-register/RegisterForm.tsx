@@ -125,7 +125,7 @@ export default function RegisterForm() {
                 <Input className="pl-5 bg-[#F2F4F7] placeholder:text-sm" type={`${inputsViewconfpassword ? "password" : "text"}`}
                   placeholder="Confirma tu contraseña" id="confirmpassword"  {...field} />
               </FormControl>
-              <FormMessage className="text-xs" ><span className="text-foreground">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula,
+              <FormMessage className="text-xs" ><span className="text-foreground text-[10px]">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula,
                 1 número y 1 caracter especial</span></FormMessage>
             </FormItem>
           )}
@@ -135,7 +135,7 @@ export default function RegisterForm() {
             {(mutationPostRegister.error as Error).message}
           </p>
         )}
-        <Button type="submit" className="cursor-pointer mt-3 w-1/2 mx-auto">Registrar</Button>
+        <Button type="submit" className="cursor-pointer mt-4 w-1/2 mx-auto">Registrar</Button>
       </form>
       <p className="text-center mt-4 text-sm">¿Ya tenés cuenta?
         <Link href="/login" className="text-secondary ml-1">
