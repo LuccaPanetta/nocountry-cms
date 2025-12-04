@@ -32,7 +32,7 @@ export class MultimediaController {
     private readonly multimediaService: MultimediaService  
   ) { }
 
-  // ✅ Mantener endpoints de consulta
+  /* // ✅ Mantener endpoints de consulta
   @Get('testimonio/:testimonioId')
   @ListTestimonioMediaSwagger()
   async listTestimonioMedia(
@@ -58,7 +58,7 @@ export class MultimediaController {
   ) {
     return this.multimediaService.getOptimizedUrls(id);
   }
-
+ */
   @Get('health')
   @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @HealthCheckSwagger()

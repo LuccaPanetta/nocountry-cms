@@ -9,24 +9,24 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
-import { CreateTestimonialDto } from './dto/create-testimonial.dto';
-import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
-import { GetTestimonialsDto } from './dto/get-testimonials.dto';
-import { Multimedia } from '../multimedia/entities/multimedia.entity';
+import { CreateTestimonialDto } from '../dto/create-testimonial.dto';
+import { UpdateTestimonialDto } from '../dto/update-testimonial.dto';
+import { GetTestimonialsDto } from '../dto/get-testimonials.dto';
+import { Multimedia } from '../../multimedia/entities/multimedia.entity';
 import { 
   TestimonialDataDto,
   TestimonialResponseDto,
   CreateTestimonialResponseDto,
   TestimonialsListResponseDto
-} from './dto/testimonial-response.dto';
-import { Testimonial, TestimonialStatus } from './entities/testimonial.entity';
-import { User } from '../users/entities/user.entity'; 
-import { UserRole } from '../users/interfaces/user-role.enum'; 
-import { Category } from '../categories/entities/category.entity';
-import { Tag } from '../tags/entities/tag.entity';
-import { MultimediaService } from '../multimedia/multimedia.service';
-import { MultimediaType } from '../multimedia/enums/multimedia-type.enum';
-import { TestimonialMapper } from './mappers/testimonial.mapper';
+} from '../dto/testimonial-response.dto';
+import { Testimonial, TestimonialStatus } from '../entities/testimonial.entity';
+import { User } from '../../users/entities/user.entity'; 
+import { UserRole } from '../../users/interfaces/user-role.enum'; 
+import { Category } from '../../categories/entities/category.entity';
+import { Tag } from '../../tags/entities/tag.entity';
+import { MultimediaService } from '../../multimedia/multimedia.service';
+import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
+import { TestimonialMapper } from '../mappers/testimonial.mapper';
 
 @Injectable()
 export class TestimonialsService {

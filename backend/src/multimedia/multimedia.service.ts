@@ -10,7 +10,7 @@ import { CreateMultimediaDto } from './dto/create-multimedia.dto';
 import { MultimediaType } from './enums/multimedia-type.enum';
 import { MultimediaResponseDto } from './dto/multimedia-response.dto';
 import { CloudinaryMediaService } from '../cloudinary/cloudinary-media.service';
-import { TestimonialsService } from '../testimonials/testimonials.service';
+import { TestimonialsService } from '../testimonials/services/testimonials.service';
 
 @Injectable()
 export class MultimediaService {

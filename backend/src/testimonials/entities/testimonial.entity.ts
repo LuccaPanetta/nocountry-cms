@@ -97,9 +97,4 @@ export class Testimonial {
     return this.multimedia?.tipo === MultimediaType.IMAGE ? [this.multimedia] : [];
   }
 
- 
-
-  /* getImageUrl(): string | null {
-    return this.multimedia?.tipo === MultimediaType.IMAGE ? this.multimedia.url : this.imageUrl;
-  } */
 }

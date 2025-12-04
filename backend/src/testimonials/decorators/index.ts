@@ -59,13 +59,6 @@ export function CreateTestimonialSwagger() {
         type: 'object',
         required: ['contenido', 'categoryId'],
         properties: {
-          contenido: {
-            type: 'string',
-            description: `**📖 Contenido principal**`,
-            example: 'Este servicio superó todas mis expectativas...',
-            minLength: 10,
-            maxLength: 2000
-          },
           titulo: {
             type: 'string',
             description: '🏷️ Título breve',
@@ -90,6 +83,13 @@ export function CreateTestimonialSwagger() {
             example: 'Directora de Marketing',
             maxLength: 100
           },
+          contenido: {
+            type: 'string',
+            description: `**📖 Contenido principal**`,
+            example: 'Este servicio superó todas mis expectativas...',
+            minLength: 10,
+            maxLength: 2000
+          },
           categoryId: {
             type: 'string',
             format: 'uuid',
@@ -111,6 +111,15 @@ Consulta primero: \`GET /tags\`
 \`\`\``,
             example: '["323e4567-e89b-12d3-a456-426614174000", "423e4567-e89b-12d3-a456-426614174000"]'
           },
+          tipo: {
+            type: 'string',
+            enum: Object.values(MultimediaType),
+            description: `**📹 Tipo de archivo** 
+            
+**Solo requerido si se sube archivo.** 
+Si no se especifica y se sube archivo, se detecta automáticamente.`,
+            example: MultimediaType.IMAGE
+          },
           multimediaUrl: { // ✅ CAMBIADO: videoUrl → multimediaUrl
             type: 'string',
             description: `**🔗 URL externa de multimedia (imagen o video)** 
@@ -122,15 +131,6 @@ Consulta primero: \`GET /tags\`
 
 **Nota:** No se puede usar simultáneamente con archivo`,
             example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-          },
-          tipo: {
-            type: 'string',
-            enum: Object.values(MultimediaType),
-            description: `**📹 Tipo de archivo** 
-            
-**Solo requerido si se sube archivo.** 
-Si no se especifica y se sube archivo, se detecta automáticamente.`,
-            example: MultimediaType.IMAGE
           },
           file: {
             type: 'string',
@@ -240,105 +240,137 @@ export function FindOneTestimonialSwagger() {
 export function UpdateTestimonialSwagger() {
   return applyDecorators(
     ApiOperation({
-      summary: '✏️ Actualizar testimonio',
-      description: `Actualiza un testimonio existente.
-**Importante:** El campo 'status' NO se puede actualizar aquí. 
-Use la ruta \`PATCH /testimonials/:id/status\` para cambiar el estado.
-**Reglas de actualización de multimedia:**
-1. **Subir nuevo archivo** → Se elimina multimedia anterior y se ignora \`multimediaUrl\`
-2. **Usar nueva URL** → Se elimina archivo anterior (si existe) y se actualiza URL
-3. **Limpiar multimedia** → Enviar \`multimediaUrl\` vacío o null
-4. **Sin cambios** → No enviar ni \`file\` ni \`multimediaUrl\``
+      summary: '✏️ Actualizar un testimonio existente',
+      description: `
+Permite actualizar parcialmente un testimonio.
+
+## 🔥 Reglas importantes
+### 📌 1. Sobre el campo **status**
+❗ *No se puede actualizar desde este endpoint*.  
+Use: **PATCH /testimonials/:id/status**
+
+---
+
+## 🎬 Reglas de actualización de multimedia
+1. **Subir un nuevo archivo (\`file\`)**
+   - Se elimina multimedia anterior.
+   - Se ignora completamente \`multimediaUrl\`.
+
+2. **Enviar una nueva URL externa (\`multimediaUrl\`)**
+   - Se elimina archivo previo si existía.
+   - Se reemplaza por la nueva URL.
+
+3. **Eliminar multimedia**
+   - Enviar: \`multimediaUrl: ""\` o \`null\`.
+
+4. **Sin cambios de multimedia**
+   - No enviar ni \`file\` ni \`multimediaUrl\`.
+
+---
+
+## 🧪 Formatos aceptados para \`tagIds\`
+- JSON array → \`["uuid1","uuid2"]\`
+- Comas → \`uuid1,uuid2\`
+- Un solo ID → \`uuid1\`
+- Limpiar todo → \`[]\`
+`
     }),
+
     ApiConsumes('multipart/form-data'),
+
     ApiParam({
       name: 'id',
       description: 'ID del testimonio a actualizar',
-      example: '123e4567-e89b-12d3-a456-426614174000'
+      example: '7a8c4f58-2a99-4fc9-8bd0-5572d1c5da31',
     }),
+
     ApiBody({
-      description: 'Campos a actualizar (todos opcionales)',
+      description: 'Campos opcionales para actualizar el testimonio',
       schema: {
         type: 'object',
         properties: {
-          contenido: { 
+          titulo: {
             type: 'string',
-            description: 'Nuevo contenido',
-            maxLength: 2000
+            description: 'Título del testimonio',
+            maxLength: 200,
+            example: 'Resultados increíbles con el nuevo sistema'
           },
-          titulo: { 
+          autorNombre: {
             type: 'string',
-            description: 'Nuevo título',
-            maxLength: 200
+            description: 'Nombre del autor del testimonio',
+            maxLength: 100,
+            example: 'María González'
           },
-          autorNombre: { 
+          empresa: {
             type: 'string',
-            description: 'Nuevo nombre del autor',
-            maxLength: 100
+            description: 'Empresa del autor',
+            maxLength: 150,
+            example: 'Tech Solutions SA'
           },
-          empresa: { 
+          cargo: {
             type: 'string',
-            description: 'Nueva empresa',
-            maxLength: 150
+            description: 'Cargo del autor',
+            maxLength: 100,
+            example: 'Gerente de Operaciones'
           },
-          cargo: { 
+          contenido: {
             type: 'string',
-            description: 'Nuevo cargo',
-            maxLength: 100
-          },
-          multimediaUrl: { // ✅ CAMBIADO: videoUrl → multimediaUrl
-            type: 'string',
-            description: `**🔗 Nueva URL externa de multimedia** 
-            
-Para eliminar multimedia existente: enviar valor vacío \`""\`
-Para actualizar URL: enviar nueva URL válida`,
-            example: 'https://www.youtube.com/watch?v=abc123'
+            description: 'Contenido actualizado del testimonio',
+            maxLength: 2000,
+            example: 'El servicio mejoró significativamente nuestro proceso interno.'
           },
           categoryId: {
             type: 'string',
             format: 'uuid',
-            description: 'Nueva categoría',
+            description: 'Nueva categoría asociada',
+            example: '3d09faca-1bef-49da-ae64-08c211cc98a8'
           },
           tagIds: {
             type: 'string',
-            description: `**🏷️ Nuevas etiquetas** 
-            
-**Formato:** 
-1. JSON array: \`["uuid1","uuid2"]\`
-2. Lista separada por comas: \`uuid1,uuid2\`
-3. Un solo ID: \`uuid1\`
-4. Para limpiar todos los tags: enviar array vacío \`[]\``,
-            example: '3d09faca-1bef-49da-ae64-08c211cc98a8,cda3620b-0e3e-4b7b-8eb8-d676b6dbf290'
-          },
-          file: {
-            type: 'string',
-            format: 'binary',
-            description: '**📎 Nuevo archivo multimedia**',
+            description: `🏷️ IDs de Tags.  
+Admite array, coma separada, un ID o limpiar con "[]"`,
+            example: '["d1b9c18b-2f1b-47ad-bdc0-e6a7b91e1db0","5385d6a9-ddd3-49c2-a64b-f91dba0f7f3d"]'
           },
           tipo: {
             type: 'string',
             enum: Object.values(MultimediaType),
-            description: '**📹 Tipo de nuevo archivo**',
+            description: 'Tipo de multimedia para el archivo subido',
+            example: MultimediaType.IMAGE
           },
-          descripcion: { 
+          multimediaUrl: {
             type: 'string',
-            description: '**📝 Nueva descripción del archivo**',
-            maxLength: 500
+            description: `**🔗 Nueva URL externa de multimedia**  
+          - Reemplaza multimedia existente  
+          - Para eliminar: enviar \`""\`  
+          - Para dejar igual: no enviar`,
+            example: 'https://res.cloudinary.com/demo/video/upload/v17302341/testimonio123.mp4'
+          },
+          file: {
+            type: 'string',
+            format: 'binary',
+            description: '📎 Nuevo archivo multimedia (imagen o video)'
+          },
+          descripcion: {
+            type: 'string',
+            maxLength: 500,
+            description: 'Descripción del archivo multimedia',
+            example: 'Fotografía del cliente mostrando el resultado final'
           }
         }
       }
     }),
+
     ApiResponse({
       status: 200,
-      description: '✅ Testimonio actualizado'
+      description: '✅ Testimonio actualizado correctamente'
     }),
     ApiResponse({
       status: 400,
-      description: '❌ Datos inválidos (ej: archivo y URL simultáneos)'
+      description: '❌ Datos inválidos (ejemplo: archivo + URL simultáneamente)'
     }),
     ApiResponse({
       status: 404,
-      description: '❌ No encontrado'
+      description: '❌ El testimonio no existe'
     }),
     ApiResponse({
       status: 401,
@@ -350,6 +382,7 @@ Para actualizar URL: enviar nueva URL válida`,
     })
   );
 }
+
 
 // 🗑️ DeleteTestimonialSwagger (sin cambios)
 export function DeleteTestimonialSwagger() {
@@ -503,22 +536,22 @@ export function TestimonialFormDataSwagger() {
                 pattern: '^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$'
               },
               multimedia: {
-  description: 'Reglas para enviar multimedia (archivo o URL)',
-  oneOf: [
-    // Opción 1: El cliente sube un archivo
-    {
-      type: 'string',
-      format: 'binary',
-      description: 'Archivo multimedia (imagen o video). Tamaño máx: 5MB imágenes / 50MB videos. Formatos: JPEG, PNG, WEBP, MP4, MOV'
-    },
-    // Opción 2: El cliente envía una URL externa
-    {
-      type: 'string',
-      format: 'uri',
-      description: 'URL externa válida a una imagen o video'
-    }
-  ]
-}
+                description: 'Reglas para enviar multimedia (archivo o URL)',
+                oneOf: [
+                  // Opción 1: El cliente sube un archivo
+                  {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Archivo multimedia (imagen o video). Tamaño máx: 5MB imágenes / 50MB videos. Formatos: JPEG, PNG, WEBP, MP4, MOV'
+                  },
+                  // Opción 2: El cliente envía una URL externa
+                  {
+                    type: 'string',
+                    format: 'uri',
+                    description: 'URL externa válida a una imagen o video'
+                  }
+                ]
+              }
             }
           },
           categories: {
