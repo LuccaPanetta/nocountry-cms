@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ImageIcon, MessageCircle, Play } from 'lucide-react';
-import { CardTestimonyType } from '@/types/CardTestimony-type';
+import { TestimonyType } from '@/types/testimony-type';
 
 
-const CardTestimony = ({ testimony }: CardTestimonyType) => {
+const CardTestimony = ({ testimonial }: TestimonyType) => {
 
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -27,19 +27,19 @@ const CardTestimony = ({ testimony }: CardTestimonyType) => {
     }
 
     return (
-        <Card key={testimony.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            {testimony.multimedia.tipo !== 'text' && (
+        <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+            {testimonial.multimedia.tipo !== 'text' && (
                 <div className="relative aspect-video w-full overflow-hidden bg-muted">
                     <img
-                        src={testimony.multimedia.url || "/placeholder.svg"}
-                        alt={testimony.multimedia.descripcion}
+                        src={testimonial.multimedia.url || "/placeholder.svg"}
+                        alt={testimonial.multimedia.descripcion}
                         className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     />
-                    {testimony.multimedia.tipo === 'video' && (
+                    {testimonial.multimedia.tipo === 'video' && (
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden">
 
                             <iframe
-                                src={youtubeToEmbed(testimony.multimedia.url)}
+                                src={youtubeToEmbed(testimonial.multimedia.url)}
                                 className="absolute inset-0 w-full h-full"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                 allowFullScreen
@@ -58,25 +58,25 @@ const CardTestimony = ({ testimony }: CardTestimonyType) => {
             <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-2">
                     <Badge variant="outline" className="gap-1">
-                        {getTypeIcon(testimony.multimedia.tipo)}
-                        {testimony.multimedia.tipo}
+                        {getTypeIcon(testimonial.multimedia.tipo)}
+                        {testimonial.multimedia.tipo}
                     </Badge>
-                    <Badge >{testimony.categoria}</Badge>
+                    <Badge >{testimonial.category}</Badge>
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-balance leading-tight">
-                    {testimony.titulo}
+                    {testimonial.titulo}
                 </h3>
                 <p className="mb-4 text-sm text-muted-foreground text-pretty line-clamp-3">
-                    {testimony.contenido}
+                    {testimonial.contenido}
                 </p>
                 <div className="mb-3 border-t pt-3">
-                    <p className="font-medium text-sm">{testimony.autor}</p>
+                    <p className="font-medium text-sm">{testimonial.autor}</p>
                     <p className="text-xs text-muted-foreground">
-                        {testimony.cargo} · {testimony.empresa}
+                        {testimonial.cargo} · {testimonial.empresa}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                    {testimony.tags.slice(0, 3).map(tag => (
+                    {testimonial.tags.slice(0, 3).map(tag => (
                         <Badge
                             key={tag}
                             variant="default"

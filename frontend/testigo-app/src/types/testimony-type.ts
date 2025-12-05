@@ -1,15 +1,15 @@
-export type CardTestimonyType = {
-  testimony: {
+export type TestimonyType = {
+  testimonial: {
     id: string;
     titulo: string;
     autor: string;
     empresa: string;
     cargo: string;
     contenido: string;
-    estado: string;
-    categoria: string;
-    creado_en: string;
-    actualizado_en: string;
+    status: string;
+    category: string;
+    creadoEn: string;
+    actualizadoEn: string;
     tags: string[];
     multimedia: {
       id: string;
@@ -18,5 +18,12 @@ export type CardTestimonyType = {
       url: string;
       descripcion: string;
     };
+  };
+};
+
+
+export type TestimonyStatusType = {
+  testimonial: {
+    status: string;
   };
 };

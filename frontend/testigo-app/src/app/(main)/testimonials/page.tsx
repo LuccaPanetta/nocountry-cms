@@ -34,7 +34,7 @@ const page = () => {
 
   const filteredTestimonials = useMemo(() => {
     return testimonials.filter((testimony) => {
-      const matchesCategory = filteredCategory === '' || testimony.categoria === filteredCategory;
+      const matchesCategory = filteredCategory === '' || testimony.category === filteredCategory;
       const matchesSearch = testimony.contenido.toLowerCase().includes(keyword.toLowerCase()) || testimony.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
@@ -44,9 +44,9 @@ const page = () => {
   const handleSort = (filteredTestimonials: typeof testimonials) => {
     switch (orderValue) {
       case 'asc-order': 
-        return [...filteredTestimonials].sort((a, b) => new Date(a.creado_en).getTime() - new Date(b.creado_en).getTime());
+        return [...filteredTestimonials].sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime());
       case 'desc-order': 
-        return [...filteredTestimonials].sort((a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());     
+        return [...filteredTestimonials].sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime());     
       default:
         return filteredTestimonials;
     } 
@@ -107,8 +107,8 @@ const page = () => {
 
       {sortedTestimonials.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 my-12">
-          {sortedTestimonials.map(testimony => (
-            <CardTestimony key={testimony.id} testimony={testimony} />
+          {sortedTestimonials.map(testimonial => (
+            <CardTestimony key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>
       ) : (

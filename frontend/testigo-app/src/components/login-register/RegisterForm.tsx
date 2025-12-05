@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
@@ -14,11 +13,7 @@ import { RegisterType } from "@/types/register-type";
 import Link from "next/link";
 
 
-
-
 export default function RegisterForm() {
-
-  const router = useRouter();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerformSchema),
