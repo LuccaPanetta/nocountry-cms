@@ -1,3 +1,4 @@
+// src/config/cors.config.ts (añadir al array de allowedOrigins)
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as dotenv from 'dotenv';
 
@@ -12,16 +13,18 @@ export class CorsConfig {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:8080', // Para desarrollo de embeds
       'https://localhost:3000',
       'https://localhost:3001',
       this.backendUrl,
       process.env.RENDER_BACKEND_URL,
+      process.env.VERCEL_FRONTEND_URL,
+      '*', // Permitir todos los orígenes para embeds (ajustar en producción)
     ].filter((origin): origin is string => !!origin);
 
-    // Eliminar duplicados
     const uniqueOrigins = [...new Set(allowedOrigins)];
 
-    console.log('🌐 CORS Origins configurados:', uniqueOrigins);
+    console.log('🌐 CORS Origins configurados para embeds:', uniqueOrigins);
 
     return {
       origin: uniqueOrigins,

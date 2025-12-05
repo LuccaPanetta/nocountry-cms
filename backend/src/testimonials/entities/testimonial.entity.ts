@@ -16,6 +16,7 @@ import { Category } from '../../categories/entities/category.entity';
 import { Tag } from '../../tags/entities/tag.entity';
 import { Multimedia } from '../../multimedia/entities/multimedia.entity';
 import { MultimediaType } from '../../multimedia/enums/multimedia-type.enum';
+import { EngagementMetric } from '../../engagement/entities/engagement.entity';
 
 export enum TestimonialStatus {
   PENDING = 'pending',
@@ -73,6 +74,15 @@ export class Testimonial {
   })
   @JoinColumn({ name: 'multimedia_id' }) // Nueva columna en la tabla testimonios
   multimedia?: Multimedia;
+
+  @OneToOne(() => EngagementMetric, engagement => engagement.testimonial, {
+    cascade: true,
+    onDelete: 'CASCADE',
+    nullable: true,
+    eager: true, // Cargar automáticamente para fácil acceso
+  })
+  @JoinColumn({ name: 'engagement_id' })
+  engagement?: EngagementMetric;
 
   @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'user_id' })

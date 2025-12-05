@@ -14,7 +14,7 @@ export class EngagementMetric {
   id: string;
 
   @OneToOne(() => Testimonial, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'testimonialId' }) 
+  @JoinColumn({ name: 'testimonial_id' }) 
   testimonial: Testimonial;
 
   @Column({ default: 0 })

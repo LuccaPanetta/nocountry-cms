@@ -79,13 +79,6 @@ export class TestimonialDataDto {
   status: TestimonialStatus;
 
   @ApiProperty({ 
-    description: 'URL de video externo (YouTube, Vimeo, etc.)',
-    example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    required: false 
-  })
-  videoUrl?: string;
-
-  @ApiProperty({ 
     description: 'Categoría del testimonio',
     example: 'tecnología' 
   })
