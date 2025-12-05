@@ -63,115 +63,122 @@ export class DatabaseModule implements OnModuleInit {
     }
   }
 
-  private async forceResetDevelopment() {
-    try {
-      console.log('💥 RESET COMPLETO (DESARROLLO)...');
-      
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      
-      try {
-        // Deshabilitar triggers temporalmente
-        await queryRunner.query('SET session_replication_role = replica;');
-        
-        // ELIMINAR en orden correcto (dependencias primero)
-        console.log('🗑️  Eliminando tablas...');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "testimonial_tags" CASCADE');
-        console.log('✅ testimonial_tags eliminada');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "testimonios" CASCADE');
-        console.log('✅ testimonios eliminada');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "multimedias" CASCADE');
-        console.log('✅ multimedias eliminada');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "categorias" CASCADE');
-        console.log('✅ categorias eliminada');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "tags" CASCADE');
-        console.log('✅ tags eliminada');
-        
-        await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "usuarios" CASCADE');
-        console.log('✅ usuarios eliminada');
+ private async forceResetDevelopment() {
+  try {
+    console.log('💥 RESET COMPLETO (DESARROLLO)...');
 
-        // Rehabilitar triggers
-        await queryRunner.query('SET session_replication_role = DEFAULT;');
-        
-        console.log('🗑️  TODAS LAS TABLAS ELIMINADAS');
-        
-        // Forzar sincronización para recrear tablas
-        console.log('🔄 Sincronizando esquema...');
-        await this.dataSource.synchronize();
-        console.log('✅ Esquema sincronizado - Tablas recreadas');
-        
-      } catch (error) {
-        console.error('❌ Error durante el reset:', error);
-      } finally {
-        await queryRunner.release();
-      }
-      
-      // Esperar a que las tablas estén listas
-      await this.waitForTables();
-      
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+
+    try {
+      // Deshabilitar triggers temporalmente
+      await queryRunner.query('SET session_replication_role = replica;');
+
+      // ELIMINAR en orden correcto (dependencias primero)
+      console.log('🗑️  Eliminando tablas...');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "testimonial_tags" CASCADE');
+      console.log('✅ testimonial_tags eliminada');
+
+      // ⭐ NUEVO: esta tabla dependía de testimonios
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "engagement_metrics" CASCADE');
+      console.log('✅ engagement_metrics eliminada');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "testimonios" CASCADE');
+      console.log('✅ testimonios eliminada');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "multimedias" CASCADE');
+      console.log('✅ multimedias eliminada');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "categorias" CASCADE');
+      console.log('✅ categorias eliminada');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "tags" CASCADE');
+      console.log('✅ tags eliminada');
+
+      await this.safeQuery(queryRunner, 'DROP TABLE IF EXISTS "usuarios" CASCADE');
+      console.log('✅ usuarios eliminada');
+
+      await queryRunner.query('SET session_replication_role = DEFAULT;');
+
+      console.log('🗑️  TODAS LAS TABLAS ELIMINADAS');
+
+      // Forzar sincronización para recrear tablas
+      console.log('🔄 Sincronizando esquema...');
+      await this.dataSource.synchronize();
+      console.log('✅ Esquema sincronizado - Tablas recreadas');
+
     } catch (error) {
-      console.error('❌ Error en forceResetDevelopment:', error);
+      console.error('❌ Error durante el reset:', error);
+    } finally {
+      await queryRunner.release();
     }
+
+    // Esperar a que las tablas estén listas
+    await this.waitForTables();
+
+  } catch (error) {
+    console.error('❌ Error en forceResetDevelopment:', error);
   }
+}
+
 
   private async safeResetProduction() {
+  try {
+    console.log('🛡️  RESET SEGURO (PRODUCCIÓN)...');
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      console.log('🛡️  RESET SEGURO (PRODUCCIÓN)...');
-      
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
+      console.log('🗑️  Eliminando registros...');
 
-      try {
-        // ELIMINAR registros en orden correcto
-        console.log('🗑️  Eliminando registros...');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "testimonial_tags"');
-        console.log('✅ testimonial_tags limpiada');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "testimonios"');
-        console.log('✅ testimonios limpiada');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "multimedias"');
-        console.log('✅ multimedias limpiada');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "categorias"');
-        console.log('✅ categorias limpiada');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "tags"');
-        console.log('✅ tags limpiada');
-        
-        await this.safeQuery(queryRunner, 'DELETE FROM "usuarios"');
-        console.log('✅ usuarios limpiada');
+      await this.safeQuery(queryRunner, 'DELETE FROM "testimonial_tags"');
+      console.log('✅ testimonial_tags limpiada');
 
-        // Reiniciar secuencias
-        await this.safeQuery(queryRunner, 'ALTER SEQUENCE usuarios_id_seq RESTART WITH 1');
-        await this.safeQuery(queryRunner, 'ALTER SEQUENCE tags_id_seq RESTART WITH 1');
-        await this.safeQuery(queryRunner, 'ALTER SEQUENCE categorias_id_seq RESTART WITH 1');
-        await this.safeQuery(queryRunner, 'ALTER SEQUENCE testimonios_id_seq RESTART WITH 1');
-        
-        console.log('🔄 Secuencias reiniciadas');
+      // ⭐ NUEVO: limpiar engagement_metrics antes de testimonios
+      await this.safeQuery(queryRunner, 'DELETE FROM "engagement_metrics"');
+      console.log('✅ engagement_metrics limpiada');
 
-        await queryRunner.commitTransaction();
-        console.log('🗑️  TODOS LOS REGISTROS ELIMINADOS');
-        
-      } catch (error) {
-        await queryRunner.rollbackTransaction();
-        console.error('❌ Error durante el reset:', error);
-        throw error;
-      } finally {
-        await queryRunner.release();
-      }
-      
+      await this.safeQuery(queryRunner, 'DELETE FROM "testimonios"');
+      console.log('✅ testimonios limpiada');
+
+      await this.safeQuery(queryRunner, 'DELETE FROM "multimedias"');
+      console.log('✅ multimedias limpiada');
+
+      await this.safeQuery(queryRunner, 'DELETE FROM "categorias"');
+      console.log('✅ categorias limpiada');
+
+      await this.safeQuery(queryRunner, 'DELETE FROM "tags"');
+      console.log('✅ tags limpiada');
+
+      await this.safeQuery(queryRunner, 'DELETE FROM "usuarios"');
+      console.log('✅ usuarios limpiada');
+
+      // Reiniciar secuencias
+      await this.safeQuery(queryRunner, 'ALTER SEQUENCE usuarios_id_seq RESTART WITH 1');
+      await this.safeQuery(queryRunner, 'ALTER SEQUENCE tags_id_seq RESTART WITH 1');
+      await this.safeQuery(queryRunner, 'ALTER SEQUENCE categorias_id_seq RESTART WITH 1');
+      await this.safeQuery(queryRunner, 'ALTER SEQUENCE testimonios_id_seq RESTART WITH 1');
+
+      console.log('🔄 Secuencias reiniciadas');
+
+      await queryRunner.commitTransaction();
+      console.log('🗑️  TODOS LOS REGISTROS ELIMINADOS');
+
     } catch (error) {
-      console.error('❌ Error en safeResetProduction:', error);
+      await queryRunner.rollbackTransaction();
+      console.error('❌ Error durante el reset:', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
+
+  } catch (error) {
+    console.error('❌ Error en safeResetProduction:', error);
   }
+}
 
   private async safeQuery(queryRunner: any, query: string) {
     try {
