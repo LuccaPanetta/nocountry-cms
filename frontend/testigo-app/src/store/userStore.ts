@@ -25,9 +25,8 @@ export const useUserStore = create<UserState>()(
 
       // Guarda los datos del usuario en el store, validando con Zod
       setUserData: (data) => {
-        // Permite mapear la respuesta del backend
-        // Si viene en formato { user, access_token }
         let userData = data;
+
         if (
           typeof data === "object" &&
           data !== null &&
@@ -40,16 +39,17 @@ export const useUserStore = create<UserState>()(
             ...(data as any).user,
             token: (data as any).access_token,
           };
-        } else {
-          userData = data; // Use data directly if user is not an object
         }
-        // Validar datos con Zod antes de guardar
+
         const parsed = userSchema.partial().safeParse(userData);
+
         if (parsed.success) {
           set((state) => ({
             ...state,
-            ...userData,
+            ...parsed.data, 
           }));
+        } else {
+          console.error("❌ User data invalid:", parsed.error);
         }
       },
 
@@ -68,7 +68,7 @@ export const useUserStore = create<UserState>()(
       setHasHydrated: (state) => set({ hasHydrated: state }),
     }),
     {
-      name: "user-storage",
+      name: "user-data-storage", // Nombre de la clave en el almacenamiento
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },
