@@ -15,7 +15,7 @@ import { TagsModule } from './tags/tags.module';
 import { MultimediaModule } from './multimedia/multimedia.module'; 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
-
+import { PublicModule } from './public/public.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +29,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     CategoriesModule,
     TagsModule,
     MultimediaModule,
+    PublicModule,
   ],
   controllers: [AppController],
   providers: [
