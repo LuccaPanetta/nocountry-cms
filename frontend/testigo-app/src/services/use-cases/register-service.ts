@@ -4,6 +4,7 @@ import { apiAuthService } from "../general-api";
 export const postRegister = async (data: RegisterType) => {
   try {
     const res = await apiAuthService.post("/register", data);
+    console.log('Se registró exitosamente');
     return res.data;
   } catch (error: any) {
   

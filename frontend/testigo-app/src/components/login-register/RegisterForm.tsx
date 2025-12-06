@@ -11,9 +11,16 @@ import { registerformSchema, RegisterFormValues } from "@/schemas/register-schem
 import { RegisterMutationsService } from "@/services/use-mutations-service/register-mutation-service";
 import { RegisterType } from "@/types/register-type";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+type onSuccessProps = {
+  onSuccess?: () => void
+}
 
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSuccess }: onSuccessProps) {
+
+  const router = useRouter();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerformSchema),
@@ -36,7 +43,18 @@ export default function RegisterForm() {
       email: data.email,
       password: data.password
     }
-    mutationPostRegister.mutate(dataPost);
+    console.log({dataPost});
+    
+    mutationPostRegister.mutate(dataPost, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/register/success")
+        }
+      }, });
+
+
   };
 
   const [inputsViewpassword, setinputsViewpass] = useState(true)
@@ -124,8 +142,7 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
-        <span className="text-foreground text-[10px] ">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula,
-                1 número y 1 caracter especial</span>
+        <span className="text-foreground text-[10px] ">*Debe incluir entre 6 y 8 caracteres, y al menos: 1 mayúscula y 1 número</span>
         {mutationPostRegister.isError && (
           <p className="text-destructive text-sm">
             {(mutationPostRegister.error as Error).message}
