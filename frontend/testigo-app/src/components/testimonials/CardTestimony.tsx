@@ -2,10 +2,14 @@ import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ImageIcon, MessageCircle, Play } from 'lucide-react';
-import { TestimonyType } from '@/types/testimony-type';
+import { PublicTestimonyResType } from '@/types/testimony-type';
+
+type CardTestimonyProps = {
+  testimonial: PublicTestimonyResType
+}
 
 
-const CardTestimony = ({ testimonial }: TestimonyType) => {
+const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -26,16 +30,21 @@ const CardTestimony = ({ testimonial }: TestimonyType) => {
         return `https://www.youtube.com/embed/${id}`;
     }
 
+    const handleDateFormat = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
     return (
         <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            {testimonial.multimedia.tipo !== 'text' && (
+            {testimonial.multimedia.type !== 'text' && (
                 <div className="relative aspect-video w-full overflow-hidden bg-muted">
                     <img
                         src={testimonial.multimedia.url || "/placeholder.svg"}
                         alt={testimonial.multimedia.descripcion}
                         className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     />
-                    {testimonial.multimedia.tipo === 'video' && (
+                    {testimonial.multimedia.type === 'video' && (
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden">
 
                             <iframe
@@ -58,21 +67,22 @@ const CardTestimony = ({ testimonial }: TestimonyType) => {
             <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-2">
                     <Badge variant="outline" className="gap-1">
-                        {getTypeIcon(testimonial.multimedia.tipo)}
-                        {testimonial.multimedia.tipo}
+                        {getTypeIcon(testimonial.multimedia.type)}
+                        {testimonial.multimedia.type.toLowerCase()}
                     </Badge>
                     <Badge >{testimonial.category}</Badge>
                 </div>
+                <p className="text-xs py-3">{handleDateFormat(testimonial.createdAt)}</p>
                 <h3 className="mb-2 text-lg font-semibold text-balance leading-tight">
-                    {testimonial.titulo}
+                    {testimonial.title}
                 </h3>
                 <p className="mb-4 text-sm text-muted-foreground text-pretty line-clamp-3">
-                    {testimonial.contenido}
+                    {testimonial.content}
                 </p>
                 <div className="mb-3 border-t pt-3">
-                    <p className="font-medium text-sm">{testimonial.autor}</p>
+                    <p className="font-medium text-sm">{testimonial.author}</p>
                     <p className="text-xs text-muted-foreground">
-                        {testimonial.cargo} · {testimonial.empresa}
+                        {testimonial.position} · {testimonial.company}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">

@@ -2,62 +2,77 @@
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select"
-import { ArrowDown, ArrowUp, Search, SearchIcon } from "lucide-react"
-import { useMemo, useState } from "react"
-import data from "@/constants/testimonials.json"
-import { useRouter } from "next/navigation"
+import { ArrowDown, ArrowUp, Search, SearchIcon, X } from "lucide-react"
 import CardTestimony from "@/components/testimonials/CardTestimony"
+import { useState, useMemo } from "react"
+import { Pagination } from "@/components/ui/pagination"
+import { usePaginatedTestimonials } from "@/hooks/usePaginationTestimonials"
+import { PublicTestimonyResType } from "@/types/testimony-type"
+import { CustomPagination } from "@/components/ui/CustomPagination"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 const categories = ["producto", "evento", "cliente", "industria"]
 
-const page = () => {
+const TestimonialsPage = () => {
 
-  const [orderValue, setOrderValue] = useState("")
-  const [testimonials, setTestimonials] = useState(data)
   const [filteredCategory, setFilteredCategory] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [orderValue, setOrderValue] = useState("")
 
-  const router = useRouter()
+  //Pagination hook
+  const { page, totalPages, testimonials, total, onPageChange, isLoading } =
+    usePaginatedTestimonials({
+      keyword,
+      filteredCategory,
+    });
 
-  const onSearchChange = (value: string) => {
-    setKeyword(value)
-  }
-
+  //Order 
   const options = [
     { value: "asc-order", label: "Fecha Asc", icon: ArrowUp },
     { value: "desc-order", label: "Fecha Desc", icon: ArrowDown },
-    /*     { value: "asc-rating", label: "Rating Asc", icon: ArrowUp },
-        { value: "desc-rating", label: "Rating Desc", icon: ArrowDown }, */
+    { value: "asc-views", label: "Visualizaciones Asc", icon: ArrowUp },
+    { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },
   ]
 
 
   const filteredTestimonials = useMemo(() => {
-    return testimonials.filter((testimony) => {
-      const matchesCategory = filteredCategory === '' || testimony.category === filteredCategory;
-      const matchesSearch = testimony.contenido.toLowerCase().includes(keyword.toLowerCase()) || testimony.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()));
+    return testimonials.filter((testimony: PublicTestimonyResType) => {
+      const matchesCategory =
+        filteredCategory === '' || testimony.category === filteredCategory;
+
+      const matchesSearch =
+        testimony.content.toLowerCase().includes(keyword.toLowerCase()) ||
+        testimony.title.toLowerCase().includes(keyword.toLowerCase()) ||
+        testimony.author.toLowerCase().includes(keyword.toLowerCase()) ||
+        testimony.company.toLowerCase().includes(keyword.toLowerCase()) ||
+        testimony.multimedia.type.toLowerCase().includes(keyword.toLowerCase()) ||
+        testimony.tags.some(tag =>
+          tag.toLowerCase().includes(keyword.toLowerCase())
+        );
+
       return matchesCategory && matchesSearch;
     });
-  }, [filteredCategory, keyword]);
+  }, [testimonials, filteredCategory, keyword]);
 
+  const hasActiveFilters = filteredCategory !== '' || keyword !== '';
 
-  const handleSort = (filteredTestimonials: typeof testimonials) => {
-    switch (orderValue) {
-      case 'asc-order': 
-        return [...filteredTestimonials].sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime());
-      case 'desc-order': 
-        return [...filteredTestimonials].sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime());     
-      default:
-        return filteredTestimonials;
-    } 
-  }
-  const sortedTestimonials = handleSort(filteredTestimonials);
+  const clearAllFilters = () => {
+    setFilteredCategory('');
+    setKeyword('');
+  };
 
   return (
     <Container>
-      <Button onClick={() => router.push('/testimonials/create')} className="w-38 flex self-end">Crear testimonio</Button>
+      <Button className="w-38 flex self-end">
+        Crear testimonio
+      </Button>
+
       <h2 className="text-lg text-secondary font-bold mt-5">Explora testimonios reales</h2>
-      <p className="font-light mt-3">Descubrí experiencias auténticas compartidas por nuestra comunidad. Usá el buscador o navegá por las páginas para encontrar los testimonios que mejor reflejen el impacto de nuestros proyectos y servicios.</p>
+      <p className="font-light mt-3">
+        Descubrí experiencias auténticas compartidas por nuestra comunidad.
+      </p>
+
       <section className="flex flex-col lg:flex-row lg:items-baseline-last lg:justify-between gap-4 mt-4 lg:mt-10">
         <div className="relative mt-8 md:w-1/2 lg:mt-0 lg:w-1/3 w-full">
           <Input
@@ -65,12 +80,13 @@ const page = () => {
             placeholder="Buscar testimonio..."
             type="search"
             value={keyword}
-            onChange={(e) => onSearchChange?.(e.target.value)}
+            onChange={(e) => setKeyword(e.target.value)}
           />
-          <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 peer-disabled:opacity-50">
+          <div className="text-muted-foreground/80 absolute inset-y-0 start-0 flex items-center ps-2">
             <SearchIcon size={16} />
           </div>
         </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 lg:w-2/3 gap-3">
           <h3 className="col-span-2 md:col-span-4">Búsqueda por categoría</h3>
           {categories.map((cat) => (
@@ -85,6 +101,17 @@ const page = () => {
           ))}
         </div>
       </section>
+
+      {hasActiveFilters && (
+        <Button
+          variant={"link"}
+          className="mt-5 w-1/2 mx-auto lg:self-end lg:w-1/6 "
+          onClick={clearAllFilters}
+        >
+          <X /> Borrar filtros
+        </Button>
+      )}
+
       <div className="flex flex-col md:flex-row mt-6 w-full md:items-center md:justify-between">
         <div className="grid grid-cols-2 justify-end items-center gap-3 md:order-2 w-full md:w-auto">
           <span className="col-span-1 md:text-end">Ordenar por:</span>
@@ -102,12 +129,14 @@ const page = () => {
             </SelectContent>
           </Select>
         </div>
-        <span className="text-sm text-muted-foreground mt-5 md:mt-0">Mostrando {filteredTestimonials.length} de {testimonials.length} testimonios</span>
+        <span className="text-sm text-muted-foreground mt-5">
+          Mostrando {filteredTestimonials.length} de {total} testimonios
+        </span>
       </div>
 
-      {sortedTestimonials.length > 0 ? (
+      {!isLoading && filteredTestimonials.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 my-12">
-          {sortedTestimonials.map(testimonial => (
+          {filteredTestimonials.map((testimonial: PublicTestimonyResType) => (
             <CardTestimony key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>
@@ -116,20 +145,21 @@ const page = () => {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="mb-2 text-lg font-semibold">No se encontraron testimonios</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Intente ajustar su búsqueda o eliminar algunos filtros.
-          </p>
-          {/*  {hasActiveFilters && (
-            <Button variant="outline" onClick={clearAllFilters}>
-              Borrar filtros
-            </Button>
-          )} */}
+          <h3 className="mb-2 text-lg font-semibold">
+            No se encontraron testimonios
+          </h3>
         </div>
       )}
 
+      {totalPages > 1 && (
+        <CustomPagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      )}
     </Container>
   )
 }
 
-export default page
+export default TestimonialsPage
