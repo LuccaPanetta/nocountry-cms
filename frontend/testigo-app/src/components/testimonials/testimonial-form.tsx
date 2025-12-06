@@ -16,7 +16,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
-import { fetchCategories, fetchTags, type Category, type Tag } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import TestimonialNotification from './pruebas/notification';
@@ -29,7 +28,7 @@ const CATEGORY_MAP: Record<string, string> = {
   'servicios': 'cc7e2851-0289-4761-b8b2-d30235425d06',
   'productos': 'c74308b1-1cfd-4838-a50a-f680cdfcf169',
   'consultoria': '94cc7563-74e3-499f-a1db-d9e028278fff',
-  'educacion': '64091810-b9db-4cf0-a928-d6d550b96fdd', // UUID real del backend
+  'educacion': '64091810-b9db-4cf0-a928-d6d550b96fdd',
   'Evento': 'otro-uuid-aqui',
   'Cliente': 'otro-uuid-aqui',
   'Industria': 'otro-uuid-aqui',
@@ -38,7 +37,7 @@ const CATEGORY_MAP: Record<string, string> = {
 const TAG_MAP: Record<string, string> = {
   'Educación': 'dbc2cf97-caaa-4a28-a4ee-994a93f7d2d8',
   'Capacitación': 'c3759780-fcb6-4d39-8a29-dc4026bfcd1e',
-  'Comunidad': '0142eb68-ea47-4fc2-bcc0-019b5bbbfad8', // Cambié el UUID
+  'Comunidad': '0142eb68-ea47-4fc2-bcc0-019b5bbbfad8',
   'Calidad': 'e8ca3dc7-e21a-427d-b4ce-3009e7c2bafb',
   'Innovación': '3c536eaa-ec49-433c-b850-b0f75611d696',
   'Flexibilidad': 'f20262ca-02b9-4378-8a79-c3395addb89c',
@@ -105,41 +104,41 @@ export function TestimonialForm() {
   try {
     const formData = new FormData();
     
-    // Campos básicos
+    
     formData.append('titulo', data.title);
     formData.append('autorNombre', data.author);
     formData.append('empresa', data.company);
     formData.append('cargo', data.position || '');
     formData.append('contenido', data.testimonialContent || '');
     
-    // Tipo
+    
     formData.append('tipo', data.contentType.toUpperCase());
     
-    // Descripción
+    
     if (data.contentType === 'image' && data.imageDescription) {
       formData.append('descripcion', data.imageDescription);
     } else if (data.contentType === 'video' && data.videoDescription) {
       formData.append('descripcion', data.videoDescription);
     }
     
-    // Archivo
+    
     if (data.contentType === 'image' && data.imageFile?.[0]) {
       formData.append('file', data.imageFile[0]);
     } else if (data.contentType === 'video' && data.videoFile?.[0]) {
       formData.append('file', data.videoFile[0]);
     }
     
-    // ✅ Mapear categoría al UUID
+    
     const categoryId = CATEGORY_MAP[data.category];
     if (!categoryId) {
       throw new Error(`Categoría "${data.category}" no encontrada`);
     }
     formData.append('categoryId', categoryId);
     
-    // ✅ Mapear tags a UUIDs
+    
     const tagIds = tags
       .map(tagName => TAG_MAP[tagName])
-      .filter(Boolean); // Filtrar nulls/undefined
+      .filter(Boolean); 
     
     if (tagIds.length > 0) {
       formData.append('tagIds', tagIds.join(','));
@@ -183,33 +182,6 @@ export function TestimonialForm() {
     setIsSubmitting(false);
   }
 };
-
-  {/*const onSubmit = (data: TestimonialFormData) => {
-    const formDataWithTags = {
-      ...data,
-      tags,
-    };
-    
-    // Manejo especial para imágenes
-    if (data.contentType === 'image' && data.imageFile) {
-      const imageFile = data.imageFile[0]; // Primer archivo seleccionado
-      console.log('Imagen seleccionada:', imageFile);
-      console.log('Descripción de imagen:', data.imageDescription);
-    }
-    
-    // Manejo especial para video
-    if (data.contentType === 'video') {
-      console.log('URL de video:', data.videoUrl);
-      if (data.videoFile) {
-        const videoFile = data.videoFile[0];
-        console.log('Archivo de video:', videoFile);
-      }
-      console.log('Descripción de video:', data.videoDescription);
-    }
-    
-    console.log('Form data completo:', formDataWithTags);
-  };
-  */}
 
   const handleCancel = () => {
     console.log('Form cancelled');
@@ -533,7 +505,7 @@ export function TestimonialForm() {
           </p>
         </div>
       </div>
-      {videoSource === 'file' && watch('videoFile') && watch('videoFile').length > 0 && (
+      {videoSource === 'file' && watch('videoFile') && watch('videoFile').length > 0 && (  //Aviso, esto lo detecta como error, pero hasta donde lo probe funciona bien
         <p className="text-sm text-green-600">
           Archivo seleccionado: {watch('videoFile')[0].name}
         </p>
@@ -639,79 +611,6 @@ export function TestimonialForm() {
   )}
 </div>
 
-        {/*<div className="space-y-2">
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-900">
-            Tags
-          </label>
-          <div className="flex gap-2"> 
-            <select
-            id="tags"
-            value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0">
-
-            <option value="">Selecciona un Tag...</option>
-            <option value="Educación">Educación</option>
-            <option value="Capacitación">Capacitación</option>
-            <option value="Comunidad">Comunidad</option>
-            <option value="Calidad">Calidad</option>
-            <option value="Innovación">Innovación</option>
-            <option value="Flexibilidad">Flexibilidad</option>
-            <option value="Eficiencia">Eficiencia</option>
-
-            </select>
-            */}
-            {/*
-            
-            <input
-              id="tags"
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-              placeholder="Agregar tag"
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
-            /> */}
-            {/*<button
-              type="button"
-              onClick={handleAddTag}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              Agregar
-            </button>
-          </div>
-          {tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1"
-                >
-                  <span className="text-sm text-blue-900">{tag}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(index)}
-                    className="text-blue-600 transition-colors hover:text-blue-800"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div> */ }
-
         <div className="flex gap-4 pt-4">
           <button
             type="button"
@@ -724,7 +623,7 @@ export function TestimonialForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 bg-Primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="flex-1 bg-Primary px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-80 duration-300"
           >
             Crear
           </button>
