@@ -15,11 +15,36 @@ import {
 } from "@/components/ui/popover";
 
 import { Badge } from "@/components/ui/badge";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchCategories, fetchTags, type Category, type Tag } from '@/lib/api';
 import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import TestimonialNotification from './pruebas/notification';
 import { X, Upload, ChevronsUpDown, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
 type ContentType = 'text' | 'image' | 'video';
+
+const CATEGORY_MAP: Record<string, string> = {
+  'tecnologia': 'fdee7e93-7051-48a5-850c-101ec2fc9e6f',
+  'servicios': 'cc7e2851-0289-4761-b8b2-d30235425d06',
+  'productos': 'c74308b1-1cfd-4838-a50a-f680cdfcf169',
+  'consultoria': '94cc7563-74e3-499f-a1db-d9e028278fff',
+  'educacion': '64091810-b9db-4cf0-a928-d6d550b96fdd', // UUID real del backend
+  'Evento': 'otro-uuid-aqui',
+  'Cliente': 'otro-uuid-aqui',
+  'Industria': 'otro-uuid-aqui',
+};
+
+const TAG_MAP: Record<string, string> = {
+  'Educación': 'dbc2cf97-caaa-4a28-a4ee-994a93f7d2d8',
+  'Capacitación': 'c3759780-fcb6-4d39-8a29-dc4026bfcd1e',
+  'Comunidad': '0142eb68-ea47-4fc2-bcc0-019b5bbbfad8', // Cambié el UUID
+  'Calidad': 'e8ca3dc7-e21a-427d-b4ce-3009e7c2bafb',
+  'Innovación': '3c536eaa-ec49-433c-b850-b0f75611d696',
+  'Flexibilidad': 'f20262ca-02b9-4378-8a79-c3395addb89c',
+  'Eficiencia': '75002c9f-abef-4104-99bb-a8df8be76f51',
+  'freelancer': '909ec270-e3a6-4073-ae03-6eb8a2ece393'
+};
 
 interface TestimonialFormData {
   title: string;
@@ -41,6 +66,10 @@ export function TestimonialForm() {
   const [tagInput, setTagInput] = useState('');
   const [videoSource, setVideoSource] = useState<'url' | 'file' | null>(null);
   const [open, setOpen] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const {
     register,
@@ -69,41 +98,90 @@ export function TestimonialForm() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data: TestimonialFormData) => {
-  const testimonialId = `tst-${Date.now()}`;
-  const multimediaId = data.contentType !== 'text' ? `m-${Date.now()}` : null;
+  const onSubmit = async (data: TestimonialFormData) => {
+  setIsSubmitting(true);
+  setError(null);
   
-  // Construir objeto multimedia
-  const multimedia = data.contentType !== 'text' ? {
-    id: multimediaId,
-    testimonio_id: testimonialId,
-    tipo: data.contentType,
-    url: data.contentType === 'video' 
-      ? (data.videoUrl || (data.videoFile?.[0] ? URL.createObjectURL(data.videoFile[0]) : ''))
-      : data.contentType === 'image' && data.imageFile?.[0] 
-      ? URL.createObjectURL(data.imageFile[0]) 
-      : '',
-    descripcion: data.contentType === 'video' ? data.videoDescription : 
-                data.contentType === 'image' ? data.imageDescription : ''
-  } : null;
-  
-  const testimonialData = {
-    id: testimonialId,
-    titulo: data.title,
-    autor: data.author,
-    empresa: data.company,
-    cargo: data.position || '',
-    contenido: data.testimonialContent || '',
-    categoria: data.category.toLowerCase(),
-    creado_en: new Date().toISOString(),
-    tags: tags,
-    ...(multimedia && { multimedia })
-  };
-  
-  console.log('Testimonio formateado:', JSON.stringify(testimonialData, null, 2));
-  
-  // Limpiar el estado de videoSource después del submit
-  setVideoSource(null);
+  try {
+    const formData = new FormData();
+    
+    // Campos básicos
+    formData.append('titulo', data.title);
+    formData.append('autorNombre', data.author);
+    formData.append('empresa', data.company);
+    formData.append('cargo', data.position || '');
+    formData.append('contenido', data.testimonialContent || '');
+    
+    // Tipo
+    formData.append('tipo', data.contentType.toUpperCase());
+    
+    // Descripción
+    if (data.contentType === 'image' && data.imageDescription) {
+      formData.append('descripcion', data.imageDescription);
+    } else if (data.contentType === 'video' && data.videoDescription) {
+      formData.append('descripcion', data.videoDescription);
+    }
+    
+    // Archivo
+    if (data.contentType === 'image' && data.imageFile?.[0]) {
+      formData.append('file', data.imageFile[0]);
+    } else if (data.contentType === 'video' && data.videoFile?.[0]) {
+      formData.append('file', data.videoFile[0]);
+    }
+    
+    // ✅ Mapear categoría al UUID
+    const categoryId = CATEGORY_MAP[data.category];
+    if (!categoryId) {
+      throw new Error(`Categoría "${data.category}" no encontrada`);
+    }
+    formData.append('categoryId', categoryId);
+    
+    // ✅ Mapear tags a UUIDs
+    const tagIds = tags
+      .map(tagName => TAG_MAP[tagName])
+      .filter(Boolean); // Filtrar nulls/undefined
+    
+    if (tagIds.length > 0) {
+      formData.append('tagIds', tagIds.join(','));
+    }
+    
+    console.log('Enviando testimonio...');
+    
+    // Enviar al backend
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/testimonials`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
+      },
+      body: formData,
+    });
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      console.error('Error del servidor:', result);
+      throw new Error(result.message || `Error ${response.status}`);
+    }
+    
+    console.log('Testimonio creado exitosamente:', result);
+    
+    setTimeout(() => {
+      setShowNotification(true);
+    }, 300);
+    
+    setVideoSource(null);
+    setTags([]);
+    
+  } catch (error) {
+    console.error('Error completo:', error);
+    setError(
+      error instanceof Error 
+        ? error.message 
+        : 'Error al enviar el testimonio'
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
 };
 
   {/*const onSubmit = (data: TestimonialFormData) => {
@@ -171,17 +249,14 @@ export function TestimonialForm() {
             id="category"
             defaultValue=""
             {...register('category', { required: 'Seleccione una categoria'})}
-            className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 ${
-              errors.category
-                ? 'border-Error focus:ring-Error'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
+            className={`...`}
           >
             <option value="">Categoria</option>
-            <option value="Producto">Producto</option>
-            <option value="Evento">Evento</option>
-            <option value="Cliente">Cliente</option>
-            <option value="Industria">Industria</option>
+            <option value="tecnologia">Tecnología</option>
+            <option value="servicios">Servicios</option>
+            <option value="productos">Productos</option>
+            <option value="consultoria">Consultoría</option>
+            <option value="educacion">Educación</option>
           </select>
         </div>
 
@@ -641,18 +716,23 @@ export function TestimonialForm() {
           <button
             type="button"
             onClick={handleCancel}
+            disabled={isSubmitting}
             className="flex-1 border border-Primary bg-white px-4 py-2 text-sm font-medium text-Primary transition-colors hover:bg-gray-50"
           >
             Volver
           </button>
           <button
             type="submit"
+            disabled={isSubmitting}
             className="flex-1 bg-Primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             Crear
           </button>
         </div>
       </form>
+      {showNotification && (
+      <TestimonialNotification onClose={() => setShowNotification(false)} />
+      )}
     </div>
   );
 }
