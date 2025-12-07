@@ -1,4 +1,4 @@
-// src/public/public.controller.ts
+// src/public/public.controller.ts (VERSIÓN COMPLETA MEJORADA)
 import { 
   Controller, 
   Get, 
@@ -6,7 +6,11 @@ import {
   Query, 
   Res, 
   Header,
-  HttpStatus 
+  HttpStatus,
+  Post,
+  Body,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import { Response } from 'express';
 import { 
@@ -15,26 +19,33 @@ import {
   ApiResponse, 
   ApiQuery, 
   ApiParam,
-  ApiProduces 
+  ApiProduces,
+  ApiBody,
+  ApiConsumes
 } from '@nestjs/swagger';
 import { PublicService } from './public.service';
 import { 
   PublicTestimonialDto, 
   EmbedCodeResponseDto,
-  PublicTestimonialsResponseDto 
+  PublicTestimonialsResponseDto
 } from './dto/public-testimonial.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { SearchTestimonialsDto } from './dto/public-testimonial.dto';
 
-@ApiTags('API Pública')
+@ApiTags('API Pública - Testimonios')
 @Controller('public')
 @Public()
 export class PublicController {
   constructor(private readonly publicService: PublicService) {}
 
+  private readonly baseUrl = process.env.RENDER_BACKEND_URL || 'http://localhost:3000';
+
+  // ========== ENDPOINTS PRINCIPALES DE TESTIMONIOS ==========
+
   @Get('testimonials')
   @ApiOperation({ 
     summary: 'Obtener testimonios públicos', 
-    description: 'Retorna una lista paginada de testimonios aprobados para integración externa, INCLUYENDO MULTIMEDIA' 
+    description: 'Retorna una lista paginada de testimonios aprobados para integración externa, incluyendo multimedia. Permite filtrar por categoría, tags y tipo de contenido.' 
   })
   @ApiQuery({ 
     name: 'page', 
@@ -52,35 +63,65 @@ export class PublicController {
     name: 'category', 
     required: false, 
     type: String, 
-    description: 'Filtrar por ID de categoría' 
+    description: 'Filtrar por nombre de categoría' 
   })
   @ApiQuery({ 
     name: 'tags', 
     required: false, 
     type: String, 
-    description: 'Tags separados por comas' 
+    description: 'Tags separados por comas (ej: tecnologia,servicio)' 
   })
   @ApiQuery({ 
-    name: 'withMultimedia', 
+    name: 'hasMultimedia', 
     required: false, 
     type: Boolean, 
-    description: 'Filtrar solo testimonios con multimedia' 
+    description: 'Filtrar solo testimonios con multimedia (true/false)' 
+  })
+  @ApiQuery({ 
+    name: 'mediaType', 
+    required: false, 
+    type: String, 
+    description: 'Tipo de multimedia (video, image, audio)' 
+  })
+  @ApiQuery({ 
+    name: 'sort', 
+    required: false, 
+    type: String, 
+    description: 'Ordenar por: newest, oldest, popular, views' 
   })
   @ApiResponse({ 
     status: 200, 
-    description: 'Lista de testimonios públicos CON MULTIMEDIA',
+    description: 'Lista de testimonios públicos',
     type: PublicTestimonialsResponseDto
   })
- async getPublicTestimonials(
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Parámetros de consulta inválidos' 
+  })
+  async getPublicTestimonials(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('category') category?: string,
     @Query('tags') tags?: string,
-    @Query('withMultimedia') withMultimedia?: string,
-  ) {
+    @Query('hasMultimedia') hasMultimedia?: string,
+    @Query('mediaType') mediaType?: string,
+    @Query('sort') sort: string = 'newest',
+  ): Promise<PublicTestimonialsResponseDto> {
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
+    
     const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(t => t) : undefined;
+    
+    // Validar mediaType
+    if (mediaType && !['video', 'image', 'audio', 'none'].includes(mediaType)) {
+      throw new BadRequestException('mediaType debe ser: video, image, audio o none');
+    }
+    
+    // Validar sort
+    const validSorts = ['newest', 'oldest', 'popular', 'views'];
+    if (sort && !validSorts.includes(sort)) {
+      throw new BadRequestException(`sort debe ser uno de: ${validSorts.join(', ')}`);
+    }
 
     const testimonials = await this.publicService.getPublicTestimonials(
       pageNum,
@@ -89,15 +130,185 @@ export class PublicController {
       tagsArray
     );
 
-    // Filtrar por multimedia si se solicita
-    if (withMultimedia === 'true') {
+    // Aplicar filtros adicionales
+    if (hasMultimedia === 'true') {
       testimonials.testimonials = testimonials.testimonials.filter(
-        testimonial => testimonial.multimedia
+        testimonial => testimonial.hasMultimedia
+      );
+      testimonials.total = testimonials.testimonials.length;
+    } else if (hasMultimedia === 'false') {
+      testimonials.testimonials = testimonials.testimonials.filter(
+        testimonial => !testimonial.hasMultimedia
       );
       testimonials.total = testimonials.testimonials.length;
     }
 
+    // Filtrar por tipo de media
+    if (mediaType) {
+      testimonials.testimonials = testimonials.testimonials.filter(
+        testimonial => testimonial.mediaType === mediaType
+      );
+      testimonials.total = testimonials.testimonials.length;
+    }
+
+    // Aplicar ordenamiento
+    if (sort === 'oldest') {
+      testimonials.testimonials.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    } else if (sort === 'popular') {
+      testimonials.testimonials.sort((a, b) => 
+        (b.engagement.views + b.engagement.embeds) - (a.engagement.views + a.engagement.embeds)
+      );
+    } else if (sort === 'views') {
+      testimonials.testimonials.sort((a, b) => 
+        b.engagement.views - a.engagement.views
+      );
+    }
+    // 'newest' es el orden por defecto (ya viene ordenado del servicio)
+
     return testimonials;
+  }
+
+  @Get('testimonials/search')
+  @ApiOperation({ 
+    summary: 'Buscar testimonios', 
+    description: 'Búsqueda avanzada en testimonios por texto, autor, empresa, etc.' 
+  })
+  @ApiQuery({ 
+    name: 'q', 
+    required: true, 
+    type: String, 
+    description: 'Término de búsqueda' 
+  })
+  @ApiQuery({ 
+    name: 'page', 
+    required: false, 
+    type: Number, 
+    description: 'Número de página' 
+  })
+  @ApiQuery({ 
+    name: 'limit', 
+    required: false, 
+    type: Number, 
+    description: 'Límite por página' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Resultados de búsqueda',
+    type: PublicTestimonialsResponseDto
+  })
+  async searchTestimonials(
+    @Query('q') query: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ): Promise<PublicTestimonialsResponseDto> {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 10));
+    
+    if (!query || query.trim().length < 2) {
+      throw new BadRequestException('El término de búsqueda debe tener al menos 2 caracteres');
+    }
+
+    // Esta es una implementación básica. Deberías crear un servicio específico para búsqueda
+    const testimonials = await this.publicService.getPublicTestimonials(
+      pageNum,
+      limitNum
+    );
+
+    // Filtrar por término de búsqueda
+    const searchTerm = query.toLowerCase().trim();
+    const filtered = testimonials.testimonials.filter(testimonial => {
+      const searchableText = `
+        ${testimonial.title?.toLowerCase() || ''}
+        ${testimonial.content?.toLowerCase() || ''}
+        ${testimonial.author?.toLowerCase() || ''}
+        ${testimonial.company?.toLowerCase() || ''}
+        ${testimonial.position?.toLowerCase() || ''}
+        ${testimonial.category?.toLowerCase() || ''}
+        ${testimonial.tags?.join(' ').toLowerCase() || ''}
+      `;
+      
+      return searchableText.includes(searchTerm);
+    });
+
+    return {
+      testimonials: filtered,
+      total: filtered.length,
+      page: pageNum,
+      limit: limitNum
+    };
+  }
+
+  @Post('testimonials/search')
+  @ApiOperation({ 
+    summary: 'Búsqueda avanzada de testimonios', 
+    description: 'Búsqueda con múltiples criterios usando POST para evitar límites de URL' 
+  })
+  @ApiConsumes('application/json')
+  @ApiBody({
+    type: SearchTestimonialsDto,
+    description: 'Criterios de búsqueda'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Resultados de búsqueda avanzada',
+    type: PublicTestimonialsResponseDto
+  })
+  async searchTestimonialsAdvanced(
+    @Body() searchDto: SearchTestimonialsDto
+  ): Promise<PublicTestimonialsResponseDto> {
+    // Implementación básica - expandir según necesidades
+    const pageNum = Math.max(1, searchDto.page || 1);
+    const limitNum = Math.min(50, Math.max(1, searchDto.limit || 10));
+
+    const testimonials = await this.publicService.getPublicTestimonials(
+      pageNum,
+      limitNum,
+      searchDto.category,
+      searchDto.tags
+    );
+
+    // Aplicar filtros adicionales
+    let filtered = testimonials.testimonials;
+
+    if (searchDto.hasMultimedia !== undefined) {
+      filtered = filtered.filter(
+        testimonial => testimonial.hasMultimedia === searchDto.hasMultimedia
+      );
+    }
+
+    if (searchDto.mediaType) {
+      filtered = filtered.filter(
+        testimonial => testimonial.mediaType === searchDto.mediaType
+      );
+    }
+
+    if (searchDto.minViews !== undefined) {
+      filtered = filtered.filter(
+        testimonial => testimonial.engagement.views >= searchDto.minViews!
+      );
+    }
+
+    if (searchDto.query) {
+      const searchTerm = searchDto.query.toLowerCase().trim();
+      filtered = filtered.filter(testimonial => {
+        const searchableText = `
+          ${testimonial.title?.toLowerCase() || ''}
+          ${testimonial.content?.toLowerCase() || ''}
+          ${testimonial.author?.toLowerCase() || ''}
+          ${testimonial.company?.toLowerCase() || ''}
+        `;
+        return searchableText.includes(searchTerm);
+      });
+    }
+
+    return {
+      testimonials: filtered,
+      total: filtered.length,
+      page: pageNum,
+      limit: limitNum
+    };
   }
 
   @Get('testimonials/:id')
@@ -120,9 +331,98 @@ export class PublicController {
     status: 404, 
     description: 'Testimonio no encontrado o no aprobado' 
   })
-  async getPublicTestimonial(@Param('id') id: string) {
+  @ApiResponse({ 
+    status: 400, 
+    description: 'ID inválido' 
+  })
+  async getPublicTestimonial(@Param('id') id: string): Promise<PublicTestimonialDto> {
     return this.publicService.getPublicTestimonialById(id);
   }
+
+  @Get('testimonials/:id/multimedia')
+  @ApiOperation({ 
+    summary: 'Obtener multimedia del testimonio', 
+    description: 'Retorna solo la información multimedia de un testimonio específico' 
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del testimonio (UUID)',
+    type: String
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Multimedia encontrada',
+    schema: {
+      type: 'object',
+      properties: {
+        multimedia: { $ref: '#/components/schemas/PublicMultimediaDto' },
+        videoUrl: { type: 'string' },
+        hasMultimedia: { type: 'boolean' },
+        mediaType: { type: 'string' }
+      }
+    }
+  })
+  async getTestimonialMultimedia(@Param('id') id: string) {
+    return this.publicService.getTestimonialMultimedia(id);
+  }
+
+  @Get('testimonials/:id/related')
+  @ApiOperation({ 
+    summary: 'Obtener testimonios relacionados', 
+    description: 'Retorna testimonios relacionados por categoría o tags' 
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del testimonio (UUID)',
+    type: String
+  })
+  @ApiQuery({ 
+    name: 'limit', 
+    required: false, 
+    type: Number, 
+    description: 'Límite de resultados (por defecto: 5)' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Testimonios relacionados',
+    type: PublicTestimonialsResponseDto
+  })
+  async getRelatedTestimonials(
+    @Param('id') id: string,
+    @Query('limit') limit: string = '5'
+  ): Promise<PublicTestimonialsResponseDto> {
+    const limitNum = Math.min(20, Math.max(1, parseInt(limit) || 5));
+    
+    // Obtener el testimonio principal
+    const mainTestimonial = await this.publicService.getPublicTestimonialById(id);
+    
+    // Obtener todos los testimonios (excluyendo el actual)
+    const allTestimonials = await this.publicService.getPublicTestimonials(1, 100);
+    
+    // Filtrar relacionados por categoría y tags
+    const related = allTestimonials.testimonials
+      .filter(t => t.id !== id)
+      .filter(t => {
+        // Misma categoría
+        if (t.category === mainTestimonial.category) return true;
+        
+        // Tags en común
+        const commonTags = t.tags.filter(tag => 
+          mainTestimonial.tags.includes(tag)
+        );
+        return commonTags.length > 0;
+      })
+      .slice(0, limitNum);
+
+    return {
+      testimonials: related,
+      total: related.length,
+      page: 1,
+      limit: limitNum
+    };
+  }
+
+  // ========== ENDPOINTS DE EMBED ==========
 
   @Get('embeds/:id')
   @ApiOperation({ 
@@ -140,13 +440,59 @@ export class PublicController {
     description: 'Códigos de embed generados',
     type: EmbedCodeResponseDto
   })
-  async getEmbedCode(@Param('id') id: string) {
+  async getEmbedCode(@Param('id') id: string): Promise<EmbedCodeResponseDto> {
     return this.publicService.getEmbedCode(id);
+  }
+
+  @Get('embeds/:id/code')
+  @ApiOperation({ 
+    summary: 'Obtener solo código HTML del embed', 
+    description: 'Retorna solo el código HTML para incrustar, sin JSON' 
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del testimonio (UUID)',
+    type: String
+  })
+  @Header('Content-Type', 'text/html')
+  @ApiProduces('text/html')
+  @ApiResponse({ 
+    status: 200, 
+    description: 'HTML del embed',
+    content: {
+      'text/html': {
+        schema: {
+          type: 'string',
+          example: '<div class="testimonial-embed">...</div>'
+        }
+      }
+    }
+  })
+  async getEmbedHtml(
+    @Param('id') id: string,
+    @Res() res: any
+  ) {
+    try {
+      const testimonial = await this.publicService.getPublicTestimonialById(id);
+      const embedCode = await this.publicService.getEmbedCode(id);
+      
+      res.setHeader('X-Testimonial-ID', id);
+      res.setHeader('X-Has-Multimedia', testimonial.hasMultimedia.toString());
+      res.setHeader('X-Media-Type', testimonial.mediaType);
+      res.send(embedCode.html);
+    } catch (error) {
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        res.status(error.getStatus()).send(`<!-- Error: ${error.message} -->`);
+      } else {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('<!-- Error generando embed -->');
+      }
+    }
   }
 
   @Get('embed/:id.js')
   @Header('Content-Type', 'application/javascript')
   @Header('Cache-Control', 'public, max-age=3600')
+  @Header('Access-Control-Allow-Origin', '*')
   @ApiOperation({ 
     summary: 'JavaScript para incrustación automática', 
     description: 'Retorna JavaScript dinámico que incrusta automáticamente el testimonio en la página.' 
@@ -172,16 +518,26 @@ export class PublicController {
   })
   async getEmbedScript(
     @Param('id') id: string,
-    @Res() res: any  // Cambiar Response por any para evitar el error de TypeScript
+    @Res() res: any
   ) {
     try {
       const script = await this.publicService.generateEmbedScript(id);
       res.setHeader('X-Testimonial-Id', id);
       res.send(script);
     } catch (error) {
-      res.status(HttpStatus.NOT_FOUND).send(
-        'console.error("Error: Testimonio no encontrado o no disponible");'
-      );
+      let errorMessage = 'Testimonio no encontrado o no disponible';
+      let statusCode = HttpStatus.NOT_FOUND;
+      
+      if (error instanceof BadRequestException) {
+        errorMessage = error.message;
+        statusCode = error.getStatus();
+      } else if (error instanceof NotFoundException) {
+        errorMessage = error.message;
+        statusCode = error.getStatus();
+      }
+      
+      const errorScript = `console.error("Error: ${errorMessage}");`;
+      res.status(statusCode).send(errorScript);
     }
   }
 
@@ -212,116 +568,14 @@ export class PublicController {
   })
   async getEmbedPreview(
     @Param('id') id: string,
-    @Res() res: any  // Cambiar Response por any
+    @Res() res: any
   ) {
     try {
       const testimonial = await this.publicService.getPublicTestimonialById(id);
+      const embedCode = await this.publicService.getEmbedCode(id);
       
-      // Acceder al método privado de manera segura
-      const generateHtmlEmbed = (testimonial: PublicTestimonialDto): string => {
-        const initials = testimonial.author?.charAt(0)?.toUpperCase() || 'A';
-        const color = '#4f46e5'; // Color por defecto
-        
-        return `
-<div class="testimonial-embed" data-testimonial-id="${testimonial.id}" style="
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-width: 400px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin: 10px auto;">
-    
-    <!-- Header -->
-    <div style="display: flex; align-items: center; margin-bottom: 16px;">
-        <div style="
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: ${color};
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-            margin-right: 16px;">
-            ${initials}
-        </div>
-        <div>
-            <h3 style="margin: 0 0 4px 0; font-size: 16px; color: #1e293b;">
-                ${testimonial.author}
-            </h3>
-            ${testimonial.position ? `
-            <p style="margin: 0 0 2px 0; font-size: 14px; color: #64748b;">
-                ${testimonial.position}
-            </p>` : ''}
-            ${testimonial.company ? `
-            <p style="margin: 0; font-size: 14px; color: #64748b;">
-                ${testimonial.company}
-            </p>` : ''}
-        </div>
-    </div>
-    
-    <!-- Content -->
-    <div style="margin-bottom: 16px;">
-        <p style="
-            margin: 0 0 12px 0;
-            font-size: 15px;
-            line-height: 1.5;
-            color: #334155;
-            font-style: italic;">
-            "${testimonial.content.substring(0, 200)}${testimonial.content.length > 200 ? '...' : ''}"
-        </p>
-    </div>
-    
-    <!-- Tags -->
-    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
-        <span style="
-            background: #e0e7ff;
-            color: #4f46e5;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;">
-            ${testimonial.category}
-        </span>
-        ${testimonial.tags.slice(0, 2).map(tag => `
-        <span style="
-            background: #f1f5f9;
-            color: #64748b;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;">
-            ${tag}
-        </span>
-        `).join('')}
-    </div>
-    
-    <!-- Stats -->
-    <div style="
-        border-top: 1px solid #f1f5f9;
-        padding-top: 12px;
-        font-size: 11px;
-        color: #94a3b8;
-        display: flex;
-        justify-content: space-between;">
-        <span>👁️ ${testimonial.engagement.views} vistas</span>
-        <span>🔗 ${testimonial.engagement.embeds} embeds</span>
-        <span>📅 ${new Date(testimonial.createdAt).toLocaleDateString('es-ES')}</span>
-    </div>
-    
-    <!-- Powered by -->
-    <div style="
-        text-align: center;
-        margin-top: 12px;
-        font-size: 10px;
-        color: #cbd5e1;">
-        Powered by Testimonial CMS
-    </div>
-</div>`;
-      };
+      // Usar método del servicio para generar HTML del embed
+      const embedHtml = await this.generateTestimonialHtml(testimonial);
       
       const html = `
 <!DOCTYPE html>
@@ -330,47 +584,148 @@ export class PublicController {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vista previa: ${testimonial.title}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 40px;
-            background: #f8fafc;
+            padding: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
-        .preview-container {
-            max-width: 600px;
+        .preview-wrapper {
             width: 100%;
-            text-align: center;
+            max-width: 800px;
+            padding: 20px;
         }
-        .preview-title {
+        .preview-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .preview-header h1 {
             color: #1e293b;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .preview-header p {
+            color: #64748b;
+            font-size: 16px;
         }
         .instructions {
-            background: #e0e7ff;
-            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .instructions h3 {
+            color: #4f46e5;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .code-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .code-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
             border-radius: 8px;
-            margin: 30px 0;
-            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .code-options { grid-template-columns: 1fr; }
+        }
+        
+        .testimonial-preview-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+        
+        .stats-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #3b82f6;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="preview-container">
-        <h1 class="preview-title">Vista previa del embed</h1>
-        <p>Así se verá tu testimonio cuando lo incrustes en otro sitio:</p>
+    <div class="preview-wrapper">
+        <div class="preview-header">
+            <h1><i class="fas fa-eye"></i> Vista previa del embed</h1>
+            <p>Así se verá tu testimonio cuando lo incrustes en otro sitio web</p>
+            ${testimonial.hasMultimedia ? 
+              `<div class="badge"><i class="fas fa-photo-video"></i> Contiene multimedia</div>` : 
+              ''}
+            <div class="stats-badge">
+                <i class="fas fa-eye"></i> ${testimonial.engagement.views} vistas
+            </div>
+        </div>
         
-        ${generateHtmlEmbed(testimonial)}
+        <!-- Vista previa del testimonio -->
+        <div class="testimonial-preview-container">
+            ${embedHtml}
+        </div>
         
         <div class="instructions">
-            <h3>Instrucciones de uso:</h3>
-            <p>1. Puedes usar el código HTML directamente</p>
-            <p>2. O usar el script JavaScript para incrustación dinámica</p>
-            <p>3. Las métricas se actualizan automáticamente</p>
+            <h3><i class="fas fa-code"></i> Cómo usar este testimonio</h3>
+            <p><strong>Opción 1:</strong> Usa el código HTML directamente</p>
+            <p><strong>Opción 2:</strong> Usa el script para incrustación dinámica</p>
+            <p><strong>Opción 3:</strong> Usa la API para obtener los datos en JSON</p>
+            
+            <div class="code-options">
+                <div>
+                    <h4><i class="fas fa-file-code"></i> Código HTML</h4>
+                    <div class="code-box">${this.escapeHtml(embedCode.html)}</div>
+                </div>
+                <div>
+                    <h4><i class="fas fa-code"></i> Script JS</h4>
+                    <div class="code-box">${this.escapeHtml(embedCode.script)}</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <h4><i class="fas fa-link"></i> Enlaces útiles</h4>
+                <p><strong>API Endpoint:</strong> <a href="${embedCode.apiUrl}" target="_blank">${embedCode.apiUrl}</a></p>
+                <p><strong>Testimonio ID:</strong> <code>${testimonial.id}</code></p>
+            </div>
         </div>
     </div>
 </body>
@@ -378,14 +733,323 @@ export class PublicController {
       
       res.send(html);
     } catch (error) {
-      res.status(HttpStatus.NOT_FOUND).send(`
-        <html>
-          <body style="font-family: sans-serif; padding: 40px; text-align: center;">
-            <h1 style="color: #ef4444;">Testimonio no encontrado</h1>
-            <p>El testimonio solicitado no existe o no está aprobado.</p>
-          </body>
-        </html>
-      `);
+      const errorHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Vista previa no disponible</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 40px;
+            text-align: center;
+            background: #f8fafc;
+        }
+        .error-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #ef4444;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1><i class="fas fa-exclamation-triangle"></i> Testimonio no encontrado</h1>
+        <p>El testimonio solicitado no existe o no está aprobado para vista pública.</p>
+        <p>ID: ${id}</p>
+        <p>Error: ${error.message}</p>
+    </div>
+</body>
+</html>`;
+      
+      res.status(
+        error instanceof NotFoundException || error instanceof BadRequestException 
+          ? error.getStatus() 
+          : HttpStatus.INTERNAL_SERVER_ERROR
+      ).send(errorHtml);
     }
+  }
+
+  @Get('embeds/:id/oembed')
+  @ApiOperation({ 
+    summary: 'oEmbed para el testimonio', 
+    description: 'Endpoint oEmbed compatible para incrustación en plataformas que soportan oEmbed' 
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del testimonio (UUID)',
+    type: String
+  })
+  @ApiQuery({ 
+    name: 'format', 
+    required: false, 
+    type: String, 
+    description: 'Formato de respuesta (json o xml)' 
+  })
+  @ApiQuery({ 
+    name: 'maxwidth', 
+    required: false, 
+    type: Number, 
+    description: 'Ancho máximo del embed' 
+  })
+  @ApiQuery({ 
+    name: 'maxheight', 
+    required: false, 
+    type: Number, 
+    description: 'Alto máximo del embed' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Respuesta oEmbed',
+    schema: {
+      type: 'object',
+      properties: {
+        version: { type: 'string' },
+        type: { type: 'string' },
+        html: { type: 'string' },
+        width: { type: 'number' },
+        height: { type: 'number' },
+        title: { type: 'string' },
+        author_name: { type: 'string' },
+        author_url: { type: 'string' },
+        provider_name: { type: 'string' },
+        provider_url: { type: 'string' }
+      }
+    }
+  })
+  async getOEmbed(
+    @Param('id') id: string,
+    @Query('format') format: string = 'json',
+    @Query('maxwidth') maxwidth: string,
+    @Query('maxheight') maxheight: string,
+    @Res() res: any
+  ) {
+    try {
+      const testimonial = await this.publicService.getPublicTestimonialById(id);
+      const embedCode = await this.publicService.getEmbedCode(id);
+      
+      const maxWidth = maxwidth ? parseInt(maxwidth) : 500;
+      const maxHeight = maxheight ? parseInt(maxheight) : 600;
+      
+      const oembedResponse = {
+        version: '1.0',
+        type: 'rich',
+        html: embedCode.html,
+        width: maxWidth,
+        height: maxHeight,
+        title: testimonial.title,
+        author_name: testimonial.author,
+        author_url: testimonial.company ? `https://${testimonial.company}.com` : undefined,
+        provider_name: 'Testimonial CMS',
+        provider_url: this.baseUrl,
+        cache_age: 3600,
+        thumbnail_url: testimonial.multimedia?.url || undefined,
+        thumbnail_width: testimonial.multimedia?.width || undefined,
+        thumbnail_height: testimonial.multimedia?.height || undefined
+      };
+      
+      if (format === 'xml') {
+        res.setHeader('Content-Type', 'application/xml');
+        const xml = this.jsonToXml(oembedResponse);
+        res.send(xml);
+      } else {
+        res.json(oembedResponse);
+      }
+      
+    } catch (error) {
+      const errorResponse = {
+        error: 'Testimonio no encontrado',
+        code: 404
+      };
+      
+      if (format === 'xml') {
+        res.setHeader('Content-Type', 'application/xml');
+        res.status(404).send(this.jsonToXml(errorResponse));
+      } else {
+        res.status(404).json(errorResponse);
+      }
+    }
+  }
+
+  // ========== ENDPOINTS DE ESTADÍSTICAS ==========
+
+  @Get('stats')
+  @ApiOperation({ 
+    summary: 'Estadísticas públicas', 
+    description: 'Obtiene estadísticas generales de los testimonios públicos' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Estadísticas',
+    schema: {
+      type: 'object',
+      properties: {
+        totalTestimonials: { type: 'number' },
+        totalViews: { type: 'number' },
+        totalEmbeds: { type: 'number' },
+        testimonialsWithMultimedia: { type: 'number' },
+        testimonialsByType: {
+          type: 'object',
+          properties: {
+            video: { type: 'number' },
+            image: { type: 'number' },
+            audio: { type: 'number' },
+            text: { type: 'number' }
+          }
+        },
+        topCategories: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              count: { type: 'number' }
+            }
+          }
+        }
+      }
+    }
+  })
+  async getPublicStats() {
+    try {
+      const testimonials = await this.publicService.getPublicTestimonials(1, 1000);
+      
+      // Calcular estadísticas básicas
+      const totalTestimonials = testimonials.total;
+      const testimonialsWithMultimedia = testimonials.testimonials.filter(t => t.hasMultimedia).length;
+      
+      let totalViews = 0;
+      let totalEmbeds = 0;
+      const typeCounts = { video: 0, image: 0, audio: 0, text: 0 };
+      const categoryCounts = {};
+      
+      testimonials.testimonials.forEach(testimonial => {
+        totalViews += testimonial.engagement.views;
+        totalEmbeds += testimonial.engagement.embeds;
+        
+        // Contar por tipo
+        typeCounts[testimonial.mediaType] = (typeCounts[testimonial.mediaType] || 0) + 1;
+        
+        // Contar por categoría
+        const category = testimonial.category || 'Sin categoría';
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+      
+      // Ordenar categorías
+      const topCategories = Object.entries(categoryCounts)
+        .map(([name, count]) => ({ name, count: count as number }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      
+      return {
+        totalTestimonials,
+        totalViews,
+        totalEmbeds,
+        testimonialsWithMultimedia,
+        testimonialsByType: typeCounts,
+        topCategories,
+        lastUpdated: new Date().toISOString()
+      };
+      
+    } catch (error) {
+      return {
+        totalTestimonials: 0,
+        totalViews: 0,
+        totalEmbeds: 0,
+        testimonialsWithMultimedia: 0,
+        testimonialsByType: { video: 0, image: 0, audio: 0, text: 0 },
+        topCategories: [],
+        error: 'Error calculando estadísticas'
+      };
+    }
+  }
+
+  @Get('stats/categories')
+@ApiOperation({ 
+  summary: 'Estadísticas por categoría', 
+  description: 'Obtiene estadísticas agrupadas por categoría' 
+})
+async getCategoryStats() {
+  const testimonials = await this.publicService.getPublicTestimonials(1, 1000);
+  
+  const statsByCategory: Record<string, {
+    count: number;
+    views: number;
+    embeds: number;
+    hasMultimedia: number;
+  }> = {};
+  
+  testimonials.testimonials.forEach(testimonial => {
+    const category = testimonial.category || 'Sin categoría';
+    
+    if (!statsByCategory[category]) {
+      statsByCategory[category] = {
+        count: 0,
+        views: 0,
+        embeds: 0,
+        hasMultimedia: 0
+      };
+    }
+    
+    statsByCategory[category].count++;
+    statsByCategory[category].views += testimonial.engagement.views;
+    statsByCategory[category].embeds += testimonial.engagement.embeds;
+    
+    if (testimonial.hasMultimedia) {
+      statsByCategory[category].hasMultimedia++;
+    }
+  });
+  
+  return Object.entries(statsByCategory).map(([category, data]) => ({
+    category,
+    ...data
+  }));
+}
+
+  // ========== MÉTODOS AUXILIARES PRIVADOS ==========
+
+  private async generateTestimonialHtml(testimonial: PublicTestimonialDto): Promise<string> {
+    // Este método llama al método privado del servicio a través de un método público
+    // Si necesitas acceder a generateHtmlEmbed, deberías exponerlo en el servicio
+    // Por ahora, usamos el embed code que ya incluye el HTML
+    const embedCode = await this.publicService.getEmbedCode(testimonial.id);
+    return embedCode.html;
+  }
+
+  private escapeHtml(text: string): string {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  private jsonToXml(json: any): string {
+    const xmlItems = Object.entries(json)
+      .map(([key, value]) => {
+        if (value === undefined || value === null) return '';
+        return `<${key}>${value}</${key}>`;
+      })
+      .filter(item => item !== '');
+    
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<oembed>
+  ${xmlItems.join('\n  ')}
+</oembed>`;
   }
 }
