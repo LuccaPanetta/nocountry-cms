@@ -124,8 +124,9 @@ export class TestimonialsController {
   @UsePipes(new ValidationPipe({ transform: true }))
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateStatusDto: UpdateStatusDto
+    @Body() updateStatusDto: UpdateStatusDto,
+    @Request() req: any 
   ): Promise<TestimonialResponseDto> {
-    return this.testimonialsService.updateStatus(id, updateStatusDto.status);
+    return this.testimonialsService.updateStatus(id, updateStatusDto.status, req.user);
   }
 }
