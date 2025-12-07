@@ -4,8 +4,8 @@ import {
   IsString,
   MinLength,
   MaxLength,
-  Matches,  
-  Equals,   
+  Matches,
+  ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -47,7 +47,7 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'El email es obligatorio' })
   email: string;
 
-  @ApiProperty({
+ @ApiProperty({
     example: 'Pass123',
     description: 'Contraseña del usuario (6-8 caracteres, 1 mayús, 1 num)',
     minLength: 6,
@@ -58,7 +58,6 @@ export class RegisterDto {
   @IsString({ message: 'La contraseña debe ser texto' })
   @MinLength(6, { message: PASSWORD_RULES_MESSAGE })
   @MaxLength(8, { message: PASSWORD_RULES_MESSAGE })
-  
   @Matches(PASSWORD_REGEX, { message: PASSWORD_RULES_MESSAGE })
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })
   password: string;
@@ -71,8 +70,8 @@ export class RegisterDto {
   })
   @IsString({ message: 'La confirmación de la contraseña debe ser texto' })
   @IsNotEmpty({ message: 'La confirmación de la contraseña es obligatoria' })
-  @Equals('password', { 
-    message: 'Las contraseñas ingresadas no coinciden', 
+  @ValidateIf((o) => o.confirmPassword === o.password, {
+    message: 'Las contraseñas ingresadas no coinciden',
   })
   confirmPassword: string;
 }
