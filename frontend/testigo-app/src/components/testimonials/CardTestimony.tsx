@@ -3,9 +3,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ImageIcon, MessageCircle, Play } from 'lucide-react';
 import { PublicTestimonyResType } from '@/types/testimony-type';
+import { useVideoPreview } from '@/hooks/usePreviewVideo';
+import PreviewModal from './PreviewModal';
+import { useNormalizeMultimediaType } from '@/hooks/useNormalizeMultimediaType';
 
 type CardTestimonyProps = {
-  testimonial: PublicTestimonyResType
+    testimonial: PublicTestimonyResType
 }
 
 
@@ -13,9 +16,13 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const { previewType, thumbnail, isYoutube } = useVideoPreview(testimonial.multimedia.url ?? "");
+    const [openModal, setOpenModal] = useState(false);
+
 
     const getTypeIcon = (type: string) => {
-        switch (type) {
+        const typeLower = type.toLowerCase();
+        switch (typeLower) {
             case 'video':
                 return <Play className="h-4 w-4 text-primary" />
             case 'imagen':
@@ -25,43 +32,55 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
         }
     }
 
-    function youtubeToEmbed(url: string) {
-        const id = url.split("v=")[1];
-        return `https://www.youtube.com/embed/${id}`;
-    }
 
     const handleDateFormat = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
     }
 
+    const mappedType: "video" | "imagen" = useNormalizeMultimediaType({ isYoutube, testimonial });
+
     return (
         <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            {testimonial.multimedia.type !== 'text' && (
-                <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                    <img
-                        src={testimonial.multimedia.url || "/placeholder.svg"}
-                        alt={testimonial.multimedia.descripcion}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                    {testimonial.multimedia.type === 'video' && (
-                        <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+            {testimonial.multimedia.type.toLowerCase() !== 'text' && (
+                <div className="relative aspect-video w-full overflow-hidden bg-muted cursor-pointer">
+                    {testimonial.multimedia.type.toLowerCase() !== "text" && (
+                        <div
+                            className="relative aspect-video cursor-pointer"
+                            onClick={() => setOpenModal(true)}
+                        >
+                            {isYoutube && thumbnail && (
+                                <img src={thumbnail} className="w-full h-full object-cover" />
+                            )}
 
-                            <iframe
-                                src={youtubeToEmbed(testimonial.multimedia.url)}
-                                className="absolute inset-0 w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                            />
+                            {!isYoutube && previewType === "video" && (
+                                <video
+                                    src={testimonial.multimedia.url ?? ""}
+                                    muted
+                                    playsInline
+                                    poster={`${testimonial.multimedia.url}#t=0.1`}
+                                    className="w-full h-full object-cover"
+                                />
+                            )}
 
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm">
-                                    <Play className="h-6 w-6 text-primary ml-1" fill="currentColor" />
+                            {mappedType === "video" && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-100">
+                                    <div className="bg-white/90 rounded-full p-3 shadow-lg">
+                                        <Play className="h-8 w-8 text-primary fill-primary group-hover:fill-secondary group-hover:text-secondary  transition-colors" />
+                                    </div>
                                 </div>
-                            </div>
-
+                            )}
                         </div>
                     )}
+
+
+                    <PreviewModal
+                        open={openModal}
+                        onClose={() => setOpenModal(false)}
+                        url={testimonial.multimedia.url ?? ""}
+                        isYoutube={isYoutube}
+                        previewType={mappedType}
+                    />
                 </div>
             )}
             <CardContent className="p-5">

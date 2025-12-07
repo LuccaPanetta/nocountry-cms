@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
-import { ArrowDown, ArrowUp, Search, SearchIcon, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Play, Search, SearchIcon, X } from "lucide-react"
 import CardTestimony from "@/components/testimonials/CardTestimony"
 import { useState, useMemo } from "react"
 import { Pagination } from "@/components/ui/pagination"
@@ -10,6 +10,7 @@ import { usePaginatedTestimonials } from "@/hooks/usePaginationTestimonials"
 import { PublicTestimonyResType } from "@/types/testimony-type"
 import { CustomPagination } from "@/components/ui/CustomPagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useGetCategories } from "@/services/use-queries-service/categories-query-service"
 
 
 const categories = ["producto", "evento", "cliente", "industria"]
@@ -35,6 +36,8 @@ const TestimonialsPage = () => {
     { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },
   ]
 
+  const { data: categories } = useGetCategories();
+  const categoryNames = categories?.map(cat => cat.name) || [];
 
   const filteredTestimonials = useMemo(() => {
     return testimonials.filter((testimony: PublicTestimonyResType) => {
@@ -62,6 +65,7 @@ const TestimonialsPage = () => {
     setKeyword('');
   };
 
+ 
   return (
     <Container>
       <Button className="w-38 flex self-end">
@@ -89,7 +93,7 @@ const TestimonialsPage = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:w-2/3 gap-3">
           <h3 className="col-span-2 md:col-span-4">Búsqueda por categoría</h3>
-          {categories.map((cat) => (
+          {categoryNames.map((cat) => (
             <Button
               key={cat}
               onClick={() => setFilteredCategory(cat)}
