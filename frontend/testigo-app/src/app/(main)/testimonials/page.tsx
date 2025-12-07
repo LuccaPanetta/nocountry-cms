@@ -11,6 +11,7 @@ import { PublicTestimonyResType } from "@/types/testimony-type"
 import { CustomPagination } from "@/components/ui/CustomPagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useGetCategories } from "@/services/use-queries-service/categories-query-service"
+import { useRouter } from "next/navigation"
 
 
 const categories = ["producto", "evento", "cliente", "industria"]
@@ -20,6 +21,8 @@ const TestimonialsPage = () => {
   const [filteredCategory, setFilteredCategory] = useState('');
   const [keyword, setKeyword] = useState('');
   const [orderValue, setOrderValue] = useState("")
+
+  const router = useRouter();
 
   //Pagination hook
   const { page, totalPages, testimonials, total, onPageChange, isLoading } =
@@ -38,6 +41,7 @@ const TestimonialsPage = () => {
 
   const { data: categories } = useGetCategories();
   const categoryNames = categories?.map(cat => cat.name) || [];
+  const hasActiveFilters = filteredCategory !== '' || keyword !== '';
 
   const filteredTestimonials = useMemo(() => {
     return testimonials.filter((testimony: PublicTestimonyResType) => {
@@ -58,7 +62,6 @@ const TestimonialsPage = () => {
     });
   }, [testimonials, filteredCategory, keyword]);
 
-  const hasActiveFilters = filteredCategory !== '' || keyword !== '';
 
   const clearAllFilters = () => {
     setFilteredCategory('');
@@ -68,7 +71,7 @@ const TestimonialsPage = () => {
  
   return (
     <Container>
-      <Button className="w-38 flex self-end">
+      <Button className="w-38 flex self-end" onClick={()=>router.push('/testimonials/create')}>
         Crear testimonio
       </Button>
 
