@@ -48,7 +48,8 @@ export class TestimonialsController {
     const multimediaData = this.dtoProcessorService.prepareMultimediaData(
       file,
       createTestimonialFormDto.tipo,
-      createTestimonialFormDto.descripcion
+      createTestimonialFormDto.descripcion,
+      createTestimonialFormDto.multimediaUrl
     );
 
     const createTestimonialDto = createTestimonialFormDto.toCreateTestimonialDto();

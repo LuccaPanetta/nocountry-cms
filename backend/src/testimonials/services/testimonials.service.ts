@@ -76,13 +76,13 @@ export class TestimonialsService {
       }
     }
 
-    // Crear testimonio - usar multimediaUrl como videoUrl para compatibilidad
+    // Crear testimonio
     const testimonial = this.testimonialRepository.create({
       contenido: createTestimonialDto.contenido,
       titulo: createTestimonialDto.titulo,
       autorNombre: createTestimonialDto.autorNombre,
       empresa: createTestimonialDto.empresa,
-      cargo: createTestimonialDto.cargo, // Asignar multimediaUrl a videoUrl
+      cargo: createTestimonialDto.cargo,
       category: category,
       tags: tags,
       user: user,
@@ -91,7 +91,7 @@ export class TestimonialsService {
 
     const savedTestimonial = await this.testimonialRepository.save(testimonial);
 
-    // Procesar archivo si existe
+    // 1. Procesar archivo si existe
     let multimedia: Multimedia | undefined;
     if (file && multimediaData) {
       const { tipo, descripcion } = multimediaData;
@@ -106,6 +106,25 @@ export class TestimonialsService {
       savedTestimonial.multimedia = multimediaResult.multimedia;
       await this.testimonialRepository.save(savedTestimonial);
       multimedia = multimediaResult.multimedia;
+    }
+    // 2. Procesar URL externa si existe (YouTube, Vimeo, etc.)
+    else if (createTestimonialDto.multimediaUrl && multimediaData) {
+      const { tipo, descripcion } = multimediaData;
+      
+      // Determinar el tipo si no se proporcionó (basado en la URL)
+      const tipoFinal = tipo || this.determinarTipoPorUrl(createTestimonialDto.multimediaUrl);
+      
+      // Crear multimedia para URL externa
+      const multimediaResult = await this.multimediaService.createWithUrl(
+        savedTestimonial.id,
+        createTestimonialDto.multimediaUrl,
+        tipoFinal,
+        descripcion
+      );
+
+      savedTestimonial.multimedia = multimediaResult;
+      await this.testimonialRepository.save(savedTestimonial);
+      multimedia = multimediaResult;
     }
 
     await queryRunner.commitTransaction();
