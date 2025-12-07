@@ -12,7 +12,6 @@ export const apiTestimonialsService = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/testimonials`
 })
 
-
 export const apiCategoriesService = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/categories`
 })
