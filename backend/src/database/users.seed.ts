@@ -6,6 +6,9 @@ import { User } from '../users/entities/user.entity';
 import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
 
+// 💡 CONSTANTE: Claridad en la contraseña por defecto
+const DEFAULT_SEED_PASSWORD = 'Pass123'; 
+
 @Injectable()
 export class UsersSeed {
   private readonly logger = new Logger(UsersSeed.name);
@@ -53,7 +56,7 @@ export class UsersSeed {
         await queryRunner.connect();
         
         try {
-          // Deshabilitar temporalmente las constraints
+          // Deshabilitar temporalmente las constraints (Postgres-specific, pero eficaz)
           await queryRunner.query('ALTER TABLE usuarios DISABLE TRIGGER ALL;');
           await queryRunner.query('DELETE FROM usuarios;');
           await queryRunner.query('ALTER TABLE usuarios ENABLE TRIGGER ALL;');
@@ -73,6 +76,8 @@ export class UsersSeed {
     await queryRunner.connect();
     
     try {
+      // 💡 Se podría usar un solo queryRunner.manager.save(User, users) 
+      // y TypeORM manejaría el array, pero iterar permite el logging detallado y manejo de error 23505 por usuario.
       for (const user of users) {
         try {
           await queryRunner.manager.save(User, user);
@@ -98,12 +103,14 @@ export class UsersSeed {
       );
       return result[0].exists;
     } catch (error) {
+      this.logger.error('❌ Error verificando si la tabla existe:', error.message);
       return false;
     }
   }
 
   private async createUsers(): Promise<User[]> {
-    const hashedPassword = await bcrypt.hash('password123!', 10);
+    // 💡 Usando la constante definida arriba
+    const hashedPassword = await bcrypt.hash(DEFAULT_SEED_PASSWORD, 10); 
     
     const users: Partial<User>[] = [
       // 1 Administrador

@@ -24,7 +24,7 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
           description: 'Acceso completo al sistema',
           value: {
             email: 'admin@testimonialcms.com',
-            password: 'password123!'
+            password: 'Pass123'
           }
         },
         editor: {
@@ -32,7 +32,7 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
           description: 'Puede moderar testimonios de todos los usuarios',
           value: {
             email: 'editor@testimonialcms.com',
-            password: 'password123!'
+            password: 'Pass123'
           }
         },
         contributor: {
@@ -40,7 +40,7 @@ Selecciona un rol del dropdown para cargar automáticamente las credenciales de 
           description: 'Puede gestionar sus propios testimonios',
           value: {
             email: 'juan.perez@gmail.com',
-            password: 'password123!'
+            password: 'Pass123'
           }
         }
       }
