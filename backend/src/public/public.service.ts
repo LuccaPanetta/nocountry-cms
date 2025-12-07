@@ -775,35 +775,62 @@ export class PublicService {
     }
   }
 
-  private generateVideoHtml(multimedia: PublicMultimediaDto): string {
-    const youtubeId = this.extractYouTubeId(multimedia.url);
-    const vimeoId = this.extractVimeoId(multimedia.url);
+ private generateVideoHtml(multimedia: PublicMultimediaDto): string {
+  const youtubeId = this.extractYouTubeId(multimedia.url);
+  const vimeoId = this.extractVimeoId(multimedia.url);
+  
+  if (youtubeId) {
+    // USAR ESTE ID DE YOUTUBE REAL PARA PRUEBAS
+    const TEST_YOUTUBE_ID = 'dQw4w9WgXcQ'; // Rick Astley - Never Gonna Give You Up (video real)
     
-    if (youtubeId) {
-      return `
+    // Si el ID extraído no es válido, usar el de prueba
+    const finalYoutubeId = youtubeId && youtubeId.length === 11 ? youtubeId : TEST_YOUTUBE_ID;
+    
+    // URL simplificada
+    const embedUrl = `https://www.youtube.com/embed/${finalYoutubeId}`;
+    
+    this.logger.debug(`🎬 Generando iframe de YouTube: ${finalYoutubeId}`);
+    
+    return `
 <div class="testimonial-video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px 12px 0 0;">
   <iframe 
-    src="https://www.youtube.com/embed/${youtubeId}?rel=0&showinfo=0&modestbranding=1&controls=1&autoplay=0&mute=0"
+    src="${embedUrl}"
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
     allowfullscreen
     title="${multimedia.description || 'Video testimonio'}"
-    loading="lazy"
-    referrerpolicy="no-referrer-when-downgrade">
+    loading="lazy">
   </iframe>
 </div>
 <div style="padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px;">
   <span style="font-size: 14px;">🎬</span>
-  <span>Video testimonio</span>
-</div>`;
-    }
-    
-    if (vimeoId) {
-      return `
+  <span>Video testimonio (YouTube)</span>
+  <a href="https://www.youtube.com/watch?v=${finalYoutubeId}" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     style="margin-left: auto; color: #4f46e5; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e0e7ff;"
+     onmouseover="this.style.textDecoration='underline'; this.style.background='#c7d2fe';"
+     onmouseout="this.style.textDecoration='none'; this.style.background='#e0e7ff';"
+     title="Abrir en YouTube">
+    Ver en YouTube
+  </a>
+</div>
+<!-- Solo mostrar si es el video de prueba -->
+${finalYoutubeId === TEST_YOUTUBE_ID ? `
+<div style="padding: 8px 20px; background: #fef3c7; border-bottom: 1px solid #fbbf24; font-size: 11px; color: #92400e; text-align: center;">
+  <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+  Usando video de prueba de YouTube. Reemplaza con tu propio video.
+</div>` : ''}`;
+  }
+  
+  if (vimeoId) {
+    return `
 <div class="testimonial-video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px 12px 0 0;">
   <iframe 
-    src="https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0&badge=0"
+    src="https://player.vimeo.com/video/${vimeoId}"
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+    frameborder="0"
     allowfullscreen
     title="${multimedia.description || 'Video testimonio'}"
     loading="lazy">
@@ -812,19 +839,27 @@ export class PublicService {
 <div style="padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px;">
   <span style="font-size: 14px;">🎬</span>
   <span>Video testimonio (Vimeo)</span>
+  <a href="https://vimeo.com/${vimeoId}" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     style="margin-left: auto; color: #19b5fe; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e1f5fe;"
+     onmouseover="this.style.textDecoration='underline'; this.style.background='#b3e5fc';"
+     onmouseout="this.style.textDecoration='none'; this.style.background='#e1f5fe';"
+     title="Abrir en Vimeo">
+    Ver en Vimeo
+  </a>
 </div>`;
-    }
-    
-    // Video local
-    const placeholder = 'https://via.placeholder.com/800x450/4f46e5/ffffff?text=Video+Testimonio';
-    
-    return `
+  }
+  
+  // Video local
+  const placeholder = 'https://via.placeholder.com/800x450/4f46e5/ffffff?text=Video+Testimonio';
+  
+  return `
 <div class="testimonial-video-local" style="background: #000; border-radius: 12px 12px 0 0; overflow: hidden;">
   <video 
     controls
     preload="metadata"
     style="width: 100%; height: auto; max-height: 400px; display: block; background: #000;"
-    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 60px 20px; text-align: center; color: #fff; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\\'><div style=\\"font-size: 40px; margin-bottom: 10px;\\">🎥</div><p style=\\"margin: 0; font-size: 14px;\\">Video no disponible</p></div>';"
     playsinline
     webkit-playsinline>
     <source src="${multimedia.url}" type="video/mp4">
@@ -840,8 +875,7 @@ export class PublicService {
     </div>
   </div>` : ''}
 </div>`;
-  }
-
+}
   private generateImageHtml(multimedia: PublicMultimediaDto): string {
     const placeholder = 'https://via.placeholder.com/800x400/4f46e5/ffffff?text=Testimonio+Imagen';
     
