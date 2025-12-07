@@ -446,27 +446,106 @@ private determinarTipoMultimedia(url: string): MultimediaType {
     return { message: 'Testimonio eliminado con éxito' };
   }
   
-  async updateStatus(
-    id: string, 
-    newStatus: TestimonialStatus
-  ): Promise<TestimonialResponseDto> {
-    const testimonial = await this.testimonialRepository.findOne({
-      where: { id },
-      relations: ['category', 'tags', 'multimedia']
-    });
-    
-    if (!testimonial) {
-      throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
-    }
-    
-    testimonial.status = newStatus;
-    const updatedTestimonial = await this.testimonialRepository.save(testimonial);
-    
-    // Transformar a DTO
-    return TestimonialMapper.toResponseDto(updatedTestimonial);
+  // En TestimonialsService, reemplaza el método updateStatus:
+async updateStatus(
+  id: string, 
+  newStatus: TestimonialStatus,
+  user?: User // Agrega el parámetro user
+): Promise<TestimonialResponseDto> {
+  const testimonial = await this.testimonialRepository.findOne({
+    where: { id },
+    relations: ['category', 'tags', 'multimedia']
+  });
+  
+  if (!testimonial) {
+    throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
   }
 
-  // Opcional: Método para obtener lista paginada
+  // Validar transición de estado según el rol del usuario
+  this.validateStatusTransition(testimonial.status, newStatus, user?.rol);
+
+  // Actualizar estado
+  testimonial.status = newStatus;
+  const updatedTestimonial = await this.testimonialRepository.save(testimonial);
+  
+  // Transformar a DTO
+  return TestimonialMapper.toResponseDto(updatedTestimonial);
+}
+
+private validateStatusTransition(
+  currentStatus: TestimonialStatus,
+  newStatus: TestimonialStatus,
+  userRole?: UserRole
+): void {
+  // Si no hay usuario (público), no puede cambiar estados
+  if (!userRole) {
+    throw new BadRequestException('Se requiere autenticación para cambiar el estado');
+  }
+
+  if (currentStatus === newStatus) {
+    return;
+  }
+
+  const allowedTransitions = {
+    [UserRole.EDITOR]: {
+      from: [TestimonialStatus.PENDING],
+      to: [TestimonialStatus.IN_REVIEW, TestimonialStatus.REJECTED]
+    },
+    [UserRole.ADMIN]: {
+      from: [TestimonialStatus.PENDING, TestimonialStatus.IN_REVIEW],
+      to: [TestimonialStatus.IN_REVIEW, TestimonialStatus.APPROVED, TestimonialStatus.REJECTED]
+    }
+  };
+
+  const userTransitions = allowedTransitions[userRole];
+  if (!userTransitions) {
+    throw new BadRequestException(`El rol ${userRole} no tiene permisos para cambiar estados`);
+  }
+
+  if (!userTransitions.from.includes(currentStatus)) {
+    throw new BadRequestException(
+      `El rol ${userRole} no puede cambiar estados desde ${currentStatus}. ` +
+      `Estados permitidos: ${userTransitions.from.join(', ')}`
+    );
+  }
+
+  if (!userTransitions.to.includes(newStatus)) {
+    throw new BadRequestException(
+      `El rol ${userRole} no puede cambiar estados a ${newStatus}. ` +
+      `Estados permitidos: ${userTransitions.to.join(', ')}`
+    );
+  }
+
+  const statusOrder = [
+    TestimonialStatus.PENDING,
+    TestimonialStatus.IN_REVIEW,
+    TestimonialStatus.APPROVED,
+    TestimonialStatus.REJECTED
+  ];
+  
+  const currentIndex = statusOrder.indexOf(currentStatus);
+  const newIndex = statusOrder.indexOf(newStatus);
+
+  if (newStatus !== TestimonialStatus.REJECTED && newIndex < currentIndex) {
+    throw new BadRequestException('No se puede retroceder en el flujo de estados');
+  }
+
+  const finalStates = [TestimonialStatus.APPROVED, TestimonialStatus.REJECTED];
+  if (finalStates.includes(currentStatus) && userRole !== UserRole.ADMIN) {
+    throw new BadRequestException(
+      `No se puede cambiar el estado desde ${currentStatus}. Estados finales no pueden ser modificados.`
+    );
+  }
+
+  if (finalStates.includes(currentStatus) && userRole === UserRole.ADMIN) {
+    if (![TestimonialStatus.APPROVED, TestimonialStatus.REJECTED].includes(newStatus)) {
+      throw new BadRequestException(
+        'Como administrador, solo puedes cambiar entre APPROVED y REJECTED para testimonios finalizados'
+      );
+    }
+  }
+}
+
   async findAllPaginated(
     filterDto: GetTestimonialsDto & { page?: number; limit?: number },
     user?: User

@@ -182,20 +182,20 @@ export function FindAllTestimonialsSwagger() {
       name: 'status',
       required: false,
       description: 'Filtrar por estado',
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending','in_review', 'approved', 'rejected'],
       example: 'approved'
     }),
     ApiQuery({
       name: 'categoryId',
       required: false,
       description: 'Filtrar por ID de categoría',
-      example: '123e4567-e89b-12d3-a456-426614174000'
+      /* example: '123e4567-e89b-12d3-a456-426614174000' */
     }),
     ApiQuery({
       name: 'tags',
       required: false,
       description: 'Filtrar por tags (nombres separados por comas)',
-      example: 'tecnologia,servicio'
+      /* example: 'tecnologia,servicio' */
     }),
     ApiResponse({
       status: 200,

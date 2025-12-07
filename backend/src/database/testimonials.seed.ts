@@ -108,7 +108,7 @@ export class TestimonialsSeed {
     // Datos de testimonios con todas las relaciones
     // Dentro del método createCompleteTestimonials, agrega fechas variadas:
 const testimonialsConfig = [
-  // Testimonio 1: Aprobado con video y engagement alto - 3 meses atrás
+  // Testimonio 1: Cambiar 'servicios' por 'producto'
   {
     testimonial: {
       titulo: 'Soporte técnico excepcional',
@@ -118,9 +118,9 @@ const testimonialsConfig = [
       cargo: 'Director de IT',
       status: TestimonialStatus.APPROVED,
       user: users[0],
-      category: findCategory('servicios'),
+      category: findCategory('producto'), // Cambiado de 'servicios' a 'producto'
       tags: findTags('servicio', 'soporte', 'recomendación'),
-      creadoEn: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 días atrás
+      creadoEn: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -134,7 +134,7 @@ const testimonialsConfig = [
       embeds: 42
     }
   },
-  // Testimonio 2: Aprobado con imagen y engagement medio - 6 meses atrás
+  // Testimonio 2: Cambiar 'tecnología' por 'producto'
   {
     testimonial: {
       titulo: 'Transformación digital completa',
@@ -144,9 +144,9 @@ const testimonialsConfig = [
       cargo: 'CEO',
       status: TestimonialStatus.APPROVED,
       user: users[1],
-      category: findCategory('tecnología'),
+      category: findCategory('producto'), // Cambiado de 'tecnología' a 'producto'
       tags: findTags('tecnología', 'facilidad-uso', 'empresa', 'innovación'),
-      creadoEn: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), // 6 meses atrás
+      creadoEn: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -160,7 +160,7 @@ const testimonialsConfig = [
       embeds: 31
     }
   },
-  // Testimonio 3: Aprobado con video y engagement alto - 1 año atrás
+  // Testimonio 3: Cambiar 'consultoría' por 'cliente'
   {
     testimonial: {
       titulo: 'ROI inmediato y excelente implementación',
@@ -170,9 +170,9 @@ const testimonialsConfig = [
       cargo: 'Gerente General',
       status: TestimonialStatus.APPROVED,
       user: users[2],
-      category: findCategory('consultoría'),
+      category: findCategory('cliente'), // Cambiado de 'consultoría' a 'cliente'
       tags: findTags('empresa', 'innovación', 'recomendación'),
-      creadoEn: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000), // 1 año atrás
+      creadoEn: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -186,7 +186,7 @@ const testimonialsConfig = [
       embeds: 55
     }
   },
-  // Testimonio 4: En revisión con imagen - 15 días atrás
+  // Testimonio 4: Cambiar 'tecnología' por 'producto'
   {
     testimonial: {
       titulo: 'Intuitiva y con soporte 24/7',
@@ -196,9 +196,9 @@ const testimonialsConfig = [
       cargo: 'Fundadora',
       status: TestimonialStatus.IN_REVIEW,
       user: users[3],
-      category: findCategory('tecnología'),
+      category: findCategory('producto'), // Cambiado de 'tecnología' a 'producto'
       tags: findTags('facilidad-uso', 'soporte', 'tecnología'),
-      creadoEn: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 días atrás
+      creadoEn: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -212,7 +212,7 @@ const testimonialsConfig = [
       embeds: 22
     }
   },
-  // Testimonio 5: PENDIENTE con video - 5 días atrás
+  // Testimonio 5: Cambiar 'tecnología' por 'producto'
   {
     testimonial: {
       titulo: 'Probando funcionalidades avanzadas',
@@ -222,9 +222,9 @@ const testimonialsConfig = [
       cargo: 'CTO',
       status: TestimonialStatus.PENDING,
       user: users[4],
-      category: findCategory('tecnología'),
+      category: findCategory('producto'), // Cambiado de 'tecnología' a 'producto'
       tags: findTags('tecnología', 'soporte', 'empresa'),
-      creadoEn: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 días atrás
+      creadoEn: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -238,7 +238,7 @@ const testimonialsConfig = [
       embeds: 12
     }
   },
-  // Testimonio 6: Aprobado sin multimedia - 8 meses atrás
+  // Testimonio 6: Cambiar 'servicios' por 'producto'
   {
     testimonial: {
       titulo: 'Buena experiencia con pequeños ajustes',
@@ -248,16 +248,16 @@ const testimonialsConfig = [
       cargo: 'Freelancer',
       status: TestimonialStatus.APPROVED,
       user: users[5],
-      category: findCategory('servicios'),
+      category: findCategory('producto'), // Cambiado de 'servicios' a 'producto'
       tags: findTags('servicio', 'soporte', 'freelancer'),
-      creadoEn: new Date(Date.now() - 240 * 24 * 60 * 60 * 1000), // 8 meses atrás
+      creadoEn: new Date(Date.now() - 240 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 48,
       embeds: 7
     }
   },
-  // Testimonio 7: RECHAZADO - 1.5 años atrás
+  // Testimonio 7: Cambiar 'servicios' por 'cliente'
   {
     testimonial: {
       titulo: 'No cumplió expectativas',
@@ -265,16 +265,16 @@ const testimonialsConfig = [
       autorNombre: 'Usuario Anónimo',
       status: TestimonialStatus.REJECTED,
       user: users[6],
-      category: findCategory('servicios'),
+      category: findCategory('cliente'), // Cambiado de 'servicios' a 'cliente'
       tags: findTags('servicio'),
-      creadoEn: new Date(Date.now() - 550 * 24 * 60 * 60 * 1000), // 1.5 años atrás
+      creadoEn: new Date(Date.now() - 550 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 15,
       embeds: 2
     }
   },
-  // Testimonio 8: Producto - 2 años atrás
+  // Testimonio 8: Ya es 'producto' ✓
   {
     testimonial: {
       titulo: 'Solución ERP que revoluciona la administración',
@@ -286,7 +286,7 @@ const testimonialsConfig = [
       user: users[7],
       category: findCategory('producto'),
       tags: findTags('software', 'automatización', 'ahorro-tiempo', 'empresa'),
-      creadoEn: new Date(Date.now() - 730 * 24 * 60 * 60 * 1000), // 2 años atrás
+      creadoEn: new Date(Date.now() - 730 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -300,7 +300,7 @@ const testimonialsConfig = [
       embeds: 58
     }
   },
-  // Testimonio 9: Producto - 1 mes atrás
+  // Testimonio 9: Ya es 'producto' ✓
   {
     testimonial: {
       titulo: 'Plataforma de marketing todo en uno',
@@ -312,7 +312,7 @@ const testimonialsConfig = [
       user: users[8],
       category: findCategory('producto'),
       tags: findTags('marketing-digital', 'saas', 'integración', 'analítica-datos'),
-      creadoEn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 1 mes atrás
+      creadoEn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -326,7 +326,7 @@ const testimonialsConfig = [
       embeds: 27
     }
   },
-  // Testimonio 10: Producto - 10 meses atrás
+  // Testimonio 10: Ya es 'producto' ✓
   {
     testimonial: {
       titulo: 'Software de diseño intuitivo para no diseñadores',
@@ -338,14 +338,14 @@ const testimonialsConfig = [
       user: users[0],
       category: findCategory('producto'),
       tags: findTags('software', 'facilidad-uso', 'diseño', 'creatividad'),
-      creadoEn: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000), // 10 meses atrás
+      creadoEn: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 310,
       embeds: 42
     }
   },
-  // Testimonio 11: Producto - 3 semanas atrás
+  // Testimonio 11: Ya es 'producto' ✓
   {
     testimonial: {
       titulo: 'Sistema de reservas que multiplicó nuestras ventas',
@@ -357,7 +357,7 @@ const testimonialsConfig = [
       user: users[1],
       category: findCategory('producto'),
       tags: findTags('ecommerce', 'software', 'ventas', 'integración'),
-      creadoEn: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000), // 3 semanas atrás
+      creadoEn: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -371,7 +371,7 @@ const testimonialsConfig = [
       embeds: 36
     }
   },
-  // Testimonio 12: Producto - 2 días atrás
+  // Testimonio 12: Ya es 'producto' ✓
   {
     testimonial: {
       titulo: 'Herramienta de colaboración remota indispensable',
@@ -383,7 +383,7 @@ const testimonialsConfig = [
       user: users[2],
       category: findCategory('producto'),
       tags: findTags('colaboración', 'software', 'remoto', 'productividad'),
-      creadoEn: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 días atrás
+      creadoEn: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -397,7 +397,7 @@ const testimonialsConfig = [
       embeds: 23
     }
   },
-  // Testimonio 13: Evento - 4 meses atrás
+  // Testimonio 13: Ya es 'evento' ✓
   {
     testimonial: {
       titulo: 'Summit de Innovación Tecnológica 2024',
@@ -409,7 +409,7 @@ const testimonialsConfig = [
       user: users[3],
       category: findCategory('evento'),
       tags: findTags('innovación', 'tecnología', 'networking', 'aprendizaje'),
-      creadoEn: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 4 meses atrás
+      creadoEn: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -423,7 +423,7 @@ const testimonialsConfig = [
       embeds: 68
     }
   },
-  // Testimonio 14: Evento - 9 meses atrás
+  // Testimonio 14: Ya es 'evento' ✓
   {
     testimonial: {
       titulo: 'Workshop de Desarrollo Ágil',
@@ -435,14 +435,14 @@ const testimonialsConfig = [
       user: users[4],
       category: findCategory('evento'),
       tags: findTags('web-development', 'devops', 'workshop', 'aprendizaje'),
-      creadoEn: new Date(Date.now() - 270 * 24 * 60 * 60 * 1000), // 9 meses atrás
+      creadoEn: new Date(Date.now() - 270 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 240,
       embeds: 31
     }
   },
-  // Testimonio 15: Evento - 6 semanas atrás
+  // Testimonio 15: Ya es 'evento' ✓
   {
     testimonial: {
       titulo: 'Conferencia de Sostenibilidad Digital',
@@ -454,7 +454,7 @@ const testimonialsConfig = [
       user: users[5],
       category: findCategory('evento'),
       tags: findTags('sostenibilidad', 'innovación', 'conferencia', 'tecnología'),
-      creadoEn: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000), // 6 semanas atrás
+      creadoEn: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -468,7 +468,7 @@ const testimonialsConfig = [
       embeds: 25
     }
   },
-  // Testimonio 16: Evento - 1 semana atrás
+  // Testimonio 16: Ya es 'evento' ✓
   {
     testimonial: {
       titulo: 'Meetup de Emprendedores Tech',
@@ -480,14 +480,14 @@ const testimonialsConfig = [
       user: users[6],
       category: findCategory('evento'),
       tags: findTags('startup', 'emprendimiento', 'meetup', 'networking'),
-      creadoEn: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 semana atrás
+      creadoEn: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 110,
       embeds: 16
     }
   },
-  // Testimonio 17: Evento - 2.5 años atrás
+  // Testimonio 17: Ya es 'evento' ✓
   {
     testimonial: {
       titulo: 'Expo de Soluciones Cloud 2024',
@@ -499,7 +499,7 @@ const testimonialsConfig = [
       user: users[7],
       category: findCategory('evento'),
       tags: findTags('cloud-computing', 'expo', 'tecnología', 'soluciones'),
-      creadoEn: new Date(Date.now() - 900 * 24 * 60 * 60 * 1000), // 2.5 años atrás
+      creadoEn: new Date(Date.now() - 900 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -513,7 +513,7 @@ const testimonialsConfig = [
       embeds: 49
     }
   },
-  // Testimonio 18: Cliente - 1.2 años atrás
+  // Testimonio 18: Ya es 'cliente' ✓
   {
     testimonial: {
       titulo: 'Cliente desde el día uno',
@@ -525,7 +525,7 @@ const testimonialsConfig = [
       user: users[8],
       category: findCategory('cliente'),
       tags: findTags('fidelidad', 'evolución', 'feedback', 'servicio'),
-      creadoEn: new Date(Date.now() - 440 * 24 * 60 * 60 * 1000), // 1.2 años atrás
+      creadoEn: new Date(Date.now() - 440 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -539,7 +539,7 @@ const testimonialsConfig = [
       embeds: 37
     }
   },
-  // Testimonio 19: Cliente - 2 años y 8 meses atrás
+  // Testimonio 19: Ya es 'cliente' ✓
   {
     testimonial: {
       titulo: 'Solución a medida para necesidades específicas',
@@ -551,14 +551,14 @@ const testimonialsConfig = [
       user: users[0],
       category: findCategory('cliente'),
       tags: findTags('personalización', 'servicio', 'salud-tecnológica', 'solución'),
-      creadoEn: new Date(Date.now() - 980 * 24 * 60 * 60 * 1000), // 2.8 años atrás
+      creadoEn: new Date(Date.now() - 980 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 320,
       embeds: 43
     }
   },
-  // Testimonio 20: Cliente - 20 días atrás
+  // Testimonio 20: Ya es 'cliente' ✓
   {
     testimonial: {
       titulo: 'Migración sin dolor de cabeza',
@@ -570,7 +570,7 @@ const testimonialsConfig = [
       user: users[1],
       category: findCategory('cliente'),
       tags: findTags('migración', 'soporte-técnico', 'implementación', 'servicio'),
-      creadoEn: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 días atrás
+      creadoEn: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -584,7 +584,7 @@ const testimonialsConfig = [
       embeds: 29
     }
   },
-  // Testimonio 21: Cliente - 11 meses atrás
+  // Testimonio 21: Ya es 'cliente' ✓
   {
     testimonial: {
       titulo: 'Respuesta en menos de 5 minutos',
@@ -596,14 +596,14 @@ const testimonialsConfig = [
       user: users[2],
       category: findCategory('cliente'),
       tags: findTags('soporte-24-7', 'tiempo-respuesta', 'emergencia', 'excelencia'),
-      creadoEn: new Date(Date.now() - 330 * 24 * 60 * 60 * 1000), // 11 meses atrás
+      creadoEn: new Date(Date.now() - 330 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 290,
       embeds: 39
     }
   },
-  // Testimonio 22: Cliente - 3 días atrás
+  // Testimonio 22: Ya es 'cliente' ✓
   {
     testimonial: {
       titulo: 'Recomiendo sin dudarlo',
@@ -615,7 +615,7 @@ const testimonialsConfig = [
       user: users[3],
       category: findCategory('cliente'),
       tags: findTags('recomendación', 'satisfacción-cliente', 'referidos', 'servicio'),
-      creadoEn: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 días atrás
+      creadoEn: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -629,7 +629,7 @@ const testimonialsConfig = [
       embeds: 19
     }
   },
-  // Testimonio 23: Industria - 7 meses atrás
+  // Testimonio 23: Ya es 'industria' ✓
   {
     testimonial: {
       titulo: 'Revolución en la industria retail',
@@ -641,7 +641,7 @@ const testimonialsConfig = [
       user: users[4],
       category: findCategory('industria'),
       tags: findTags('retail', 'analítica-datos', 'ventaja-competitiva', 'innovación'),
-      creadoEn: new Date(Date.now() - 210 * 24 * 60 * 60 * 1000), // 7 meses atrás
+      creadoEn: new Date(Date.now() - 210 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -655,7 +655,7 @@ const testimonialsConfig = [
       embeds: 50
     }
   },
-  // Testimonio 24: Industria - 2.3 años atrás
+  // Testimonio 24: Ya es 'industria' ✓
   {
     testimonial: {
       titulo: 'Manufactura 4.0 hecha realidad',
@@ -667,14 +667,14 @@ const testimonialsConfig = [
       user: users[5],
       category: findCategory('industria'),
       tags: findTags('manufactura', 'iot', 'automatización', 'calidad'),
-      creadoEn: new Date(Date.now() - 840 * 24 * 60 * 60 * 1000), // 2.3 años atrás
+      creadoEn: new Date(Date.now() - 840 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 265,
       embeds: 35
     }
   },
-  // Testimonio 25: Industria - 1 mes y medio atrás
+  // Testimonio 25: Ya es 'industria' ✓
   {
     testimonial: {
       titulo: 'Transformación en servicios financieros',
@@ -686,7 +686,7 @@ const testimonialsConfig = [
       user: users[6],
       category: findCategory('industria'),
       tags: findTags('fintech', 'ciberseguridad', 'regulación', 'experiencia-cliente'),
-      creadoEn: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 1.5 meses atrás
+      creadoEn: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.IMAGE,
@@ -700,7 +700,7 @@ const testimonialsConfig = [
       embeds: 30
     }
   },
-  // Testimonio 26: Industria - 2 semanas atrás
+  // Testimonio 26: Ya es 'industria' ✓
   {
     testimonial: {
       titulo: 'Agricultura de precisión con tecnología',
@@ -712,7 +712,7 @@ const testimonialsConfig = [
       user: users[7],
       category: findCategory('industria'),
       tags: findTags('agricultura', 'iot', 'sostenibilidad', 'optimización'),
-      creadoEn: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 2 semanas atrás
+      creadoEn: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
     },
     multimedia: {
       tipo: MultimediaType.VIDEO,
@@ -726,7 +726,7 @@ const testimonialsConfig = [
       embeds: 24
     }
   },
-  // Testimonio 27: Industria - 3 años atrás (el más antiguo)
+  // Testimonio 27: Ya es 'industria' ✓
   {
     testimonial: {
       titulo: 'Turismo inteligente post-pandemia',
@@ -738,7 +738,7 @@ const testimonialsConfig = [
       user: users[8],
       category: findCategory('industria'),
       tags: findTags('turismo', 'personalización', 'global', 'innovación'),
-      creadoEn: new Date(Date.now() - 1095 * 24 * 60 * 60 * 1000), // 3 años atrás
+      creadoEn: new Date(Date.now() - 1095 * 24 * 60 * 60 * 1000),
     },
     engagement: {
       views: 310,
@@ -746,7 +746,6 @@ const testimonialsConfig = [
     }
   }
 ];
-
     const createdTestimonials: Testimonial[] = [];
 
     // Crear cada testimonio con sus relaciones usando una transacción
