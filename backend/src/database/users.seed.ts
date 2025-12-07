@@ -7,7 +7,7 @@ import { UserRole } from '../users/interfaces/user-role.enum';
 import * as bcrypt from 'bcrypt';
 
 // 💡 CONSTANTE: Claridad en la contraseña por defecto
-const DEFAULT_SEED_PASSWORD = 'Pass123'; 
+const DEFAULT_SEED_PASSWORD = 'Pass123';
 
 @Injectable()
 export class UsersSeed {
@@ -17,7 +17,7 @@ export class UsersSeed {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   async seed() {
     try {
@@ -34,7 +34,7 @@ export class UsersSeed {
       await this.cleanExistingUsers();
 
       const users = await this.createUsers();
-      
+
       // ✅ INSERTAR con manejo de duplicados
       await this.insertUsersSafely(users);
 
@@ -48,19 +48,19 @@ export class UsersSeed {
     try {
       // Verificar si hay usuarios existentes
       const existingCount = await this.userRepository.count().catch(() => 0);
-      
+
       if (existingCount > 0) {
         this.logger.log(`🗑️  Eliminando ${existingCount} usuarios existentes...`);
-        
+
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
-        
+
         try {
           // Deshabilitar temporalmente las constraints (Postgres-specific, pero eficaz)
           await queryRunner.query('ALTER TABLE usuarios DISABLE TRIGGER ALL;');
           await queryRunner.query('DELETE FROM usuarios;');
           await queryRunner.query('ALTER TABLE usuarios ENABLE TRIGGER ALL;');
-          
+
           this.logger.log('✅ Usuarios existentes eliminados');
         } finally {
           await queryRunner.release();
@@ -74,7 +74,7 @@ export class UsersSeed {
   private async insertUsersSafely(users: User[]) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    
+
     try {
       // 💡 Se podría usar un solo queryRunner.manager.save(User, users) 
       // y TypeORM manejaría el array, pero iterar permite el logging detallado y manejo de error 23505 por usuario.
@@ -110,8 +110,8 @@ export class UsersSeed {
 
   private async createUsers(): Promise<User[]> {
     // 💡 Usando la constante definida arriba
-    const hashedPassword = await bcrypt.hash(DEFAULT_SEED_PASSWORD, 10); 
-    
+    const hashedPassword = await bcrypt.hash(DEFAULT_SEED_PASSWORD, 10);
+
     const users: Partial<User>[] = [
       // 1 Administrador
       {
@@ -130,7 +130,7 @@ export class UsersSeed {
         password: hashedPassword,
       },
       {
-        nombre: 'Editor', 
+        nombre: 'Editor',
         apellido: 'Dos',
         email: 'edito2@testimonialcms.com',
         rol: UserRole.EDITOR,
@@ -139,7 +139,7 @@ export class UsersSeed {
       // 3 Contribuidores
       {
         nombre: 'Juan',
-        apellido: 'Perez', 
+        apellido: 'Perez',
         email: 'juan.perez@gmail.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
@@ -148,7 +148,7 @@ export class UsersSeed {
         nombre: 'Manuel',
         apellido: 'Gomez',
         email: 'manuel.gomez@testimonialcms.com',
-        rol: UserRole.CONTRIBUTOR, 
+        rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
       {
@@ -158,6 +158,56 @@ export class UsersSeed {
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
       },
+      {
+        nombre: 'Lucia',
+        apellido: 'Fernandez',
+        email: 'lucia.fernandez@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Carlos',
+        apellido: 'Ramirez',
+        email: 'carlos.ramirez@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Sofia',
+        apellido: 'Garcia',
+        email: 'sofia.garcia@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Diego',
+        apellido: 'Lopez',
+        email: 'diego.lopez@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Valentina',
+        apellido: 'Rojas',
+        email: 'valentina.rojas@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Nicolas',
+        apellido: 'Diaz',
+        email: 'nicolas.diaz@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      },
+      {
+        nombre: 'Camila',
+        apellido: 'Vega',
+        email: 'camila.vega@testimonialcms.com',
+        rol: UserRole.CONTRIBUTOR,
+        password: hashedPassword,
+      }
+
     ];
 
     return this.userRepository.create(users);

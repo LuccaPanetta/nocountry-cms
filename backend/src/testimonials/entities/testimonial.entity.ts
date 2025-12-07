@@ -20,6 +20,7 @@ import { EngagementMetric } from '../../engagement/entities/engagement.entity';
 
 export enum TestimonialStatus {
   PENDING = 'pending',
+  IN_REVIEW = 'in_review',
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }
