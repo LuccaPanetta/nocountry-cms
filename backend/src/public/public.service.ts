@@ -1,4 +1,3 @@
-// src/public/public.service.ts (VERSIÓN COMPLETA CON TUS ENTIDADES)
 import { 
   Injectable, 
   NotFoundException, 
@@ -62,8 +61,8 @@ export class PublicService {
     private readonly configService: ConfigService,
   ) {
     this.baseUrl = process.env.RENDER_BACKEND_URL || 
-                   configService.get<string>('APP_URL') || 
-                   'http://localhost:3000';
+             configService.get<string>('APP_URL') || 
+             'http://localhost:3000';
     
     this.embedStyles = {
       default: {
@@ -93,15 +92,19 @@ export class PublicService {
     this.logger.log(`PublicService inicializado con baseUrl: ${this.baseUrl}`);
   }
 
-  async getPublicTestimonialById(id: string): Promise<PublicTestimonialDto> {
-    try {
-      // Validar formato UUID
-      if (!this.isValidUUID(id)) {
-        throw new BadRequestException('ID de testimonio inválido');
-      }
+  // --- MÉTODOS DE OBTENCIÓN Y REGISTRO ---
 
-      // Usar QueryBuilder para cargar TODAS las relaciones correctamente
-      const testimonialEntity = await this.testimonialRepository
+  /**
+   * Método auxiliar para obtener la entidad Testimonial aprobada, sin lógica de registro.
+   */
+  private async fetchApprovedTestimonialEntity(id: string): Promise<Testimonial> {
+     // Validar formato UUID
+    if (!this.isValidUUID(id)) {
+        throw new BadRequestException('ID de testimonio inválido');
+    }
+    
+    // Usar QueryBuilder para cargar TODAS las relaciones correctamente
+    const testimonialEntity = await this.testimonialRepository
         .createQueryBuilder('testimonial')
         .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
         .leftJoinAndSelect('testimonial.engagement', 'engagement')
@@ -111,29 +114,46 @@ export class PublicService {
         .andWhere('testimonial.status = :status', { status: TestimonialStatus.APPROVED })
         .getOne();
 
-      this.logger.debug(`🔍 Buscando testimonio ${id}`, {
-        encontrado: !!testimonialEntity,
-        tieneMultimedia: !!testimonialEntity?.multimedia,
-        tieneEngagement: !!testimonialEntity?.engagement,
-        tieneCategory: !!testimonialEntity?.category,
-        tieneTags: testimonialEntity?.tags?.length || 0
-      });
-
-      if (!testimonialEntity) {
+    if (!testimonialEntity) {
         throw new NotFoundException('Testimonio no encontrado o no aprobado');
+    }
+    return testimonialEntity;
+  }
+  
+  /**
+   * Obtiene un testimonio público por ID, con control opcional de registro de vista.
+   * ✅ REGLA: Registrar vista si shouldRegisterView es TRUE (usado por GET /testimonials/{id})
+   */
+  async getPublicTestimonialById(id: string, shouldRegisterView: boolean = false): Promise<PublicTestimonialDto> {
+    try {
+      const testimonialEntity = await this.fetchApprovedTestimonialEntity(id);
+
+      this.logger.debug(`🔍 Testimonio ${id} encontrado.`);
+      
+      let engagementMetrics: EngagementMetricsResponse;
+
+      // --- Control de Registro de Vista ---
+      if (shouldRegisterView) {
+          await this.engagementService.registerView(id);
+          // Obtenemos las métricas actualizadas después del registro
+          engagementMetrics = await this.getEngagementMetrics(id);
+      } else {
+          // Si no se registra, usamos las métricas cargadas por TypeORM o las buscamos.
+          engagementMetrics = testimonialEntity.engagement 
+             ? { 
+                 views: testimonialEntity.engagement.views, 
+                 embeds: testimonialEntity.engagement.embeds,
+                 testimonialId: id,
+                 ultimaActualizacion: testimonialEntity.engagement.ultimaActualizacion,
+                 id: testimonialEntity.engagement.id 
+             } 
+             : await this.getEngagementMetrics(id); // Fallback si engagement no se cargó correctamente
       }
-
-      // Registrar vista
-      await this.engagementService.registerView(id);
-
-      // Obtener engagement actualizado
-      const engagementMetrics = await this.getEngagementMetrics(id);
 
       // Preparar multimedia DTO
       let multimediaDto: PublicMultimediaDto | undefined;
       if (testimonialEntity.multimedia) {
         multimediaDto = this.mapMultimediaToDto(testimonialEntity.multimedia);
-        this.logger.debug(`📸 Multimedia mapeada:`, multimediaDto);
       }
 
       // Preparar engagement DTO
@@ -156,7 +176,7 @@ export class PublicService {
         company: testimonialEntity.empresa,
         position: testimonialEntity.cargo,
         status: testimonialEntity.status,
-        videoUrl: testimonialEntity['videoUrl'], // Si existe en la entidad
+        videoUrl: testimonialEntity['videoUrl'],
         category: this.extractCategoryName(testimonialEntity),
         tags: this.extractTagNames(testimonialEntity),
         multimedia: multimediaDto,
@@ -169,11 +189,7 @@ export class PublicService {
 
       this.logger.debug(`✅ DTO final generado:`, {
         id: publicTestimonial.id,
-        tieneMultimedia: publicTestimonial.hasMultimedia,
-        mediaType: publicTestimonial.mediaType,
-        multimediaType: publicTestimonial.multimedia?.type,
         engagementViews: publicTestimonial.engagement.views,
-        engagementLastUpdated: publicTestimonial.engagement.lastUpdated
       });
 
       return publicTestimonial;
@@ -187,6 +203,10 @@ export class PublicService {
     }
   }
 
+  /**
+   * Obtiene la lista de testimonios paginada.
+   * ✅ REGLA: NO REGISTRA vistas (GET /testimonials). Usa el engagement eager-loaded.
+   */
   async getPublicTestimonials(
     page: number = 1,
     limit: number = 10,
@@ -198,7 +218,7 @@ export class PublicService {
       const pageNum = Math.max(1, page);
       const limitNum = Math.min(50, Math.max(1, limit));
 
-      // Usar QueryBuilder para optimizar la consulta
+      // Usar QueryBuilder para optimizar la consulta y cargar 'engagement'
       const query = this.testimonialRepository
         .createQueryBuilder('testimonial')
         .leftJoinAndSelect('testimonial.multimedia', 'multimedia')
@@ -233,48 +253,43 @@ export class PublicService {
       });
 
       // Mapear a DTOs públicos
-      const publicTestimonials = await Promise.all(
-        testimonialEntities.map(async (testimonial) => {
-          // Registrar vista para cada testimonio
-          await this.engagementService.registerView(testimonial.id);
+      const publicTestimonials = testimonialEntities.map((testimonial) => {
+        // NO se llama a registerView. Se usa el objeto 'engagement' ya cargado.
+        const engagementMetrics = testimonial.engagement;
 
-          // Obtener engagement actualizado
-          const engagementMetrics = await this.getEngagementMetrics(testimonial.id);
+        // Preparar multimedia DTO
+        let multimediaDto: PublicMultimediaDto | undefined;
+        if (testimonial.multimedia) {
+          multimediaDto = this.mapMultimediaToDto(testimonial.multimedia);
+        }
 
-          // Preparar multimedia DTO
-          let multimediaDto: PublicMultimediaDto | undefined;
-          if (testimonial.multimedia) {
-            multimediaDto = this.mapMultimediaToDto(testimonial.multimedia);
-          }
+        // Determinar si tiene multimedia
+        const hasMultimedia = !!multimediaDto;
+        const mediaType = this.determineMediaType(multimediaDto);
 
-          // Determinar si tiene multimedia
-          const hasMultimedia = !!multimediaDto;
-          const mediaType = this.determineMediaType(multimediaDto);
-
-          return {
-            id: testimonial.id,
-            title: testimonial.titulo || '',
-            content: testimonial.contenido,
-            author: testimonial.autorNombre || 'Anónimo',
-            company: testimonial.empresa,
-            position: testimonial.cargo,
-            status: testimonial.status,
-            videoUrl: testimonial['videoUrl'], // Si existe en la entidad
-            category: this.extractCategoryName(testimonial),
-            tags: this.extractTagNames(testimonial),
-            multimedia: multimediaDto,
-            createdAt: testimonial.creadoEn,
-            updatedAt: testimonial.actualizadoEn,
-            engagement: {
-              views: engagementMetrics?.views || 0,
-              embeds: engagementMetrics?.embeds || 0,
-              lastUpdated: engagementMetrics?.ultimaActualizacion || new Date()
-            },
-            hasMultimedia,
-            mediaType
-          };
-        })
-      );
+        return {
+          id: testimonial.id,
+          title: testimonial.titulo || '',
+          content: testimonial.contenido,
+          author: testimonial.autorNombre || 'Anónimo',
+          company: testimonial.empresa,
+          position: testimonial.cargo,
+          status: testimonial.status,
+          videoUrl: testimonial['videoUrl'], // Si existe en la entidad
+          category: this.extractCategoryName(testimonial),
+          tags: this.extractTagNames(testimonial),
+          multimedia: multimediaDto,
+          createdAt: testimonial.creadoEn,
+          updatedAt: testimonial.actualizadoEn,
+          engagement: {
+            views: engagementMetrics?.views || 0,
+            embeds: engagementMetrics?.embeds || 0,
+            lastUpdated: engagementMetrics?.ultimaActualizacion || testimonial.actualizadoEn || new Date()
+          },
+          hasMultimedia,
+          mediaType
+        };
+      });
 
       return {
         testimonials: publicTestimonials,
@@ -289,13 +304,18 @@ export class PublicService {
     }
   }
 
+  /**
+   * Obtiene la metadata multimedia de un testimonio específico.
+   * ✅ REGLA: NO REGISTRA vista (usado por GET /testimonials/{id}/multimedia)
+   */
   async getTestimonialMultimedia(id: string): Promise<{
     multimedia?: PublicMultimediaDto;
     videoUrl?: string;
     hasMultimedia: boolean;
     mediaType: string;
   }> {
-    const testimonial = await this.getPublicTestimonialById(id);
+    // Llama al método principal sin registrar vista (shouldRegisterView: false)
+    const testimonial = await this.getPublicTestimonialById(id, false);
     
     return {
       multimedia: testimonial.multimedia,
@@ -305,12 +325,16 @@ export class PublicService {
     };
   }
 
+  /**
+   * Obtiene el código de embed.
+   * ✅ REGLA: Registra VISTA y EMBED (GET /embeds/{id}/code)
+   */
   async getEmbedCode(testimonialId: string): Promise<EmbedCodeResponseDto> {
     try {
-      // Verificar que existe y está aprobado
-      const testimonial = await this.getPublicTestimonialById(testimonialId);
+      // 1. Obtiene el testimonio y registra la VISTA (true)
+      const testimonial = await this.getPublicTestimonialById(testimonialId, true); 
       
-      // Registrar embed
+      // 2. Registra el EMBED (separado de la vista)
       await this.engagementService.registerEmbed(testimonialId);
 
       // Generar códigos de embed
@@ -332,13 +356,15 @@ export class PublicService {
     }
   }
 
+  /**
+   * Genera el script JS del embed.
+   * Asume que la carga del script es una vista.
+   */
   async generateEmbedScript(testimonialId: string): Promise<string> {
     try {
-      const testimonial = await this.getPublicTestimonialById(testimonialId);
+      // Obtiene el testimonio y registra la VISTA al cargar el script.
+      const testimonial = await this.getPublicTestimonialById(testimonialId, true); 
       
-      // Registrar vista para el script también
-      await this.engagementService.registerView(testimonialId);
-
       const htmlEmbed = this.generateHtmlEmbed(testimonial);
 
       return `
@@ -393,40 +419,31 @@ export class PublicService {
 
   // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
+  /**
+   * Usa el EngagementService para obtener las métricas más recientes.
+   */
   private async getEngagementMetrics(testimonialId: string): Promise<EngagementMetricsResponse> {
     try {
-      const engagement = await this.engagementRepository.findOne({
-        where: { testimonial: { id: testimonialId } },
-        relations: ['testimonial']
-      });
+      // Llama al método corregido en EngagementService
+      const metrics = await this.engagementService.getMetricsByTestimonialId(testimonialId);
+      
+      // ✅ Solución: `metrics` ahora siempre incluye 'ultimaActualizacion' e 'id', 
+      // incluso si son 0 o undefined. Simplemente retornamos el objeto.
+      return metrics;
 
-      if (engagement) {
-        return {
-          views: engagement.views,
-          embeds: engagement.embeds,
-          testimonialId: engagement.testimonial.id,
-          ultimaActualizacion: engagement.ultimaActualizacion,
-          id: engagement.id
-        };
-      }
-
-      // Si no existe engagement, crear uno por defecto
-      return {
-        views: 0,
-        embeds: 0,
-        testimonialId,
-        ultimaActualizacion: new Date()
-      };
     } catch (error) {
-      this.logger.error(`Error obteniendo engagement para ${testimonialId}:`, error.message);
-      return {
-        views: 0,
-        embeds: 0,
-        testimonialId,
-        ultimaActualizacion: new Date()
-      };
+       this.logger.error(`Error obteniendo engagement para ${testimonialId}:`, error.message);
+       
+       // Si hay un error, el fallback DEBE mantener la estructura completa de EngagementMetricsResponse.
+       return { 
+           views: 0, 
+           embeds: 0, 
+           testimonialId, 
+           ultimaActualizacion: new Date(), 
+           id: undefined // Aseguramos que la propiedad 'id' existe
+       };
     }
-  }
+}
 
   private mapMultimediaToDto(multimedia: Multimedia): PublicMultimediaDto {
     return {
@@ -435,7 +452,6 @@ export class PublicService {
       url: multimedia.url,
       description: multimedia.descripcion,
       // Nota: Los campos thumbnailUrl, width, height, duration no existen en tu entidad
-      // Si los necesitas, debes agregarlos a la entidad Multimedia
       thumbnailUrl: undefined,
       width: undefined,
       height: undefined,
@@ -575,19 +591,18 @@ export class PublicService {
     
     return `
 <div class="testimonial-embed" 
-     data-testimonial-id="${testimonial.id}" 
-     data-testimonial-title="${testimonial.title}"
-     data-media-type="${testimonial.mediaType}"
-     data-author="${testimonial.author}"
-     data-category="${testimonial.category}"
-     style="${inlineStyles}; transition: transform 0.2s ease, box-shadow 0.2s ease;"
-     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px -2px rgba(0,0,0,0.15)';"
-     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';">
+      data-testimonial-id="${testimonial.id}" 
+      data-testimonial-title="${testimonial.title}"
+      data-media-type="${testimonial.mediaType}"
+      data-author="${testimonial.author}"
+      data-category="${testimonial.category}"
+      style="${inlineStyles}; transition: transform 0.2s ease, box-shadow 0.2s ease;"
+      onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 20px -2px rgba(0,0,0,0.15)';"
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';">
     
     ${multimediaHtml}
     
     <div style="${hasMedia ? 'padding: 20px;' : ''}">
-        <!-- Header -->
         <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
             <div style="
                 width: 56px;
@@ -632,7 +647,6 @@ export class PublicService {
             </div>
         </div>
         
-        <!-- Title & Content -->
         <div style="margin-bottom: 18px;">
             ${testimonial.title ? `
             <h4 style="
@@ -664,7 +678,6 @@ export class PublicService {
             </div>
         </div>
         
-        <!-- Tags -->
         ${(testimonial.category || (testimonial.tags && testimonial.tags.length > 0)) ? `
         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
             ${testimonial.category ? `
@@ -701,7 +714,6 @@ export class PublicService {
             `).join('') : ''}
         </div>` : ''}
         
-        <!-- Stats & Footer -->
         <div style="
             border-top: 1px solid #f1f5f9;
             padding-top: 14px;
@@ -733,16 +745,15 @@ export class PublicService {
             </div>
         </div>
         
-        <!-- Powered by -->
         <div style="
             text-align: center;
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid #f1f5f9;">
             <a href="${this.baseUrl}" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               style="
+                target="_blank" 
+                rel="noopener noreferrer"
+                style="
                     color: #94a3b8;
                     text-decoration: none;
                     font-size: 10px;
@@ -753,8 +764,8 @@ export class PublicService {
                     border-radius: 20px;
                     background: #f8fafc;
                     transition: all 0.2s ease;"
-               onmouseover="this.style.color='#4f46e5'; this.style.background='#e0e7ff';"
-               onmouseout="this.style.color='#94a3b8'; this.style.background='#f8fafc';">
+                onmouseover="this.style.color='#4f46e5'; this.style.background='#e0e7ff';"
+                onmouseout="this.style.color='#94a3b8'; this.style.background='#f8fafc';">
                <span style="font-size: 12px;">💬</span>
                <span>Generado con Testimonial CMS</span>
                <span style="font-size: 12px;">🚀</span>
@@ -775,23 +786,23 @@ export class PublicService {
     }
   }
 
- private generateVideoHtml(multimedia: PublicMultimediaDto): string {
-  const youtubeId = this.extractYouTubeId(multimedia.url);
-  const vimeoId = this.extractVimeoId(multimedia.url);
-  
-  if (youtubeId) {
-    // USAR ESTE ID DE YOUTUBE REAL PARA PRUEBAS
-    const TEST_YOUTUBE_ID = 'dQw4w9WgXcQ'; // Rick Astley - Never Gonna Give You Up (video real)
+  private generateVideoHtml(multimedia: PublicMultimediaDto): string {
+    const youtubeId = this.extractYouTubeId(multimedia.url);
+    const vimeoId = this.extractVimeoId(multimedia.url);
     
-    // Si el ID extraído no es válido, usar el de prueba
-    const finalYoutubeId = youtubeId && youtubeId.length === 11 ? youtubeId : TEST_YOUTUBE_ID;
-    
-    // URL simplificada
-    const embedUrl = `https://www.youtube.com/embed/${finalYoutubeId}`;
-    
-    this.logger.debug(`🎬 Generando iframe de YouTube: ${finalYoutubeId}`);
-    
-    return `
+    if (youtubeId) {
+      // USAR ESTE ID DE YOUTUBE REAL PARA PRUEBAS
+      const TEST_YOUTUBE_ID = 'dQw4w9WgXcQ'; // Rick Astley - Never Gonna Give You Up (video real)
+      
+      // Si el ID extraído no es válido, usar el de prueba
+      const finalYoutubeId = youtubeId && youtubeId.length === 11 ? youtubeId : TEST_YOUTUBE_ID;
+      
+      // URL simplificada
+      const embedUrl = `https://www.youtube.com/embed/${finalYoutubeId}`;
+      
+      this.logger.debug(`🎬 Generando iframe de YouTube: ${finalYoutubeId}`);
+      
+      return `
 <div class="testimonial-video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px 12px 0 0;">
   <iframe 
     src="${embedUrl}"
@@ -807,25 +818,24 @@ export class PublicService {
   <span style="font-size: 14px;">🎬</span>
   <span>Video testimonio (YouTube)</span>
   <a href="https://www.youtube.com/watch?v=${finalYoutubeId}" 
-     target="_blank" 
-     rel="noopener noreferrer"
-     style="margin-left: auto; color: #4f46e5; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e0e7ff;"
-     onmouseover="this.style.textDecoration='underline'; this.style.background='#c7d2fe';"
-     onmouseout="this.style.textDecoration='none'; this.style.background='#e0e7ff';"
-     title="Abrir en YouTube">
+      target="_blank" 
+      rel="noopener noreferrer"
+      style="margin-left: auto; color: #4f46e5; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e0e7ff;"
+      onmouseover="this.style.textDecoration='underline'; this.style.background='#c7d2fe';"
+      onmouseout="this.style.textDecoration='none'; this.style.background='#e0e7ff';"
+      title="Abrir en YouTube">
     Ver en YouTube
   </a>
 </div>
-<!-- Solo mostrar si es el video de prueba -->
 ${finalYoutubeId === TEST_YOUTUBE_ID ? `
 <div style="padding: 8px 20px; background: #fef3c7; border-bottom: 1px solid #fbbf24; font-size: 11px; color: #92400e; text-align: center;">
   <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
   Usando video de prueba de YouTube. Reemplaza con tu propio video.
 </div>` : ''}`;
-  }
-  
-  if (vimeoId) {
-    return `
+    }
+    
+    if (vimeoId) {
+      return `
 <div class="testimonial-video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px 12px 0 0;">
   <iframe 
     src="https://player.vimeo.com/video/${vimeoId}"
@@ -840,21 +850,21 @@ ${finalYoutubeId === TEST_YOUTUBE_ID ? `
   <span style="font-size: 14px;">🎬</span>
   <span>Video testimonio (Vimeo)</span>
   <a href="https://vimeo.com/${vimeoId}" 
-     target="_blank" 
-     rel="noopener noreferrer"
-     style="margin-left: auto; color: #19b5fe; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e1f5fe;"
-     onmouseover="this.style.textDecoration='underline'; this.style.background='#b3e5fc';"
-     onmouseout="this.style.textDecoration='none'; this.style.background='#e1f5fe';"
-     title="Abrir en Vimeo">
+      target="_blank" 
+      rel="noopener noreferrer"
+      style="margin-left: auto; color: #19b5fe; text-decoration: none; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #e1f5fe;"
+      onmouseover="this.style.textDecoration='underline'; this.style.background='#b3e5fc';"
+      onmouseout="this.style.textDecoration='none'; this.style.background='#e1f5fe';"
+      title="Abrir en Vimeo">
     Ver en Vimeo
   </a>
 </div>`;
-  }
-  
-  // Video local
-  const placeholder = 'https://via.placeholder.com/800x450/4f46e5/ffffff?text=Video+Testimonio';
-  
-  return `
+    }
+    
+    // Video local
+    const placeholder = 'https://via.placeholder.com/800x450/4f46e5/ffffff?text=Video+Testimonio';
+    
+    return `
 <div class="testimonial-video-local" style="background: #000; border-radius: 12px 12px 0 0; overflow: hidden;">
   <video 
     controls
@@ -875,7 +885,8 @@ ${finalYoutubeId === TEST_YOUTUBE_ID ? `
     </div>
   </div>` : ''}
 </div>`;
-}
+  }
+  
   private generateImageHtml(multimedia: PublicMultimediaDto): string {
     const placeholder = 'https://via.placeholder.com/800x400/4f46e5/ffffff?text=Testimonio+Imagen';
     
