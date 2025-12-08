@@ -66,21 +66,20 @@ export class Testimonial {
   })
   tags: Tag[];
 
-  // ✅ CAMBIO: De OneToMany a OneToOne
   @OneToOne(() => Multimedia, multimedia => multimedia.testimonio, {
     cascade: true,
     onDelete: 'CASCADE',
-    nullable: true, // Un testimonio puede no tener multimedia
-    eager: true, // Para cargar automáticamente
+    nullable: true,
+    eager: true, 
   })
-  @JoinColumn({ name: 'multimedia_id' }) // Nueva columna en la tabla testimonios
+  @JoinColumn({ name: 'multimedia_id' })
   multimedia?: Multimedia;
 
   @OneToOne(() => EngagementMetric, engagement => engagement.testimonial, {
     cascade: true,
     onDelete: 'CASCADE',
     nullable: true,
-    eager: true, // Cargar automáticamente para fácil acceso
+    eager: true,
   })
   @JoinColumn({ name: 'engagement_id' })
   engagement?: EngagementMetric;
@@ -95,7 +94,6 @@ export class Testimonial {
   @UpdateDateColumn({ name: 'actualizado_en' })
   actualizadoEn: Date;
 
-  // ✅ ACTUALIZA los métodos helpers para usar la nueva relación OneToOne
   getImagenPrincipal(): Multimedia | undefined {
     return this.multimedia?.tipo === MultimediaType.IMAGE ? this.multimedia : undefined;
   }

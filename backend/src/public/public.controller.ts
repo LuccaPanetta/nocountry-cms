@@ -336,7 +336,7 @@ export class PublicController {
     description: 'ID inválido' 
   })
   async getPublicTestimonial(@Param('id') id: string): Promise<PublicTestimonialDto> {
-    return this.publicService.getPublicTestimonialById(id);
+    return this.publicService.getPublicTestimonialById(id,true);
   }
 
   @Get('testimonials/:id/multimedia')
@@ -473,8 +473,8 @@ export class PublicController {
     @Res() res: any
   ) {
     try {
-      const testimonial = await this.publicService.getPublicTestimonialById(id);
       const embedCode = await this.publicService.getEmbedCode(id);
+      const testimonial = await this.publicService.getPublicTestimonialById(id);
       
       res.setHeader('X-Testimonial-ID', id);
       res.setHeader('X-Has-Multimedia', testimonial.hasMultimedia.toString());
@@ -1052,4 +1052,5 @@ async getCategoryStats() {
   ${xmlItems.join('\n  ')}
 </oembed>`;
   }
+  
 }
