@@ -1,64 +1,109 @@
-import { GetTestimonialsParams, TestimonyReqType, TestimonyStatusType } from "@/types/testimony-type";
-import {apiPublicTestimonialsService, apiTestimonialsService } from "../general-api";
+import {
+  GetTestimonialsParams,
+  TestimonyStatusType,
+} from "@/types/testimony-type";
+import {
+  apiPublicTestimonialsService,
+  apiTestimonialsService,
+} from "../general-api";
+import { useUserStore } from "@/store/userStore";
 
-export const postTestimonials = async (data: TestimonyReqType) => {
+export const postTestimonials = async (data: FormData) => {
+  const { token } = useUserStore.getState();
+
+  if (!token) {
+    throw new Error("No hay token de autenticación.");
+  }
   try {
-    const res = await apiTestimonialsService.post("/", data);
+    const res = await apiTestimonialsService.post("/", data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     return res.data;
   } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Error de conexión");
+    throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
-
 
 export const getTestimonials = async () => {
+  const { token } = useUserStore.getState();
+
+  if (!token) {
+    throw new Error("No hay token de autenticación.");
+  }
+
   try {
-    const res = await apiTestimonialsService.get("/");
+    const res = await apiTestimonialsService.get("/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     return res.data;
-  } catch (error: any) {  
+  } catch (error: any) {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
-
 
 export const getTestimonyById = async (id: string) => {
+  const { token } = useUserStore.getState();
+
+  if (!token) {
+    throw new Error("No hay token de autenticación.");
+  }
+
   try {
-    const res = await apiTestimonialsService.get(`/${id}`);
+    const res = await apiTestimonialsService.get(`/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return res.data;
-  } catch (error: any) {  
+  } catch (error: any) {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
 
-export const updateTestimonyById = async (id: string, data: TestimonyReqType) => {
+export const updateTestimonyById = async (id: string, data: FormData) => {
+  const { token } = useUserStore.getState();
+
+  if (!token) {
+    throw new Error("No hay token de autenticación.");
+  }
   try {
-    const res = await apiTestimonialsService.patch(`/${id}`, data);
+    const res = await apiTestimonialsService.patch(`/${id}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return res.data;
-  } catch (error: any) {  
+  } catch (error: any) {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
 
-export const updateStatusOfTestimonyById = async (id: string, data: TestimonyStatusType) => {
+export const updateStatusOfTestimonyById = async (
+  id: string,
+  data: TestimonyStatusType
+) => {
   try {
     const res = await apiTestimonialsService.patch(`/${id}/status`, data);
     return res.data;
-  } catch (error: any) {  
+  } catch (error: any) {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
-
 
 export const deleteTestimonyById = async (id: string) => {
   try {
     const res = await apiTestimonialsService.delete(`/${id}`);
     return res.data;
-  } catch (error: any) {  
+  } catch (error: any) {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
-
-
 
 export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
   try {
@@ -77,4 +122,3 @@ export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
-

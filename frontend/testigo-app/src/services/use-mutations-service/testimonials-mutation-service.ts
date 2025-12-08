@@ -5,17 +5,17 @@ import {
   updateStatusOfTestimonyById,
   updateTestimonyById,
 } from "../use-cases/testimonials.service";
-import { TestimonyStatusType, TestimonyType } from "@/types/testimony-type";
+import { TestimonyStatusType} from "@/types/testimony-type";
 
 export const TestimonialsMutationsService = () => {
   const mutationPostTestimony = useMutation({
-    mutationFn: (data: TestimonyType) => {
+    mutationFn: (data: FormData) => {
       return postTestimonials(data);
     },
   });
 
   const mutationUpdateTestimonyById = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TestimonyType }) => {
+    mutationFn: ({ id, data }: { id: string; data: FormData}) => {
       return updateTestimonyById(id, data);
     },
   });
