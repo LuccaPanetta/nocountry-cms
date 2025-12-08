@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn, 
   Column, 
   OneToOne, 
-  JoinColumn,
   UpdateDateColumn
 } from 'typeorm';
 import { Testimonial } from '../../testimonials/entities/testimonial.entity';
@@ -13,8 +12,7 @@ export class EngagementMetric {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Testimonial, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'testimonial_id' }) 
+  @OneToOne(() => Testimonial, (testimonial) => testimonial.engagement, { onDelete: 'CASCADE' })
   testimonial: Testimonial;
 
   @Column({ default: 0 })

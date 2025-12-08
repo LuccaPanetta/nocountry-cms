@@ -80,7 +80,7 @@ export class Testimonial {
     cascade: true,
     onDelete: 'CASCADE',
     nullable: true,
-    eager: true, // Cargar automáticamente para fácil acceso
+    eager: true,
   })
   @JoinColumn({ name: 'engagement_id' })
   engagement?: EngagementMetric;
