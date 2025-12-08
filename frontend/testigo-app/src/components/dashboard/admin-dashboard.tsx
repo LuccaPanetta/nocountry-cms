@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { BarChart3, Heart, Zap, Shield, Users, Settings, TrendingUp , CircleCheckBig, SquareX } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
-import { TestimonialTable } from './testimonial-table';
+import TestimonialsTable  from './testimonial-table';
 
 type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';
 
@@ -84,7 +84,7 @@ export function AdminDashboard() {
       </div>
 
       <div>
-        {activeSection === 'moderacion' && <TestimonialTable />}
+        {activeSection === 'moderacion' && <TestimonialsTable />}
         {activeSection === 'usuarios' && (
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <p className="text-gray-600">Gestión de usuarios - Próximamente</p>

@@ -1,214 +1,329 @@
-'use client';
+"use client"
+import React from 'react';
+import { MoreHorizontal, Eye, SquarePen, Trash2 } from 'lucide-react';
 
-import { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+type TestimonialStatus = 'pending' | 'approved' | 'rejected';
+type TestimonialFormat = 'text' | 'image' | 'video';
 
 interface Testimonial {
   id: string;
-  status: 'Pendiente' | 'Aprobado' | 'Rechazado';
+  status: TestimonialStatus;
   title: string;
   author: string;
   category: string;
-  format: 'Texto' | 'Imagen' | 'Video';
-  createdDate: string;
-  updatedDate: string;
+  format: TestimonialFormat;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const TESTIMONIALS_DATA: Testimonial[] = [
+// Datos de ejemplo
+const mockTestimonials: Testimonial[] = [
   {
     id: '1',
-    status: 'Pendiente',
-    title: 'Excelente servicio',
-    author: 'Juan García',
-    category: 'Servicio',
-    format: 'Texto',
-    createdDate: '2024-11-20',
-    updatedDate: '2024-11-20',
+    status: 'pending',
+    title: 'Excelente servicio al cliente',
+    author: 'María González',
+    category: 'Soporte',
+    format: 'text',
+    createdAt: new Date('2024-11-28'),
+    updatedAt: new Date('2024-11-28'),
   },
   {
     id: '2',
-    status: 'Aprobado',
-    title: 'Recomiendo totalmente',
-    author: 'María López',
+    status: 'approved',
+    title: 'Producto de alta calidad',
+    author: 'Juan Pérez',
     category: 'Producto',
-    format: 'Imagen',
-    createdDate: '2024-11-19',
-    updatedDate: '2024-11-19',
+    format: 'video',
+    createdAt: new Date('2024-11-25'),
+    updatedAt: new Date('2024-11-27'),
   },
   {
     id: '3',
-    status: 'Pendiente',
-    title: 'Muy buena experiencia',
-    author: 'Carlos Rodríguez',
-    category: 'Experiencia',
-    format: 'Texto',
-    createdDate: '2024-11-18',
-    updatedDate: '2024-11-18',
+    status: 'rejected',
+    title: 'Muy satisfecho con la compra',
+    author: 'Ana Martínez',
+    category: 'Compras',
+    format: 'image',
+    createdAt: new Date('2024-11-20'),
+    updatedAt: new Date('2024-11-26'),
   },
   {
     id: '4',
-    status: 'Rechazado',
-    title: 'Problema con la entrega',
-    author: 'Ana Martínez',
-    category: 'Logística',
-    format: 'Video',
-    createdDate: '2024-11-17',
-    updatedDate: '2024-11-17',
+    status: 'pending',
+    title: 'Rápida entrega',
+    author: 'Carlos Ruiz',
+    category: 'Envío',
+    format: 'text',
+    createdAt: new Date('2024-11-15'),
+    updatedAt: new Date('2024-11-20'),
   },
   {
     id: '5',
-    status: 'Aprobado',
-    title: 'Perfecta atención al cliente',
-    author: 'Pedro Sánchez',
-    category: 'Servicio',
-    format: 'Texto',
-    createdDate: '2024-11-16',
-    updatedDate: '2024-11-16',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
+    category: 'Experiencia',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
   },
   {
     id: '6',
-    status: 'Pendiente',
-    title: 'Producto de calidad',
-    author: 'Laura Fernández',
-    category: 'Producto',
-    format: 'Imagen',
-    createdDate: '2024-11-15',
-    updatedDate: '2024-11-15',
-  },
-  {
-    id: '7',
-    status: 'Aprobado',
-    title: 'Entrega rápida',
-    author: 'Diego Torres',
-    category: 'Logística',
-    format: 'Texto',
-    createdDate: '2024-11-14',
-    updatedDate: '2024-11-14',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
+    category: 'Experiencia',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
   },
   {
     id: '8',
-    status: 'Pendiente',
-    title: 'Muy satisfecho',
-    author: 'Sofia Moreno',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
     category: 'Experiencia',
-    format: 'Video',
-    createdDate: '2024-11-13',
-    updatedDate: '2024-11-13',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
   },
   {
     id: '9',
-    status: 'Rechazado',
-    title: 'No cumple expectativas',
-    author: 'Miguel Jiménez',
-    category: 'Producto',
-    format: 'Texto',
-    createdDate: '2024-11-12',
-    updatedDate: '2024-11-12',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
+    category: 'Experiencia',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
   },
   {
     id: '10',
-    status: 'Aprobado',
-    title: 'Excelentes precios',
-    author: 'Elena Ruiz',
-    category: 'Precio',
-    format: 'Imagen',
-    createdDate: '2024-11-11',
-    updatedDate: '2024-11-11',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
+    category: 'Experiencia',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
+  },
+  {
+    id: '11',
+    status: 'approved',
+    title: 'Increíble experiencia',
+    author: 'Laura Torres',
+    category: 'Experiencia',
+    format: 'video',
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-18'),
   },
 ];
 
-export function TestimonialTable() {
-  const [currentPage, setCurrentPage] = useState(0);
+const TestimonialsTable = () => {
+  const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 6;
 
-  const totalPages = Math.ceil(TESTIMONIALS_DATA.length / itemsPerPage);
-  const startIndex = currentPage * itemsPerPage;
-  const paginatedData = TESTIMONIALS_DATA.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePrevious = () => {
-    setCurrentPage((prev) => (prev > 0 ? prev - 1 : 0));
+  const getStatusBadge = (status: TestimonialStatus) => {
+    const styles: Record<TestimonialStatus, string> = {
+      pending: 'text-Accent',
+      approved: 'text-Success',
+      rejected: 'text-Error',
+    };
+
+    const labels: Record<TestimonialStatus, string> = {
+      pending: 'Pendiente',
+      approved: 'Aprobado',
+      rejected: 'Rechazado',
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
+        {labels[status]}
+      </span>
+    );
   };
 
-  const handleNext = () => {
-    setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : prev));
+  const getFormatBadge = (format: TestimonialFormat) => {
+    const styles: Record<TestimonialFormat, string> = {
+      text: 'text-Primary',
+      video: 'text-Secondary',
+      image: 'text-Accent',
+    };
+
+    const labels: Record<TestimonialFormat, string> = {
+      text: 'Texto',
+      video: 'Video',
+      image: 'Imagen',
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[format]}`}>
+        {labels[format]}
+      </span>
+    );
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pendiente':
-        return 'text-Accent';
-      case 'Aprobado':
-        return 'text-Success';
-      case 'Rechazado':
-        return 'text-Error';
-      default:
-        return 'text-Neutro-1';
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  };
+
+  const toggleDropdown = (id: string) => {
+    setOpenDropdown(openDropdown === id ? null : id);
+  };
+
+  const totalPages = Math.ceil(mockTestimonials.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTestimonials = mockTestimonials.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
   return (
-    <div className="rounded-lg border border-gray-200  bg-white p-6 shadow-sm">
-      <h1 className="mb-2 text-2xl font-bold text-Secondary">Testimonios</h1>
-      <p className="mb-6 text-sm text-Neutro-1">Gestión y revisión de testimonios</p>
+    <div className="w-full p-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Moderación de Testimonios
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Gestiona y modera los testimonios enviados por los usuarios
+          </p>
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Estado</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Titulo</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Autor</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Categoria</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Formato</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Creado</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Actualizado</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-Neutro-1">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.map((testimonial) => (
-              <tr key={testimonial.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(testimonial.status)}`}>
-                    {testimonial.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-900">{testimonial.title}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{testimonial.author}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{testimonial.category}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{testimonial.format}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{testimonial.createdDate}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{testimonial.updatedDate}</td>
-                <td className="px-4 py-3">
-                  <button className="rounded-md p-1 transition-colors hover:bg-gray-100">
-                    <MoreVertical size={18} className="text-Neutro-1" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <div className="bg-white rounded-lg shadow overflow-visible">
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Título
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Autor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Categoría
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Formato
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Creado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actualizado
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentTestimonials.map((testimonial, index) => (
+                  <tr key={testimonial.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(testimonial.status)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {testimonial.title}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {testimonial.author}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {testimonial.category}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getFormatBadge(testimonial.format)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">
+                        {formatDate(testimonial.createdAt)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">
+                        {formatDate(testimonial.updatedAt)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right relative">
+                      <div className="relative">
+                        <button
+                          onClick={() => toggleDropdown(testimonial.id)}
+                          className="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        >
 
-      <div className="mt-6 flex justify-between">
-        <button
-          onClick={handlePrevious}
-          disabled={currentPage === 0}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Anterior
-        </button>
-        <span className="flex items-center text-sm text-gray-600">
-          Página {currentPage + 1} de {totalPages}
-        </span>
-        <button
-          onClick={handleNext}
-          disabled={currentPage === totalPages - 1}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Siguiente
-        </button>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      
+                      
+                        {openDropdown === testimonial.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenDropdown(null)}
+                            />
+                            <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg z-20 py-1 border border-gray-200 ${
+                                index >= currentTestimonials.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'
+                              }`}>
+                              <button className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-Accent">
+                                <Eye className='text-Neutro-1 h-4 w-4' />
+                                <p>Ver detalles</p>
+                              </button>
+                              <button className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-Accent">
+                                <SquarePen className='text-Neutro-1 h-4 w-4' />
+                                <p>Editar</p>
+                              </button>
+                              <button className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-Accent">
+                                <Trash2 className='text-Neutro-1 h-4 w-4'/>
+                                <p>Eliminar</p>
+                              </button>
+                            </div>
+                        </>
+                      )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <button className='bg-white border-2 border-Primary text-Primary text-center px-4 py-2' onClick={goToPreviousPage}>Anterior</button>
+              <span>Página {currentPage} de {totalPages}</span>
+              <button className='bg-white border-2 border-Primary text-Primary text-center px-4 py-2' onClick={goToNextPage}>Siguiente</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default TestimonialsTable;
