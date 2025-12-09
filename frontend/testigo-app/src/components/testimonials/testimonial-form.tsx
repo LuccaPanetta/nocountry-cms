@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-/* import TestimonialNotification from './pruebas/notification'; */
+import TestimonialNotification from './notification';
 import { X, Upload, ChevronsUpDown, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
 type ContentType = 'text' | 'image' | 'video';

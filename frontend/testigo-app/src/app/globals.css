@@ -3,6 +3,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme{
+  --color-Primary: #2B628C;
+  --color-Secondary: #E57C56;
+  --color-Accent: #F7C873;
+  --color-Neutro-1: #1C2233;
+  --color-Neutro-2: #C8C6CD;
+  --color-Neutro-3: #FAFAFA;
+  --color-Success: #3FB88C;
+  --color-Error: #C02222;
+
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
