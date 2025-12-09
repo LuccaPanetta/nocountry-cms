@@ -1,7 +1,7 @@
-# 📢 Testimonial CMS – Sistema de Gestión de Testimonios {#testimonial-cms-sistema-de-gestión-de-testimonios}
+# 📢 Testimonial CMS – Sistema de Gestion de Testimonios
 
 <h1 align="center">
-  <a href="#testimonial-cms-sistema-de-gestión-de-testimonios"><img src="https://res.cloudinary.com/dkkzwhtfx/image/upload/v1765237031/testiGo_isologo-slogan_zyz0wd.svg" width="400" alt="TestiGo Logo"></a>
+  <a href="#testimonial-cms--sistema-de-gestion-de-testimonios"><img src="https://res.cloudinary.com/dkkzwhtfx/image/upload/v1765237031/testiGo_isologo-slogan_zyz0wd.svg" width="400" alt="TestiGo Logo"></a>
 </h1>
 
 <h3 align="center">📌 Alcance del Proyecto: Testimonial CMS</h3>
@@ -12,20 +12,20 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 ---
 
 ## 📋 **Índice**
-1. [🚀 Tecnologías Utilizadas](#tecnologias-utilizadas)
-2. [📌 Descripción del Proyecto](#descripcion-del-proyecto) 
-3. [🛠️ Instalación Backend](#instalacion-y-configuracion-backend) 
-4. [💻 Instalación Frontend](#instalacion-y-configuracion-frontend) 
-5. [🗄️ Modelo de Datos](#modelo-de-datos) 
-6. [📚 Documentación API](#documentacion-de-la-api)
-7. [🧪 Pruebas QA](#escenarios-de-pruebas-qa)
-8. [🌐 Deploys](#deploys)
-9. [👥 Contribuidores](#contribuidores) 
-10. [📌 Trello](#tablero-de-trello)
+1. [🚀 Tecnologías Utilizadas](#-tecnologias-utilizadas)
+2. [📌 Descripción del Proyecto](#-descripcion-del-proyecto)
+3. [🛠️ Instalación Backend](#-instalacion-y-configuracion-backend)
+4. [💻 Instalación Frontend](#-instalacion-y-configuracion-frontend)
+5. [🗄️ Modelo de Datos](#-modelo-de-datos)
+6. [📚 Documentación API](#-documentacion-de-la-api)
+7. [🧪 Pruebas QA](#-escenarios-de-pruebas-qa)
+8. [🌐 Deploys](#-deploys)
+9. [👥 Contribuidores](#-integrantes)
+10. [📌 Trello](#-tablero-de-trello)
 
 ---
 
-## 🚀 **Tecnologías Utilizadas** {#tecnologias-utilizadas}
+## 🚀 **Tecnologías Utilizadas**
 
 ### **Backend**
 - **Framework:** NestJS, TypeScript
@@ -47,7 +47,7 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 
 ---
 
-## 📌 **Descripción del Proyecto** {#descripcion-del-proyecto}
+## 📌 **Descripción del Proyecto**
 
 El Testimonial CMS permite:
 
@@ -60,11 +60,10 @@ El Testimonial CMS permite:
 
 ---
 
-## 🛠️ **Instalación y Configuración Backend** {#instalacion-y-configuracion-backend}
-
+## 🛠️ **Instalación y Configuración Backend**
 ### **1️⃣ Clonar el Repositorio**
 ```bash
-git clone [https://github.com/LuccaPanetta/nocountry-cms](https://github.com/LuccaPanetta/nocountry-cms)
+git clone https://github.com/LuccaPanetta/nocountry-cms
 cd nocountry-cms/backend
 ```
 
@@ -94,9 +93,9 @@ JWT_EXPIRES_IN=1h
 # =======================
 # 🌐 DEPLOY
 # =======================
-RENDER_BACKEND_URL=[https://nocountry-cms.onrender.com](https://nocountry-cms.onrender.com)
-VERCEL_FRONTEND_URL=[https://nocountry-cms-dusky.vercel.app](https://nocountry-cms-dusky.vercel.app)
-VERCEL_FRONTEND_EMBED_TESTER=[https://testimonios-embed-tester.vercel.app](https://testimonios-embed-tester.vercel.app)
+RENDER_BACKEND_URL=https://nocountry-cms.onrender.com
+VERCEL_FRONTEND_URL=https://nocountry-cms-dusky.vercel.app
+VERCEL_FRONTEND_EMBED_TESTER=https://testimonios-embed-tester.vercel.app
 # =======================
 # ☁️ MULTIMEDIA
 # =======================
@@ -106,7 +105,7 @@ CLOUDINARY_API_SECRET=
 ```
 
 ### 3️⃣ **Levantar PostgreSQL con Docker**
-```
+```bash 
 docker run --name nocountry-pg \
   -e POSTGRES_USER=admin \
   -e POSTGRES_PASSWORD=mysecretpassword \
@@ -115,17 +114,17 @@ docker run --name nocountry-pg \
 ```
 
 ### 4️⃣ **Instalar dependencias del backend**
-```
+```bash 
 npm install
 ```
 
 ### 5️⃣ **Ejecutar backend**
-```
+```bash 
 npm run start:dev
 ```
 
 ---
-## 💻 Instalación y Configuración Frontend {#instalacion-y-configuracion-frontend}
+## 💻 Instalación y Configuración Frontend
 
 ### 1️⃣ **Ir a la carpeta del Frontend**
 ```bash
@@ -139,9 +138,7 @@ npm install
 
 ### 3️⃣ **Crear archivo .env del Frontend**
 ```bash
-NEXT_PUBLIC_URL_BASE=[https://nocountry-cms.onrender.com/api/v1](https://nocountry-cms.onrender.com/api/v1)
-# Para desarrollo local:
-# NEXT_PUBLIC_URL_BASE=http://localhost:3000/api/v1
+NEXT_PUBLIC_URL_BASE=https://nocountry-cms.onrender.com/api/v1
 ```
 
 ### 4️⃣ **Ejecutar Frontend**
@@ -149,8 +146,7 @@ NEXT_PUBLIC_URL_BASE=[https://nocountry-cms.onrender.com/api/v1](https://nocount
 npm run dev
 ```
 ---
-## 5. Modelo de Datos
-### 🗄️ Modelo de Datos {#modelo-de-datos}
+## 🗄️ **Modelo de Datos**
 
 ### 📌 **Diagrama DER**
 <p align="center">
@@ -158,7 +154,7 @@ npm run dev
 </p>
 
 ---
-## 📚 Documentación de la API {#documentacion-de-la-api}
+## 📚 Documentación de la API
 
 La API está documentada con **Swagger**. Accede a las especificaciones:
 
@@ -179,13 +175,13 @@ La API está documentada con **Swagger**. Accede a las especificaciones:
 
 ---
 
-## 🧪 Escenarios-de-Pruebas-QA {#escenarios-de-pruebas-qa}
+## 🧪 Escenarios de Pruebas QA
 
 **Docs.**
 [Escenario de prueba](https://docs.google.com/document/d/1cnlVvaK5J8MJapNFce8dP8mRrP5CeCZTC69veMHe7Mg/edit?tab=t.0#heading=h.y587ji3hfi4b)
 
 ---
-## 👥 Integrantes {#contribuidores}
+## 👥 Integrantes
 
 Puedes ver la lista completa y actualizada de los integrantes del proyecto en el siguiente enlace:
 
