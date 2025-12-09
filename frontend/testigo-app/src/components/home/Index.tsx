@@ -3,7 +3,7 @@ import { useTypewriter } from "@/hooks/useTypewriter";
 import { Button } from "../ui/button"
 
 import Container from "../ui/Container";
-import { CheckCircle, FileHeart, Icon, Link } from "lucide-react";
+import { CheckCircle, FileHeart, Link } from "lucide-react";
 import CardBenefit from "./Card-benefit";
 import { useRouter } from "next/navigation";
 
@@ -14,19 +14,24 @@ const Index = () => {
     80,
     2000
   );
-  const typewriterText = (
+/*   const typewriterText = (
     <span className="inline-block whitespace-nowrap min-w-[20ch] text-center bg-clip-text text-secondary">
       {text}
     </span>
   );
-
+ */
   const router = useRouter();
 
   return (
     <Container >
       <div className=" flex flex-col items-center mx-auto">
-        <div className="md:max-w-[479px] lg:max-w-[850px]">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-center mt-20 mb-8">Gestiona y publica testimonios que  {typewriterText}</h1>
+        <div className="w-full md:max-w-[479px] lg:max-w-[850px]">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-center mt-20 mb-8">
+  Gestiona y publica testimonios que{" "} <br />
+  <span className="inline-block text-center bg-clip-text text-secondary">
+    {text}
+  </span>
+</h1>
           <p className="text-md text-center">Sistema CMS especializado en recopilar, organizar y publicar historias de éxito. Perfecto para instituciones y empresas con comunidades activas.</p>
           <div className="w-full flex flex-col gap-2 mt-10 items-center md:flex-row md:justify-center md:gap-4">
             <Button className="w-40 md:w-50" onClick={() => router.push("/testimonials")}>Ver Testimonios</Button>

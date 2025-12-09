@@ -11,7 +11,7 @@ export function AdminDashboard() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('moderacion');
 
   return (
-    <div className="max-w-2xl md:max-w-5xl bg-gray-50 p-8">
+    <div className="w-full bg-gray-50 p-8 m-auto">
 
       <div className="mb-8 grid grid-cols-4 gap-6">
         <TestimonialCard
