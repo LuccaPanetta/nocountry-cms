@@ -68,8 +68,8 @@ const TestimonialsPage = () => {
       switch (orderValue) {
         case "asc-order": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         case "desc-order": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        case "asc-views": return (a.views || 0) - (b.views || 0)
-        case "desc-views": return (b.views || 0) - (a.views || 0)
+        case "asc-views": return (a.engagement.views || 0) - (b.engagement.views || 0)
+        case "desc-views": return (b.engagement.views || 0) - (a.engagement.views || 0)
         default:
           return 0
       }
