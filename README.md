@@ -14,9 +14,9 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 ## 📋 **Índice**
 1. [🚀 Tecnologías Utilizadas](#-tecnologías-utilizadas)
 2. [📌 Descripción del Proyecto](#-descripción-del-proyecto)
-3. [🛠️ Instalación Backend](#-instalación-y-configuración-backend)
+3. [🛠️ Instalación Backend](#🛠️-instalación-y-configuración-backend)
 4. [💻 Instalación Frontend](#-instalación-y-configuración-frontend)
-5. [🗄️ Modelo de Datos](#-modelo-de-datos)
+5. [🗄️ Modelo de Datos](#🗄️-modelo-de-datos)
 6. [📚 Documentación API](#-documentación-de-la-api)
 7. [🧪 Pruebas QA](#-escenarios-de-pruebas-qa)
 8. [🌐 Deploys](#-deploys)
