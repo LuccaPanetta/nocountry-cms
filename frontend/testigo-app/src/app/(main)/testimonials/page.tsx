@@ -94,7 +94,7 @@ const TestimonialsPage = () => {
   return (
     <Container>
       <Button
-        className="w-38 flex self-end"
+        className="w-1/2 md:w-1/4 lg:w-1/6 ml-auto"
         onClick={() => router.push('/testimonials/create')}
       >
         Crear testimonio
