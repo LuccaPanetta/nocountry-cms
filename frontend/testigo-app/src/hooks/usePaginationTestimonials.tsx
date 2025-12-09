@@ -5,9 +5,11 @@ import { useCallback } from "react";
 export function usePaginatedTestimonials({
   keyword,
   filteredCategory,
+  orderValue,
 }: {
   keyword: string;
   filteredCategory: string;
+  orderValue: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -20,15 +22,13 @@ export function usePaginatedTestimonials({
     limit,
     search: keyword,
     category: filteredCategory,
+    order: orderValue, 
   });
 
   const total = data?.total ?? 0;
   const testimonials = data?.testimonials ?? [];
-
-  // total pages from backend
   const totalPages = Math.ceil(total / limit);
 
-  // update URL on page change
   const onPageChange = useCallback(
     (newPage: number) => {
       const query = new URLSearchParams(params.toString());
@@ -42,6 +42,7 @@ export function usePaginatedTestimonials({
     page,
     totalPages,
     testimonials,
+    pageSize:limit,
     total,
     isLoading,
     onPageChange,

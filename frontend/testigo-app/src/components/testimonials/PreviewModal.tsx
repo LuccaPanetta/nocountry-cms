@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 type PreviewModalProps = {
   open: boolean;
@@ -28,6 +28,8 @@ const PreviewModal = ({ open, onClose, url, isYoutube, previewType }: PreviewMod
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
+      <DialogTitle  className="sr-only">{url}</DialogTitle>
+      <DialogDescription  className="sr-only">Esta es una vista previa del contenido seleccionado.</DialogDescription>
       <DialogContent className="p-0 bg-black/90 max-w-4xl">
         {/* ---- YouTube ---- */}
         {isYoutube && (

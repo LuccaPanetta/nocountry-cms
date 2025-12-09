@@ -2,10 +2,9 @@
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
-import { ArrowDown, ArrowUp, Play, Search, SearchIcon, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Search, SearchIcon, X } from "lucide-react"
 import CardTestimony from "@/components/testimonials/CardTestimony"
-import { useState, useMemo } from "react"
-import { Pagination } from "@/components/ui/pagination"
+import { useState, useMemo, useEffect } from "react"
 import { usePaginatedTestimonials } from "@/hooks/usePaginationTestimonials"
 import { PublicTestimonyResType } from "@/types/testimony-type"
 import { CustomPagination } from "@/components/ui/CustomPagination"
@@ -14,64 +13,90 @@ import { useGetCategories } from "@/services/use-queries-service/categories-quer
 import { useRouter } from "next/navigation"
 
 
-const categories = ["producto", "evento", "cliente", "industria"]
-
 const TestimonialsPage = () => {
 
   const [filteredCategory, setFilteredCategory] = useState('');
   const [keyword, setKeyword] = useState('');
-  const [orderValue, setOrderValue] = useState("")
-
+  const [orderValue, setOrderValue] = useState("desc-order")
   const router = useRouter();
 
-  //Pagination hook
-  const { page, totalPages, testimonials, total, onPageChange, isLoading } =
-    usePaginatedTestimonials({
-      keyword,
-      filteredCategory,
-    });
-
-  //Order 
+  //Order
   const options = [
     { value: "asc-order", label: "Fecha Asc", icon: ArrowUp },
     { value: "desc-order", label: "Fecha Desc", icon: ArrowDown },
     { value: "asc-views", label: "Visualizaciones Asc", icon: ArrowUp },
-    { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },
-  ]
+    { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },]
+
+
+  const { page, totalPages, testimonials, pageSize, total, onPageChange, isLoading } =
+    usePaginatedTestimonials({
+      keyword,
+      filteredCategory,
+      orderValue,
+    });
+
+  // Cálculo rango visible
+  const from = (page - 1) * pageSize + 1
+  const to = Math.min(page * pageSize, total)
 
   const { data: categories } = useGetCategories();
   const categoryNames = categories?.map(cat => cat.name) || [];
   const hasActiveFilters = filteredCategory !== '' || keyword !== '';
 
-  const filteredTestimonials = useMemo(() => {
-    return testimonials.filter((testimony: PublicTestimonyResType) => {
-      const matchesCategory =
-        filteredCategory === '' || testimony.category === filteredCategory;
 
-      const matchesSearch =
-        testimony.content.toLowerCase().includes(keyword.toLowerCase()) ||
-        testimony.title.toLowerCase().includes(keyword.toLowerCase()) ||
-        testimony.author.toLowerCase().includes(keyword.toLowerCase()) ||
-        testimony.company.toLowerCase().includes(keyword.toLowerCase()) ||
-        testimony.multimedia.type.toLowerCase().includes(keyword.toLowerCase()) ||
-        testimony.tags.some(tag =>
-          tag.toLowerCase().includes(keyword.toLowerCase())
-        );
+  const searchedTestimonials = useMemo(() => {
+    if (!keyword) return testimonials
 
-      return matchesCategory && matchesSearch;
-    });
-  }, [testimonials, filteredCategory, keyword]);
+    const lower = keyword.toLowerCase()
 
+    return testimonials.filter((t: PublicTestimonyResType) => {
+      return (
+        t.content.toLowerCase().includes(lower) ||
+        t.title.toLowerCase().includes(lower) ||
+        t.author.toLowerCase().includes(lower) ||
+        t.company.toLowerCase().includes(lower) ||
+        t.multimedia?.type?.toLowerCase().includes(lower) ||
+        t.tags.some(tag => tag.toLowerCase().includes(lower))
+      )
+    })
+  }, [testimonials, keyword])
+
+  const orderedTestimonials = useMemo(() => {
+    if (!orderValue) return searchedTestimonials
+
+    return [...searchedTestimonials].sort((a, b) => {
+      switch (orderValue) {
+        case "asc-order": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        case "desc-order": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case "asc-views": return (a.views || 0) - (b.views || 0)
+        case "desc-views": return (b.views || 0) - (a.views || 0)
+        default:
+          return 0
+      }
+    })
+  }, [searchedTestimonials, orderValue])
 
   const clearAllFilters = () => {
     setFilteredCategory('');
     setKeyword('');
+    onPageChange(1);
   };
 
- 
+  // Resetea página si cambia categoría, keyword o el orden
+  useEffect(() => {
+    onPageChange(1)
+  }, [filteredCategory, keyword, orderValue])
+
+  useEffect(() => {
+    console.log("orderValue changed:", orderValue)
+  }, [orderValue])
+
   return (
     <Container>
-      <Button className="w-38 flex self-end" onClick={()=>router.push('/testimonials/create')}>
+      <Button
+        className="w-38 flex self-end"
+        onClick={() => router.push('/testimonials/create')}
+      >
         Crear testimonio
       </Button>
 
@@ -99,7 +124,10 @@ const TestimonialsPage = () => {
           {categoryNames.map((cat) => (
             <Button
               key={cat}
-              onClick={() => setFilteredCategory(cat)}
+              onClick={() => {
+                console.log("Click en categoría:", cat)
+                setFilteredCategory(cat)
+              }}
               variant={filteredCategory === cat ? "ghost" : "outline"}
               className="capitalize"
             >
@@ -122,28 +150,31 @@ const TestimonialsPage = () => {
       <div className="flex flex-col md:flex-row mt-6 w-full md:items-center md:justify-between">
         <div className="grid grid-cols-2 justify-end items-center gap-3 md:order-2 w-full md:w-auto">
           <span className="col-span-1 md:text-end">Ordenar por:</span>
-          <Select value={orderValue} onValueChange={setOrderValue}>
+          <Select value={orderValue} onValueChange={(v) => {
+            console.log("change:", v)
+            setOrderValue(v)
+          }}>
             <SelectTrigger className="w-full col-span-1 md:w-38 lg:w-50">
               <SelectValue placeholder="Selecciona" />
             </SelectTrigger>
-            <SelectContent>
-              {options.map(({ value, label, icon: Icon }) => (
-                <SelectItem key={value} value={value} className="flex items-center gap-1">
-                  <Icon size={15} />
-                  {label}
-                </SelectItem>
-              ))}
+            <SelectContent> {options.map(({ value, label, icon: Icon }) => (
+              <SelectItem key={value} value={value} className="flex items-center gap-1">
+                <Icon size={15} />
+                {label}
+              </SelectItem>))}
             </SelectContent>
           </Select>
         </div>
-        <span className="text-sm text-muted-foreground mt-5">
-          Mostrando {filteredTestimonials.length} de {total} testimonios
-        </span>
+        {total > 0 && (
+          <span className="text-sm text-muted-foreground mt-5">
+            Mostrando {from}–{to} de {total} testimonios
+          </span>
+        )}
       </div>
 
-      {!isLoading && filteredTestimonials.length > 0 ? (
+      {!isLoading && searchedTestimonials.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 my-12">
-          {filteredTestimonials.map((testimonial: PublicTestimonyResType) => (
+          {orderedTestimonials.map((testimonial: PublicTestimonyResType) => (
             <CardTestimony key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>

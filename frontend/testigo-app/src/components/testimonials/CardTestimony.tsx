@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ImageIcon, MessageCircle, Play } from 'lucide-react';
+import { Code, ImageIcon, MessageCircle, Play } from 'lucide-react';
 import { PublicTestimonyResType } from '@/types/testimony-type';
 import { useVideoPreview } from '@/hooks/usePreviewVideo';
 import PreviewModal from './PreviewModal';
 import { useNormalizeMultimediaType } from '@/hooks/useNormalizeMultimediaType';
+import Link from 'next/link';
 
 type CardTestimonyProps = {
     testimonial: PublicTestimonyResType
@@ -14,9 +15,15 @@ type CardTestimonyProps = {
 
 const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
+    console.log({ testimonial });
+
+
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const { previewType, thumbnail, isYoutube } = useVideoPreview(testimonial.multimedia.url ?? "");
+
+    const url = testimonial?.multimedia?.url ?? "";
+    const format = testimonial?.mediaType
+    const { previewType, thumbnail, isYoutube } = useVideoPreview(url);
     const [openModal, setOpenModal] = useState(false);
 
 
@@ -42,23 +49,27 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
     return (
         <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            {testimonial.multimedia.type.toLowerCase() !== 'text' && (
+            {testimonial?.hasMultimedia && (
                 <div className="relative aspect-video w-full overflow-hidden bg-muted cursor-pointer">
-                    {testimonial.multimedia.type.toLowerCase() !== "text" && (
+
+                    {testimonial.multimedia?.type?.toLowerCase() !== "text" && (
                         <div
                             className="relative aspect-video cursor-pointer"
                             onClick={() => setOpenModal(true)}
                         >
                             {isYoutube && thumbnail && (
-                                <img src={thumbnail} className="w-full h-full object-cover" />
+                                <img
+                                    src={thumbnail}
+                                    className="w-full h-full object-cover"
+                                />
                             )}
 
                             {!isYoutube && previewType === "video" && (
                                 <video
-                                    src={testimonial.multimedia.url ?? ""}
+                                    src={testimonial.multimedia?.url ?? ""}
                                     muted
                                     playsInline
-                                    poster={`${testimonial.multimedia.url}#t=0.1`}
+                                    poster={`${testimonial.multimedia?.url}#t=0.1`}
                                     className="w-full h-full object-cover"
                                 />
                             )}
@@ -66,28 +77,31 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                             {mappedType === "video" && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-100">
                                     <div className="bg-white/90 rounded-full p-3 shadow-lg">
-                                        <Play className="h-8 w-8 text-primary fill-primary group-hover:fill-secondary group-hover:text-secondary  transition-colors" />
+                                        <Play className="h-8 w-8 text-primary fill-primary group-hover:fill-secondary group-hover:text-secondary transition-colors" />
                                     </div>
                                 </div>
                             )}
                         </div>
                     )}
 
-
                     <PreviewModal
                         open={openModal}
                         onClose={() => setOpenModal(false)}
-                        url={testimonial.multimedia.url ?? ""}
+                        url={testimonial.multimedia?.url ?? ""}
                         isYoutube={isYoutube}
                         previewType={mappedType}
                     />
                 </div>
             )}
-            <CardContent className="p-5">
+            <CardContent className="">
+                <div className='flex justify-end gap-2 text-xs pb-4 text-primary items-center' >
+                    <span className='flex justify-between'>{testimonial.engagement.views} vistas  | </span>
+                    <Link className="hover:text-secondary flex items-center gap-2 border border-primary hover:border-secondary px-2 rounded-md" href={"/"}><Code className='w-4' /> Embed</Link>
+                </div>
                 <div className="mb-3 flex items-center gap-2">
                     <Badge variant="outline" className="gap-1">
-                        {getTypeIcon(testimonial.multimedia.type)}
-                        {testimonial.multimedia.type.toLowerCase()}
+                        {getTypeIcon(format)}
+                        {format !== "none" ? format : "texto"}
                     </Badge>
                     <Badge >{testimonial.category}</Badge>
                 </div>

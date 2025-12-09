@@ -8,7 +8,9 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils"
 
 interface Props {
     page: number;
@@ -43,18 +45,23 @@ export const CustomPagination = ({ page, totalPages, onPageChange }: Props) => {
                 <PaginationItem>
                     <PaginationLink
                         onClick={() => page !== 1 && handleNavigate(1)}
-                        className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        className={cn(
+                            "border border-primary rounded-md text-primary",
+                            page === 1 && "opacity-50 pointer-events-none"
+                        )}
                     >
-                        Primero
+                        <ChevronFirst />
                     </PaginationLink>
                 </PaginationItem>
 
-                {/* Previous */}
+                {/* Previuos */}
                 <PaginationItem>
                     <PaginationPrevious
-                        aria-label="Página anterior"
                         onClick={() => handleNavigate(page - 1)}
-                        className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        className={cn(
+                            "border border-primary rounded-md text-primary",
+                            page === 1 && "opacity-50 pointer-events-none"
+                        )}
                     />
                 </PaginationItem>
 
@@ -62,7 +69,7 @@ export const CustomPagination = ({ page, totalPages, onPageChange }: Props) => {
                 <PaginationItem>
                     <PaginationLink
                         isActive
-                        className="font-bold bg-secondary text-white"
+                        className="font-bold bg-primary text-white"
                     >
                         {page}
                     </PaginationLink>
@@ -71,22 +78,26 @@ export const CustomPagination = ({ page, totalPages, onPageChange }: Props) => {
                 {/* Next */}
                 <PaginationItem>
                     <PaginationNext
-                        aria-label="Página siguiente"
                         onClick={() => handleNavigate(page + 1)}
-                        className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                        className={cn(
+                            "border border-primary rounded-md text-primary",    
+                            page === totalPages && "opacity-50 pointer-events-none"
+                        )}
                     />
                 </PaginationItem>
 
                 {/* Last */}
                 <PaginationItem>
                     <PaginationLink
-                        onClick={() => page !== 1 && handleNavigate(1)}
-                        className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        onClick={() => page !== totalPages && handleNavigate(totalPages)}
+                        className={cn(
+                            "border border-primary rounded-md text-primary",  
+                            page === totalPages && "opacity-50 pointer-events-none"
+                        )}
                     >
-                        Último
+                        <ChevronLast />
                     </PaginationLink>
                 </PaginationItem>
-
             </PaginationContent>
         </Pagination>
     );

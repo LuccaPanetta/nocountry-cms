@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import TestimonialNotification from './pruebas/notification';
+/* import TestimonialNotification from './pruebas/notification'; */
 import { X, Upload, ChevronsUpDown, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
 type ContentType = 'text' | 'image' | 'video';
@@ -505,11 +505,11 @@ export function TestimonialForm() {
           </p>
         </div>
       </div>
-      {videoSource === 'file' && watch('videoFile') && watch('videoFile').length > 0 && (  //Aviso, esto lo detecta como error, pero hasta donde lo probe funciona bien
+   {/*    {videoSource === 'file' && watch('videoFile') && watch('videoFile').length > 0 && (  //Aviso, esto lo detecta como error, pero hasta donde lo probe funciona bien
         <p className="text-sm text-green-600">
           Archivo seleccionado: {watch('videoFile')[0].name}
         </p>
-      )}
+      )} */}
     </div>
 
     {/* Campo de descripción de video */}
@@ -629,9 +629,9 @@ export function TestimonialForm() {
           </button>
         </div>
       </form>
-      {showNotification && (
+     {/*  {showNotification && (
       <TestimonialNotification onClose={() => setShowNotification(false)} />
-      )}
+      )} */}
     </div>
   );
 }
