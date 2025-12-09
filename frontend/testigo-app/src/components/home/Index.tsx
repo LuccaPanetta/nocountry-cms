@@ -35,7 +35,7 @@ const Index = () => {
           <p className="text-md text-center">Sistema CMS especializado en recopilar, organizar y publicar historias de éxito. Perfecto para instituciones y empresas con comunidades activas.</p>
           <div className="w-full flex flex-col gap-2 mt-10 items-center md:flex-row md:justify-center md:gap-4">
             <Button className="w-40 md:w-50" onClick={() => router.push("/testimonials")}>Ver Testimonios</Button>
-            <Button className="w-40 md:w-50" variant={"outline"} onClick={() => router.push("/")}>Explorar API</Button>
+            <Button className="w-40 md:w-50" variant={"outline"} onClick={() => router.push("/api-explorer")}>Explorar API</Button>
           </div>
         </div>
         <div className="flex flex-col gap-4 my-10 md:w-full md:gap-1 lg:gap-2 lg:flex-row lg:justify-between lg:mt-5">
