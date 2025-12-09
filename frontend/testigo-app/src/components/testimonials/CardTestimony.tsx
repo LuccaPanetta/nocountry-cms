@@ -103,7 +103,7 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                         {getTypeIcon(format)}
                         {format !== "none" ? format : "texto"}
                     </Badge>
-                    <Badge >{testimonial.category}</Badge>
+                    <Badge className='bg-muted-foreground/50 text-foreground hover:bg-primary/30'>{testimonial.category}</Badge>
                 </div>
                 <p className="text-xs py-3">{handleDateFormat(testimonial.createdAt)}</p>
                 <h3 className="mb-2 text-lg font-semibold text-balance leading-tight">
@@ -123,7 +123,7 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                         <Badge
                             key={tag}
                             variant="default"
-                            className="text-xs hover:bg-primary/30"
+                            className="text-xs hover:bg-primary/30 bg-muted-foreground/50 text-foreground"
                             onClick={() => {
                                 if (!selectedTags.includes(tag)) {
                                     setSelectedTags([...selectedTags, tag])
