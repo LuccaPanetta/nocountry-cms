@@ -59,8 +59,7 @@ El Testimonial CMS permite:
 * **Administración:** Dashboard administrativo.
 
 ---
-
-## 🛠️ **Instalación y Configuración Backend**
+## 🛠️ Instalación y Configuración Backend
 ### **1️⃣ Clonar el Repositorio**
 ```bash
 git clone https://github.com/LuccaPanetta/nocountry-cms
@@ -146,7 +145,7 @@ NEXT_PUBLIC_URL_BASE=https://nocountry-cms.onrender.com/api/v1
 npm run dev
 ```
 ---
-## 🗄️ **Modelo de Datos**
+## 🗄️ Modelo de Datos
 
 ### 📌 **Diagrama DER**
 <p align="center">
