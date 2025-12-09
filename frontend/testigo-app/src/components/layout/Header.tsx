@@ -41,7 +41,7 @@ useEffect(() => {
         <nav className="h-full flex items-center justify-between p-5 lg:max-w-[1277px] m-auto lg:p-0">
           <Link href="/"><Logo /></Link>
           {token ?
-            <div className="flex justify-end relative items-center gap-2">
+            <div className="flex justify-end relative items-center gap-2 cursor-pointer">
               {rol !== 'contributor' ? <span className="text-sm">{rol?.toUpperCase()}</span> : ''}
               <Avatar avatarInitials={avatarInitials} onClick={() => setOpen(true)} />
             </div>
