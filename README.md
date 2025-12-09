@@ -14,9 +14,9 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 ## 📋 **Índice**
 1. [🚀 Tecnologías Utilizadas](#-tecnologías-utilizadas)
 2. [📌 Descripción del Proyecto](#-descripción-del-proyecto)
-3. [🛠️ Instalación Backend](#instalación-y-configuración-backend-)
+3. [⚙️Instalación Backend](#instalación-backend-)
 4. [💻 Instalación Frontend](#-instalación-y-configuración-frontend)
-5. [🗄️ Modelo de Datos](#modelo-de-datos-)
+5. [📁Modelo de Datos](#modelo-de-datos-)
 6. [📚 Documentación API](#-documentación-de-la-api)
 7. [🧪 Pruebas QA](#-escenarios-de-pruebas-qa)
 8. [🌐 Deploys](#-deploys)
@@ -59,7 +59,7 @@ El Testimonial CMS permite:
 * **Administración:** Dashboard administrativo.
 
 ---
-## Instalación y Configuración Backend 🛠️
+## Instalación Backend ⚙️
 ### **1️⃣ Clonar el Repositorio**
 ```bash
 git clone https://github.com/LuccaPanetta/nocountry-cms
@@ -145,7 +145,7 @@ NEXT_PUBLIC_URL_BASE=https://nocountry-cms.onrender.com/api/v1
 npm run dev
 ```
 ---
-## Modelo de Datos 🗄️
+## Modelo de Datos 📁
 
 ### 📌 **Diagrama DER**
 <p align="center">
