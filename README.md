@@ -25,7 +25,7 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 
 ---
 
-## 🚀 **Tecnologías Utilizadas**
+## 🚀 **Tecnologias Utilizadas**
 
 ### **Backend**
 - **Framework:** NestJS, TypeScript
@@ -47,7 +47,7 @@ Testimonial CMS es un sistema diseñado para que instituciones, empresas y comun
 
 ---
 
-## 📌 **Descripción del Proyecto**
+## 📌 **Descripcion del Proyecto**
 
 El Testimonial CMS permite:
 
