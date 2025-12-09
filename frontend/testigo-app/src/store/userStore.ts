@@ -13,6 +13,7 @@ interface UserState extends Partial<User> {
 
 // Store Zustand con persistencia y validación Zod
 export const useUserStore = create<UserState>()(
+
   persist(
     (set) => ({
       id: "",
@@ -63,6 +64,7 @@ export const useUserStore = create<UserState>()(
           rol: undefined,
           token: "",
         }),
+        
 
       // Marca el store como hidratado desde el storage
       setHasHydrated: (state) => set({ hasHydrated: state }),

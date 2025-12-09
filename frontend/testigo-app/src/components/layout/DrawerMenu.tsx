@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useRef} from 'react'
 import Avatar from '../ui/avatar'
 import { LogOut, X } from 'lucide-react'
 import { useUserStore } from '@/store/userStore'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 type DrawerMenuProps = {
     isOpen: boolean,
@@ -17,6 +17,7 @@ const DrawerMenu = ({ isOpen, setOpen, avatarInitials }: DrawerMenuProps) => {
     const { nombre, apellido, rol, clearUserData } = useUserStore();
 
     const pathname = usePathname();
+    const router = useRouter()
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -48,7 +49,21 @@ const DrawerMenu = ({ isOpen, setOpen, avatarInitials }: DrawerMenuProps) => {
                 { href: "/dashboard/admin/metricas", label: "Métricas" },
             ]
             : []),
+              ...(rol === "contributor"
+            ? [
+                { href: "/", label: "Inicio" },
+                { href: "/testimonials", label: "Testimonios públicos" },
+                { href: "/testimonials/create", label: "Crear testimonio" },
+            ]
+            : []),
     ];
+
+
+    const handleLogout = () => {
+    clearUserData(); 
+    setOpen(false)
+    router.push("/"); 
+  };
 
     return (
 
@@ -85,7 +100,7 @@ const DrawerMenu = ({ isOpen, setOpen, avatarInitials }: DrawerMenuProps) => {
                     ))}
                 </nav>
             </div>
-            <div className="h-25 w-full bg-white rounded-bl-[100px] flex flex-row justify-end items-center p-8 gap-2 cursor-pointer text-sm" onClick={() => { clearUserData(), setOpen(false) }}>
+            <div className="h-25 w-full bg-white rounded-bl-[100px] flex flex-row justify-end items-center p-8 gap-2 cursor-pointer text-sm" onClick={() => handleLogout }>
                 <span>CERRAR SESIÓN</span><LogOut className="text-secondary w-6" />
             </div>
         </div>

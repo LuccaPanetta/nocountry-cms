@@ -11,6 +11,7 @@ import { CustomPagination } from "@/components/ui/CustomPagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useGetCategories } from "@/services/use-queries-service/categories-query-service"
 import { useRouter } from "next/navigation"
+import { useUserStore } from "@/store/userStore"
 
 
 const TestimonialsPage = () => {
@@ -19,6 +20,8 @@ const TestimonialsPage = () => {
   const [keyword, setKeyword] = useState('');
   const [orderValue, setOrderValue] = useState("desc-order")
   const router = useRouter();
+
+  const { token } = useUserStore()
 
   //Order
   const options = [
@@ -91,11 +94,18 @@ const TestimonialsPage = () => {
     console.log("orderValue changed:", orderValue)
   }, [orderValue])
 
+  const handleCreatePermission = () => {
+    if (!token) {
+      return router.push('/login')
+    }
+    return router.push('/testimonials/create')
+  }
+
   return (
     <Container>
       <Button
         className="w-1/2 md:w-1/4 lg:w-1/6 ml-auto"
-        onClick={() => router.push('/testimonials/create')}
+        onClick={handleCreatePermission}
       >
         Crear testimonio
       </Button>

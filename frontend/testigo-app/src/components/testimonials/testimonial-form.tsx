@@ -185,6 +185,7 @@ export function TestimonialForm() {
 
   const handleCancel = () => {
     console.log('Form cancelled');
+    router.push("/testimonials")
   };
 
   return (
