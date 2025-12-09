@@ -100,7 +100,7 @@ const DrawerMenu = ({ isOpen, setOpen, avatarInitials }: DrawerMenuProps) => {
                     ))}
                 </nav>
             </div>
-            <div className="h-25 w-full bg-white rounded-bl-[100px] flex flex-row justify-end items-center p-8 gap-2 cursor-pointer text-sm" onClick={() => handleLogout }>
+            <div className="h-25 w-full bg-white rounded-bl-[100px] flex flex-row justify-end items-center p-8 gap-2 cursor-pointer text-sm" onClick={() => handleLogout() }>
                 <span>CERRAR SESIÓN</span><LogOut className="text-secondary w-6" />
             </div>
         </div>
