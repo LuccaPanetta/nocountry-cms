@@ -297,7 +297,7 @@ export default function CreateTestimonialPage() {
       <Success
         text="¡Testimonio creado exitosamente!"
         buttonText="Volver a testimonios"
-        redirect="/" //**/testimonials** para listar testimonios propios */
+        redirect="/testimonials"
       />
     )
   }
