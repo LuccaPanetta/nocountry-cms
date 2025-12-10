@@ -6,6 +6,7 @@ import { TestimonialCard } from './testimonial-card';
 import TestimonialsTable  from './testimonial-table';
 import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { MetricsSummary } from './metrics-dashboard';
 
 type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';
 
@@ -98,7 +99,7 @@ export function AdminDashboard() {
         </div>
 
         <div>
-          {activeSection === 'moderacion' && <TestimonialTable />}
+          {activeSection === 'moderacion' && <TestimonialsTable />}
           {activeSection === 'usuarios' && (
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
               <p className="text-gray-600">Gestión de usuarios - Próximamente</p>
