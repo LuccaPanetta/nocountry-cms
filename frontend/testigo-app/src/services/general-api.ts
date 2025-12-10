@@ -23,3 +23,8 @@ export const apiTagsService = axios.create({
 export const apiPublicTestimonialsService = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/public/testimonials`
 })
+
+export const apiPublicEmbedsService = axios.create({
+    baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/public/embeds`
+})
+

@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Code, ImageIcon, MessageCircle, Play } from 'lucide-react';
+import { Code, ImageIcon, MessageCircle, Play, Quote } from 'lucide-react';
 import { PublicTestimonyResType } from '@/types/testimony-type';
 import { useVideoPreview } from '@/hooks/usePreviewVideo';
 import PreviewModal from './PreviewModal';
 import { useNormalizeMultimediaType } from '@/hooks/useNormalizeMultimediaType';
 import Link from 'next/link';
+import { useGetPublicTestimonyById, useGetPublicTestimonyEmbedCodeById } from '@/services/use-queries-service/testimonials-query-service';
+import ModalEmbedCode from './ModalEmbedCode';
+
 
 type CardTestimonyProps = {
     testimonial: PublicTestimonyResType
@@ -15,8 +18,13 @@ type CardTestimonyProps = {
 
 const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
-    console.log({ testimonial });
 
+    const { refetch } = useGetPublicTestimonyById(testimonial.id);
+
+    const { refetch: refetchEmbed } = useGetPublicTestimonyEmbedCodeById(testimonial.id);
+    const [dataEmbed, setDataEmbed] = useState("")
+
+    const [views, setViews] = useState(testimonial.engagement.views)
 
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -25,6 +33,10 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
     const format = testimonial?.mediaType
     const { previewType, thumbnail, isYoutube } = useVideoPreview(url);
     const [openModal, setOpenModal] = useState(false);
+    const [openModalEmbed, setOpenModalEmbed] = useState(false);
+
+    const mappedType: "video" | "imagen" = useNormalizeMultimediaType({ isYoutube, testimonial });
+
 
 
     const getTypeIcon = (type: string) => {
@@ -39,24 +51,56 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
         }
     }
 
-
     const handleDateFormat = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
     }
 
-    const mappedType: "video" | "imagen" = useNormalizeMultimediaType({ isYoutube, testimonial });
+    const handleOpenModal = async () => {
 
+        const key = `viewed-${testimonial.id}`;
+
+        localStorage.removeItem(key);
+
+        if (!localStorage.getItem(key)) {
+
+            const result = await refetch();
+            const newViews = result.data?.engagement.views;
+
+            if (newViews !== undefined) {
+                setViews(newViews);
+            }
+
+            localStorage.setItem(key, "true");
+        }
+        setOpenModal(true);
+    };
+
+   const handleEmbed = async () => {
+    try {
+        const result = await refetchEmbed(); 
+        const embedHtml = result.data;   
+        console.log({embedHtml});
+        
+        if (embedHtml) {
+            setDataEmbed(embedHtml);         
+        }
+        setOpenModalEmbed(true);             
+    } catch (error) {
+        console.error("Error fetching embed code", error);
+    }
+};
     return (
         <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-            {testimonial?.hasMultimedia && (
-                <div className="relative aspect-video w-full overflow-hidden bg-muted cursor-pointer">
 
-                    {testimonial.multimedia?.type?.toLowerCase() !== "text" && (
-                        <div
-                            className="relative aspect-video cursor-pointer"
-                            onClick={() => setOpenModal(true)}
-                        >
+            <div className="relative aspect-video w-full overflow-hidden bg-muted cursor-pointer">
+
+                <div
+                    className="relative aspect-video cursor-pointer"
+                    onClick={handleOpenModal}
+                >
+                    {testimonial?.hasMultimedia ? (
+                        <>
                             {isYoutube && thumbnail && (
                                 <img
                                     src={thumbnail}
@@ -81,23 +125,39 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    )}
-
-                    <PreviewModal
-                        open={openModal}
-                        onClose={() => setOpenModal(false)}
-                        url={testimonial.multimedia?.url ?? ""}
-                        isYoutube={isYoutube}
-                        previewType={mappedType}
-                    />
+                        </>
+                    ) : <p className='flex items-center mt-auto h-full justify-center text-primary font-semibold relative'><Quote className='text-white w-30 h-30 absolute -top-5 -left-3.5' />VER MÁS</p>}
                 </div>
-            )}
+
+            </div>
+
+            <PreviewModal
+                open={openModal}
+                onClose={() => {
+                    setOpenModal(false)
+                }}
+                url={testimonial.multimedia?.url ?? ""}
+                isYoutube={isYoutube}
+                previewType={mappedType}
+                content={testimonial.content}
+                author={testimonial.author}
+            />
+
+
             <CardContent className="">
                 <div className='flex justify-end gap-2 text-xs pb-4 text-primary items-center' >
-                    <span className='flex justify-between'>{testimonial.engagement.views} vistas  | </span>
-                    <Link className="hover:text-secondary flex items-center gap-2 border border-primary hover:border-secondary px-2 rounded-md" href={"/"}><Code className='w-4' /> Embed</Link>
+                    <span className='flex justify-between'>{views} vistas  | </span>
+                    <p className="hover:text-secondary flex items-center gap-2 border border-primary hover:border-secondary px-2 rounded-md cursor-pointer" onClick={handleEmbed}><Code className='w-4' /> Embed</p>
                 </div>
+
+                <ModalEmbedCode
+                    open={openModalEmbed}
+                    onClose={() => {
+                        setOpenModalEmbed(false)
+                    }}
+                    code={dataEmbed}
+                />
+
                 <div className="mb-3 flex items-center gap-2">
                     <Badge variant="outline" className="gap-1">
                         {getTypeIcon(format)}
@@ -137,6 +197,7 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                 </div>
             </CardContent>
         </Card>
+
     )
 }
 

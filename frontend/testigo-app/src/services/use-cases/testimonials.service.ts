@@ -3,6 +3,7 @@ import {
   TestimonyStatusType,
 } from "@/types/testimony-type";
 import {
+  apiPublicEmbedsService,
   apiPublicTestimonialsService,
   apiTestimonialsService,
 } from "../general-api";
@@ -105,6 +106,8 @@ export const deleteTestimonyById = async (id: string) => {
   }
 };
 
+//Public Testimonials 
+
 export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
   try {
     const res = await apiPublicTestimonialsService.get("/", {
@@ -122,3 +125,25 @@ export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
     throw new Error(error.response?.data?.message || "Error de conexión");
   }
 };
+
+
+export const getPublicTestimonyById = async (id : string) => {
+  try {
+    const res = await apiPublicTestimonialsService.get(`/${id}`);
+
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Error de conexión");
+  }
+};
+
+export const getPublicTestimonyEmbedCode = async (id : string) => {
+  try {
+    const res = await apiPublicEmbedsService.get(`/${id}/code`);
+
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Error de conexión");
+  }
+};
+

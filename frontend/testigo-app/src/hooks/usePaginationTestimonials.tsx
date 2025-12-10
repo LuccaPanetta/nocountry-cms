@@ -1,6 +1,6 @@
 import { useGetPublicTestimonials } from "@/services/use-queries-service/testimonials-query-service";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 export function usePaginatedTestimonials({
   keyword,
@@ -22,7 +22,7 @@ export function usePaginatedTestimonials({
     limit,
     search: keyword,
     category: filteredCategory,
-    order: orderValue, 
+    order: orderValue,
   });
 
   const total = data?.total ?? 0;
@@ -33,16 +33,22 @@ export function usePaginatedTestimonials({
     (newPage: number) => {
       const query = new URLSearchParams(params.toString());
       query.set("page", String(newPage));
-      router.push(`?${query.toString()}`);
+      router.replace(`?${query.toString()}`);
     },
     [router, params]
   );
+
+  useEffect(() => {
+    const query = new URLSearchParams(params.toString());
+    query.set("page", "1");
+    router.replace(`?${query.toString()}`);
+  }, [keyword, filteredCategory, orderValue]);
 
   return {
     page,
     totalPages,
     testimonials,
-    pageSize:limit,
+    pageSize: limit,
     total,
     isLoading,
     onPageChange,

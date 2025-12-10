@@ -91,7 +91,6 @@ const TestimonialsPage = () => {
   }, [filteredCategory, keyword, orderValue])
 
   useEffect(() => {
-    console.log("orderValue changed:", orderValue)
   }, [orderValue])
 
   const handleCreatePermission = () => {
