@@ -297,7 +297,7 @@ export default function CreateTestimonialPage() {
       <Success
         text="¡Testimonio creado exitosamente!"
         buttonText="Volver a testimonios"
-        redirect="/testimonials"
+        redirect="/" //**/testimonials** para listar testimonios propios */
       />
     )
   }
@@ -335,26 +335,6 @@ export default function CreateTestimonialPage() {
               />
               {errors.title && (
                 <p className="text-sm text-red-500">{errors.title.message}</p>
-              )}
-            </div>
-
-            {/* CONTENIDO */}
-            <div className="space-y-2">
-              <Label htmlFor="testimonialContent">
-                Contenido <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="testimonialContent"
-                {...register('testimonialContent', {
-                  required: 'El contenido es obligatorio',
-                  minLength: { value: 10, message: 'Mínimo 10 caracteres' }
-                })}
-                placeholder="Escribe aquí tu testimonio..."
-                rows={6}
-                className={errors.testimonialContent ? 'border-red-500' : ''}
-              />
-              {errors.testimonialContent && (
-                <p className="text-sm text-red-500">{errors.testimonialContent.message}</p>
               )}
             </div>
 
@@ -402,7 +382,7 @@ export default function CreateTestimonialPage() {
             {/* EMPRESA */}
             <div className="space-y-2">
               <Label htmlFor="company">
-                Empresa <span className="text-red-500">*</span>
+                Empresa / Institución <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="company"
@@ -433,6 +413,26 @@ export default function CreateTestimonialPage() {
               isLoading={loadingTags}
               maxTags={5}
             />
+
+            {/* CONTENIDO */}
+            <div className="space-y-2">
+              <Label htmlFor="testimonialContent">
+                Contenido <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="testimonialContent"
+                {...register('testimonialContent', {
+                  required: 'El contenido es obligatorio',
+                  minLength: { value: 10, message: 'Mínimo 10 caracteres' }
+                })}
+                placeholder="Escribe aquí tu testimonio..."
+                rows={6}
+                className={errors.testimonialContent ? 'border-red-500' : ''}
+              />
+              {errors.testimonialContent && (
+                <p className="text-sm text-red-500">{errors.testimonialContent.message}</p>
+              )}
+            </div>
 
             {/* TIPO DE CONTENIDO */}
             <div className="space-y-2">

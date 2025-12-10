@@ -288,7 +288,7 @@ export function TestimonialForm() {
         {/* EMPRESA */}
         <div className="space-y-2">
           <label htmlFor="company" className="block text-sm font-medium text-gray-900">
-            Empresa <span className="text-red-500">*</span>
+            Empresa / Institución <span className="text-red-500">*</span>
           </label>
           <input
             id="company"
