@@ -28,3 +28,7 @@ export const apiPublicEmbedsService = axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/public/embeds`
 })
 
+export const apiStatisticsService = axios.create({
+    baseURL: `${process.env.NEXT_PUBLIC_URL_BASE}/public/stats`
+})
+
