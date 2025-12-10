@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, Heart, Zap, Shield, Users, Settings, TrendingUp , CircleCheckBig, SquareX } from 'lucide-react';
+import { Users, CircleCheckBig, SquareX } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
 import TestimonialsTable  from './testimonial-table';
 
-type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';
+type ActiveSection = 'moderacion'; //| 'usuarios' | 'configuraciones' | 'metricas';
 
-export function AdminDashboard() {
+const AdminDashboard = ()  => {
   const [activeSection, setActiveSection] = useState<ActiveSection>('moderacion');
 
   return (
@@ -51,7 +51,7 @@ export function AdminDashboard() {
         >
           Moderación
         </button>
-        <button
+        {/*<button
           onClick={() => setActiveSection('usuarios')}
           className={`text-center rounded-sm gap-2 py-2 font-medium transition-colors ${
             activeSection === 'usuarios'
@@ -80,27 +80,28 @@ export function AdminDashboard() {
           }`}
         >
           Métricas
-        </button>
+        </button>*/}
       </div>
 
-      <div>
-        {activeSection === 'moderacion' && <TestimonialsTable />}
-        {activeSection === 'usuarios' && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-gray-600">Gestión de usuarios - Próximamente</p>
-          </div>
-        )}
-        {activeSection === 'configuraciones' && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-gray-600">Configuraciones - Próximamente</p>
-          </div>
-        )}
-        {activeSection === 'metricas' && (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-gray-600">Métricas - Próximamente</p>
-          </div>
-        )}
+      <div className='block' > {/*{activeSection === 'moderacion' ? 'block' : 'hidden'*/}
+        <TestimonialsTable />
       </div>
+    {/*  <div className={activeSection === 'usuarios' ? 'block' : 'hidden'}>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-gray-600">Gestión de usuarios - Próximamente</p>
+        </div>
+      </div>
+      <div className={activeSection === 'configuraciones' ? 'block' : 'hidden'}>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-gray-600">Configuraciones - Próximamente</p>
+        </div>
+      </div>
+      <div className={activeSection === 'metricas' ? 'block' : 'hidden'}>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-gray-600">Métricas - Próximamente</p>
+        </div>
+      </div> */}
     </div>
   );
 }
+export default AdminDashboard
