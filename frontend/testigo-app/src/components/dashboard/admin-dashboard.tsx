@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Users, CircleCheckBig, SquareX } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
-import { TestimonialTable } from './testimonial-table';
-import { MetricsSummary } from './metrics-dashboard';
+import TestimonialsTable  from './testimonial-table';
 import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -30,9 +29,8 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="w-full bg-gray-50  m-auto min-h-screen">
-      <Container >
-
+    <div className="w-full bg-gray-50 m-auto min-h-screen"> 
+      <Container>
         <div className="mb-8 grid md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 lg:gap-6">
           <TestimonialCard
             label="Total de Testimonios"
