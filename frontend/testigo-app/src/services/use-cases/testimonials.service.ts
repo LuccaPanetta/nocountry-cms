@@ -105,6 +105,8 @@ export const deleteTestimonyById = async (id: string) => {
   }
 };
 
+//Public Testimonials 
+
 export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
   try {
     const res = await apiPublicTestimonialsService.get("/", {
@@ -116,6 +118,17 @@ export const getPublicTestimonials = async (params: GetTestimonialsParams) => {
         order: params.order,
       },
     });
+
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Error de conexión");
+  }
+};
+
+
+export const getPublicTestimonyById = async (id : string) => {
+  try {
+    const res = await apiPublicTestimonialsService.get(`/${id}`);
 
     return res.data;
   } catch (error: any) {

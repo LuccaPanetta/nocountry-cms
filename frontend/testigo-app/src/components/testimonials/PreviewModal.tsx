@@ -4,12 +4,21 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 type PreviewModalProps = {
   open: boolean;
   onClose: () => void;
-  url: string;
-  isYoutube: boolean;
-  previewType: "video" | "imagen";
+  url?: string;
+  isYoutube?: boolean;
+  previewType?: "video" | "imagen";
+  content: string;
+  author:string
 };
 
-const PreviewModal = ({ open, onClose, url, isYoutube, previewType }: PreviewModalProps) => {
+const PreviewModal = ({ open, onClose, url, isYoutube, previewType, content, author }: PreviewModalProps) => {
+
+  const getYoutubeEmbed = (url: string) => {
+    const params = new URL(url);
+    const id =
+      params.searchParams.get("v") || params.pathname.split("/").pop();
+    return `https://www.youtube.com/embed/${id}?autoplay=1`;
+  };
 
   useEffect(() => {
     // Bloquea scroll background cuando modal está abierto
@@ -19,44 +28,48 @@ const PreviewModal = ({ open, onClose, url, isYoutube, previewType }: PreviewMod
     };
   }, [open]);
 
-  const getYoutubeEmbed = (url: string) => {
-    const params = new URL(url);
-    const id =
-      params.searchParams.get("v") || params.pathname.split("/").pop();
-    return `https://www.youtube.com/embed/${id}?autoplay=1`;
-  };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogTitle  className="sr-only">{url}</DialogTitle>
-      <DialogDescription  className="sr-only">Esta es una vista previa del contenido seleccionado.</DialogDescription>
+    <Dialog open={open} onOpenChange={(value) => { if (!value) onClose() }}>
+      <DialogTitle className="sr-only">{url}</DialogTitle>
+      <DialogDescription className="sr-only">Esta es una vista previa del contenido seleccionado.</DialogDescription>
       <DialogContent className="p-0 bg-black/90 max-w-4xl">
-        {/* ---- YouTube ---- */}
-        {isYoutube && (
-          <iframe
-            src={getYoutubeEmbed(url)}
-            allow="autoplay"
-            className="w-full aspect-video"
-          />
-        )}
+        {url && (
+          <>
+            {/* ---- YouTube ---- */}
+            {isYoutube && (
+              <iframe
+                src={getYoutubeEmbed(url)}
+                allow="autoplay"
+                className="w-full aspect-video"
+              />
+            )}
 
-        {/* ---- MP4 / Cloudinary ---- */}
-        {!isYoutube && previewType === "video" && (
-          <video
-            src={url}
-            controls
-            autoPlay
-            className="w-full aspect-video"
-          />
-        )}
+            {/* ---- MP4 / Cloudinary ---- */}
+            {!isYoutube && previewType === "video" && (
+              <video
+                src={url}
+                controls
+                autoPlay
+                className="w-full aspect-video"
+              />
+            )}
 
-        {/* Imagen  */}
-        {!isYoutube && previewType === "imagen" && (
-          <img
-            src={url}
-            className="w-full object-contain max-h-screen"
-          />
-        )}
+            {/* Imagen  */}
+            {!isYoutube && previewType === "imagen" && (
+              <img
+                src={url}
+                className="w-full object-contain max-h-screen"
+              />
+            )}
+
+          </>
+        )
+        }
+        <div className="p-6 text-white text-sm">
+          <p className="pb-3 font-light">{author}</p>
+          <p >{content}</p>
+        </div>
       </DialogContent>
     </Dialog>
   );
