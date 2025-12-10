@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPublicTestimonials, getPublicTestimonyById, getTestimonials, getTestimonyById } from "../use-cases/testimonials.service";
+import { getPublicTestimonials, getPublicTestimonyById, getPublicTestimonyEmbedCode, getTestimonials, getTestimonyById } from "../use-cases/testimonials.service";
 import { GetTestimonialsParams,  TestimonyResType} from "@/types/testimony-type";
 
 
@@ -38,6 +38,17 @@ export function useGetPublicTestimonyById(id: string) {
   return useQuery({
     queryKey: ["publicTestimonyById", id],
     queryFn: () => getPublicTestimonyById(id),
+    enabled: false,
+    placeholderData: (prev) => prev,
+  });
+}
+
+//  Hook para obtener testimonio publico por ID y registrar embed
+
+export function useGetPublicTestimonyEmbedCodeById(id: string) {
+  return useQuery({
+    queryKey: ["publicTestimonyEmbedCodeById", id],
+    queryFn: () => getPublicTestimonyEmbedCode(id),
     enabled: false,
     placeholderData: (prev) => prev,
   });

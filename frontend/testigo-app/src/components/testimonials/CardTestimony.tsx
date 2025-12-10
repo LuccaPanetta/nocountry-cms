@@ -7,7 +7,8 @@ import { useVideoPreview } from '@/hooks/usePreviewVideo';
 import PreviewModal from './PreviewModal';
 import { useNormalizeMultimediaType } from '@/hooks/useNormalizeMultimediaType';
 import Link from 'next/link';
-import { useGetPublicTestimonyById } from '@/services/use-queries-service/testimonials-query-service';
+import { useGetPublicTestimonyById, useGetPublicTestimonyEmbedCodeById } from '@/services/use-queries-service/testimonials-query-service';
+import ModalEmbedCode from './ModalEmbedCode';
 
 
 type CardTestimonyProps = {
@@ -20,6 +21,9 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
 
     const { refetch } = useGetPublicTestimonyById(testimonial.id);
 
+    const { refetch: refetchEmbed } = useGetPublicTestimonyEmbedCodeById(testimonial.id);
+    const [dataEmbed, setDataEmbed] = useState("")
+
     const [views, setViews] = useState(testimonial.engagement.views)
 
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -29,6 +33,7 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
     const format = testimonial?.mediaType
     const { previewType, thumbnail, isYoutube } = useVideoPreview(url);
     const [openModal, setOpenModal] = useState(false);
+    const [openModalEmbed, setOpenModalEmbed] = useState(false);
 
     const mappedType: "video" | "imagen" = useNormalizeMultimediaType({ isYoutube, testimonial });
 
@@ -71,7 +76,20 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
         setOpenModal(true);
     };
 
-
+   const handleEmbed = async () => {
+    try {
+        const result = await refetchEmbed(); 
+        const embedHtml = result.data;   
+        console.log({embedHtml});
+        
+        if (embedHtml) {
+            setDataEmbed(embedHtml);         
+        }
+        setOpenModalEmbed(true);             
+    } catch (error) {
+        console.error("Error fetching embed code", error);
+    }
+};
     return (
         <Card key={testimonial.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
 
@@ -125,11 +143,21 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                 author={testimonial.author}
             />
 
+
             <CardContent className="">
                 <div className='flex justify-end gap-2 text-xs pb-4 text-primary items-center' >
                     <span className='flex justify-between'>{views} vistas  | </span>
-                    <Link className="hover:text-secondary flex items-center gap-2 border border-primary hover:border-secondary px-2 rounded-md" href={"/"}><Code className='w-4' /> Embed</Link>
+                    <p className="hover:text-secondary flex items-center gap-2 border border-primary hover:border-secondary px-2 rounded-md cursor-pointer" onClick={handleEmbed}><Code className='w-4' /> Embed</p>
                 </div>
+
+                <ModalEmbedCode
+                    open={openModalEmbed}
+                    onClose={() => {
+                        setOpenModalEmbed(false)
+                    }}
+                    code={dataEmbed}
+                />
+
                 <div className="mb-3 flex items-center gap-2">
                     <Badge variant="outline" className="gap-1">
                         {getTypeIcon(format)}
@@ -169,6 +197,7 @@ const CardTestimony = ({ testimonial }: CardTestimonyProps) => {
                 </div>
             </CardContent>
         </Card>
+
     )
 }
 
