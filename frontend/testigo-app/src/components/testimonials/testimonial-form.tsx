@@ -16,34 +16,17 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from 'react';
+import { useUserStore } from '@/store/userStore';
+import { useGetCategories } from '@/services/use-queries-service/categories-query-service'; // ← AGREGAR
+import { useGetTags } from '@/services/use-queries-service/tags-query-service';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import TestimonialNotification from './notification';
 import { X, Upload, ChevronsUpDown, MessageCircle, CirclePlay, Image } from 'lucide-react';
 
+
 type ContentType = 'text' | 'image' | 'video';
 
-const CATEGORY_MAP: Record<string, string> = {
-  'tecnologia': 'fdee7e93-7051-48a5-850c-101ec2fc9e6f',
-  'servicios': 'cc7e2851-0289-4761-b8b2-d30235425d06',
-  'productos': 'c74308b1-1cfd-4838-a50a-f680cdfcf169',
-  'consultoria': '94cc7563-74e3-499f-a1db-d9e028278fff',
-  'educacion': '64091810-b9db-4cf0-a928-d6d550b96fdd',
-  'Evento': 'otro-uuid-aqui',
-  'Cliente': 'otro-uuid-aqui',
-  'Industria': 'otro-uuid-aqui',
-};
-
-const TAG_MAP: Record<string, string> = {
-  'Educación': 'dbc2cf97-caaa-4a28-a4ee-994a93f7d2d8',
-  'Capacitación': 'c3759780-fcb6-4d39-8a29-dc4026bfcd1e',
-  'Comunidad': '0142eb68-ea47-4fc2-bcc0-019b5bbbfad8',
-  'Calidad': 'e8ca3dc7-e21a-427d-b4ce-3009e7c2bafb',
-  'Innovación': '3c536eaa-ec49-433c-b850-b0f75611d696',
-  'Flexibilidad': 'f20262ca-02b9-4378-8a79-c3395addb89c',
-  'Eficiencia': '75002c9f-abef-4104-99bb-a8df8be76f51',
-  'freelancer': '909ec270-e3a6-4073-ae03-6eb8a2ece393'
-};
 
 interface TestimonialFormData {
   title: string;
@@ -69,6 +52,19 @@ export function TestimonialForm() {
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { data: categories, isLoading: loadingCategories } = useGetCategories();
+  const { data: availableTags, isLoading: loadingTags } = useGetTags();
+  const token = useUserStore((state) => state.token);
+
+
+const TAG_MAP: Record<string, string> = {
+  'tecnologia': '4b798ee0-a5e7-48e1-a349-c728e1fd4c87', // tecnología
+  'soporte': 'e0e50624-89e7-4e41-bfa3-b6598140a04f', // soporte-técnico
+  'facilidad-uso': '39f4c8cd-0f8d-44f8-af32-4ac444637ee6',
+  'recomendacion': '2bfd27d4-6984-4184-b3ff-0e595e031f05', // recomendación
+  'empresa': 'a5dbcc02-0631-484b-aefd-d8a62899dcee',
+  'innovacion': '38ba3a8f-bca6-46df-8315-82fcb7b8e71f' // innovación
+};
 
   const {
     register,
@@ -101,68 +97,122 @@ export function TestimonialForm() {
   setIsSubmitting(true);
   setError(null);
   
+  if (!token) {
+    setError('No estás autenticado. Por favor, inicia sesión primero.');
+    setIsSubmitting(false);
+    return;
+  }
+  
   try {
     const formData = new FormData();
     
+    // ✅ CAMPOS CORRECTOS SEGÚN LA DOCUMENTACIÓN
     
-    formData.append('titulo', data.title);
-    formData.append('autorNombre', data.author);
-    formData.append('empresa', data.company);
-    formData.append('cargo', data.position || '');
+    // Campo REQUERIDO
     formData.append('contenido', data.testimonialContent || '');
     
+    // Campos OPCIONALES
+    if (data.title) formData.append('titulo', data.title);
+    if (data.author) formData.append('autorNombre', data.author);  // ← CORRECTO
+    if (data.company) formData.append('empresa', data.company);
+    if (data.position) formData.append('cargo', data.position);
     
-    formData.append('tipo', data.contentType.toUpperCase());
-    
-    
-    if (data.contentType === 'image' && data.imageDescription) {
-      formData.append('descripcion', data.imageDescription);
-    } else if (data.contentType === 'video' && data.videoDescription) {
-      formData.append('descripcion', data.videoDescription);
-    }
-    
-    
-    if (data.contentType === 'image' && data.imageFile?.[0]) {
-      formData.append('file', data.imageFile[0]);
-    } else if (data.contentType === 'video' && data.videoFile?.[0]) {
-      formData.append('file', data.videoFile[0]);
-    }
-    
-    
-    const categoryId = CATEGORY_MAP[data.category];
+    // ✅ categoryId es REQUERIDO (UUID)
+    const categoryId = data.category;
+
     if (!categoryId) {
-      throw new Error(`Categoría "${data.category}" no encontrada`);
+      throw new Error(`Por favor selecciona una categoría`);
     }
     formData.append('categoryId', categoryId);
     
-    
-    const tagIds = tags
-      .map(tagName => TAG_MAP[tagName])
-      .filter(Boolean); 
-    
-    if (tagIds.length > 0) {
-      formData.append('tagIds', tagIds.join(','));
+    // ✅ tagIds es OPCIONAL (UUIDs separados por comas)
+    if (tags.length > 0 && availableTags) {
+      const tagIds = tags
+        .map(tagName => {
+          const foundTag = availableTags.find(t => t.name === tagName);
+          return foundTag?.id;
+        })
+        .filter(Boolean);
+      
+      if (tagIds.length > 0) {
+        formData.append('tagIds', tagIds.join(','));
+      }
     }
     
-    console.log('Enviando testimonio...');
+    // ✅ MULTIMEDIA
+    // Si es imagen o video con archivo
+    if (data.contentType === 'image' && data.imageFile?.[0]) {
+      formData.append('file', data.imageFile[0]);
+      formData.append('tipo', 'IMAGEN');  // ← DEBE SER "IMAGEN", NO "IMAGE"
+      if (data.imageDescription) {
+        formData.append('descripcion', data.imageDescription);
+      }
+    } else if (data.contentType === 'video' && data.videoFile?.[0]) {
+      formData.append('file', data.videoFile[0]);
+      formData.append('tipo', 'VIDEO');  // ← CORRECTO
+      if (data.videoDescription) {
+        formData.append('descripcion', data.videoDescription);
+      }
+    } else if (data.contentType === 'video' && data.videoUrl) {
+      // Si es URL de video (YouTube/Vimeo)
+      formData.append('multimediaUrl', data.videoUrl);
+      if (data.videoDescription) {
+        formData.append('descripcion', data.videoDescription);
+      }
+    }
+    // Si es tipo "text", no agregamos nada de multimedia
     
-    // Enviar al backend
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/testimonials`, {
+    const API_URL = process.env.NEXT_PUBLIC_URL_BASE || 'https://nocountry-cms.onrender.com/api/v1';
+    
+    console.log('🚀 Enviando a:', `${API_URL}/testimonials`);
+    console.log('🔑 Token presente:', token ? 'SÍ' : 'NO');
+    console.log('📦 Datos a enviar:');
+    for (let pair of formData.entries()) {
+      console.log(`  ${pair[0]}: ${pair[1]}`);
+    }
+    
+    const response = await fetch(`${API_URL}/testimonials`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`,
+        'Authorization': `Bearer ${token}`,
+        // NO agregar Content-Type, FormData lo maneja automáticamente
       },
       body: formData,
     });
     
-    const result = await response.json();
+    console.log('📡 Response status:', response.status);
+    
+    const contentType = response.headers.get('content-type');
     
     if (!response.ok) {
-      console.error('Error del servidor:', result);
-      throw new Error(result.message || `Error ${response.status}`);
+      if (contentType?.includes('text/html')) {
+        throw new Error(`Error ${response.status}: El servidor devolvió HTML en vez de JSON`);
+      }
+      
+      const errorData = await response.json();
+      console.error('❌ Error del servidor COMPLETO:', errorData);
+      
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        console.error('📋 Errores de validación:');
+        errorData.errors.forEach((error: any, index: number) => {
+          console.error(`  ${index + 1}.`, JSON.stringify(error, null, 2));
+        });
+        
+        const errorMessages = errorData.errors.map((e: any) => {
+          if (typeof e === 'string') return e;
+          if (e.errors && e.errors[0]?.message) return `${e.field}: ${e.errors[0].message}`;
+          if (e.message) return e.message;
+          return JSON.stringify(e);
+        }).join(' | ');
+        
+        throw new Error(`Errores de validación: ${errorMessages}`);
+      }
+      
+      throw new Error(errorData.message || `Error ${response.status}`);
     }
     
-    console.log('Testimonio creado exitosamente:', result);
+    const result = await response.json();
+    console.log('✅ Testimonio creado exitosamente:', result);
     
     setTimeout(() => {
       setShowNotification(true);
@@ -172,7 +222,7 @@ export function TestimonialForm() {
     setTags([]);
     
   } catch (error) {
-    console.error('Error completo:', error);
+    console.error('💥 Error completo:', error);
     setError(
       error instanceof Error 
         ? error.message 
@@ -182,6 +232,7 @@ export function TestimonialForm() {
     setIsSubmitting(false);
   }
 };
+
 
   const handleCancel = () => {
     console.log('Form cancelled');
@@ -216,21 +267,31 @@ export function TestimonialForm() {
 
         <div className="space-y-2">
           <label htmlFor="category" className="block text-sm font-medium text-gray-900">
-            Categoria
+            Categoria <span className="text-Error">*</span>
           </label>
           <select
             id="category"
             defaultValue=""
+            disabled={loadingCategories}
             {...register('category', { required: 'Seleccione una categoria'})}
-            className={`...`}
+            className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 ${
+              errors.category
+                ? 'border-Error focus:ring-Error'
+                : 'border-gray-300 focus:ring-blue-500'
+            } ${loadingCategories ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           >
-            <option value="">Categoria</option>
-            <option value="tecnologia">Tecnología</option>
-            <option value="servicios">Servicios</option>
-            <option value="productos">Productos</option>
-            <option value="consultoria">Consultoría</option>
-            <option value="educacion">Educación</option>
+            <option value="">
+              {loadingCategories ? 'Cargando categorías...' : 'Selecciona una categoría'}
+            </option>
+            {categories?.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+              </option>
+            ))}
           </select>
+          {errors.category && (
+            <p className="text-sm text-red-500">{errors.category.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -573,18 +634,17 @@ export function TestimonialForm() {
           </button>
         </CommandEmpty>
         <CommandGroup>
-          {['Educación', 'Capacitación', 'Comunidad', 'Calidad', 'Innovación', 
-            'Flexibilidad', 'Eficiencia']
-            .filter(tag => !tags.includes(tag)) // Ocultar tags ya agregados
+          {availableTags
+            ?.filter(tag => !tags.includes(tag.name))
             .map((tag) => (
-            <CommandItem
-              key={tag}
-              onSelect={() => handleAddTag(tag)}
-              className="cursor-pointer"
-            >
-              {tag}
-            </CommandItem>
-          ))}
+              <CommandItem
+                key={tag.id}
+                onSelect={() => handleAddTag(tag.name)}
+                className="cursor-pointer"
+              >
+                {tag.name}
+              </CommandItem>
+            ))}
         </CommandGroup>
       </Command>
     </PopoverContent>
