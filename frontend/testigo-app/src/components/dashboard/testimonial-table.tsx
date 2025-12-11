@@ -2,6 +2,7 @@
 import React from 'react';
 import { MoreHorizontal, Eye, SquarePen, Trash2, Loader2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { deleteTestimonyById, updateStatusOfTestimonyById } from '@/services/use-cases/testimonials.service';
 import { useGetTestimonials } from '@/services/use-queries-service/testimonials-query-service';
 import TestimonialView from './testimonial-view';
@@ -33,6 +34,7 @@ interface TestimonialResponse {
 }
 
 const TestimonialsTable = () => {
+  const router = useRouter();
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 6;
@@ -138,10 +140,10 @@ const mutationUpdateStatusTestimonyById = useMutation({
 };
 
   const handleEdit = (id: string) => {
-    // Implementar navegación a edición
-    console.log('Editar:', id);
-    setOpenDropdown(null);
-  };
+  router.push(`/dashboard/editor/${id}`);
+  setOpenDropdown(null);
+};
+
 
 
   const goToNextPage = () => {
