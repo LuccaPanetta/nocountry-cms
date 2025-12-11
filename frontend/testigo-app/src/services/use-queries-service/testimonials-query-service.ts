@@ -53,3 +53,11 @@ export function useGetPublicTestimonyEmbedCodeById(id: string) {
     placeholderData: (prev) => prev,
   });
 }
+
+// Hook específico para editar - devuelve el objeto completo con la estructura del backend
+export const useGetTestimonyByIdForEdit = (id: string) => {
+  return useQuery<{ testimonial: TestimonyResType }>({
+    queryKey: [`testimony-edit-${id}`, id],
+    queryFn: () => getTestimonyById(id),
+  });
+};
