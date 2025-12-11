@@ -6,6 +6,7 @@ import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import TitleSection from "../ui/TitleSection"
 import { useCountUp } from "@/hooks/useCountUp"
 import { Loader2 } from "lucide-react"
+import SummaryCircle from "./summaryCircle"
 
 type MetricsCategoryItem = {
     category: string
@@ -55,33 +56,30 @@ export function MetricsSummary() {
         { title: "Contenido multimedia incluído", dataKey: "hasMultimedia" },
     ]
 
-      if (isLoading || isLoadingMetricsCategory) {
-    return (
-      <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
-          <p className="text-gray-600">Cargando testimonios...</p>
-        </div>
-      </div>
-    );
-  }
+    if (isLoading || isLoadingMetricsCategory) {
+        return (
+            <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+                    <p className="text-gray-600">Cargando métricas...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
             <div className="my-8 lg:my-12 ">
                 <TitleSection text="Estadísticas generales" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 my-10">
-                    {summaryMetrics.map(metric => {
-                        const animatedValue = useCountUp(metric.value, 1000) // 1 segundo
-                        return (
-                            <div key={metric.label} className="flex flex-col items-center">
-                                <div className={`w-30 h-30 md:w-35 md:h-35 lg:w-45 lg:h-45 rounded-full border-4 lg:border-8 border-${metric.color} flex flex-col justify-center items-center text-${metric.color} text-center`}>
-                                    <div className="text-sm lg:text-lg">{metric.label}</div>
-                                    <div className="text-2xl lg:text-4xl font-bold">{animatedValue}</div>
-                                </div>
-                            </div>
-                        )
-                    })}
+                    {summaryMetrics.map(metric => (
+                        <SummaryCircle
+                            key={metric.label}
+                            label={metric.label}
+                            value={metric.value}
+                            color={metric.color}
+                        />
+                    ))}
                 </div>
             </div>
             <div className="my-12 lg:my-16 ">
