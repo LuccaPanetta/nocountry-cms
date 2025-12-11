@@ -4,8 +4,7 @@ import { MoreHorizontal } from "lucide-react";
 import { formatDate } from "./table-components/formatDate";
 import { getFormatBadge } from "./table-components/getFormatBadge";
 import { getStatusBadge } from "./table-components/getStatusBagde";
-import { useTestimonialsTable } from "@/hooks/useTestimonialstable";
-
+import { useTestimonialsTable } from "@/hooks/useTestimonialsTable";
 
 
 type ActionButton = {
@@ -20,13 +19,15 @@ interface TestimonialsTableBaseProps {
     subtitle: string;
     testimonials: TestimonyResType[];
     actions: ActionButton[];
+    onCloseDropdown?: () => void;
 }
 
 export function TestimonialsTableBase({
     title,
     subtitle,
     testimonials,
-    actions
+    actions,
+    onCloseDropdown
 }: TestimonialsTableBaseProps) {
 
     const {
@@ -39,27 +40,26 @@ export function TestimonialsTableBase({
         setOpenDropdown,
         nextPage,
         prevPage
-    } = useTestimonialsTable(testimonials);
+    } = useTestimonialsTable(testimonials)
 
-    
 
-     const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const goToPreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
 
     return (
-        <div className="w-full p-8 bg-gray-50">
+        <div className="w-full pt-8 bg-gray-50">
             <div className="max-w-7xl mx-auto">
 
-                {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
                     <p className="text-gray-600 mt-2">{subtitle}</p>
@@ -68,7 +68,6 @@ export function TestimonialsTableBase({
                     </p>
                 </div>
 
-                {/* Tabla */}
                 <div className="bg-white rounded-lg shadow overflow-visible">
                     <div className="overflow-x-auto">
 
@@ -161,12 +160,18 @@ export function TestimonialsTableBase({
 
                                                     {openDropdown === testimonial.id && (
                                                         <>
-                                                            <div className="fixed inset-0" onClick={() => setOpenDropdown(null)} />
+                                                            <div className="fixed inset-0" onClick={() => { 
+                                                                setOpenDropdown(null);
+                                                                 onCloseDropdown?.(); }} />
                                                             <div className="absolute right-0 w-48 bg-white rounded-md shadow z-20">
                                                                 {actions.map((action) => (
                                                                     <button
                                                                         key={action.label}
-                                                                        onClick={() => action.onClick(testimonial)}
+                                                                        onClick={() => {
+                                                                            action.onClick(testimonial);
+                                                                            setOpenDropdown(null);
+                                                                            onCloseDropdown?.();
+                                                                        }}
                                                                         className={`flex justify-between px-4 py-2 text-sm w-full hover:bg-gray-100 
                                       ${action.danger ? "text-red-600" : "text-gray-700"}`}
                                                                     >
@@ -186,37 +191,37 @@ export function TestimonialsTableBase({
                     </div>
 
                     {/* Paginación */}
-                    <div className="p-4 border-t flex justify-between">
-                        {testimonials.length > 0 && (
-                            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                                <button
-                                    onClick={goToPreviousPage}
-                                    disabled={currentPage === 1}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === 1
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                        }`}
-                                >
-                                    Anterior
-                                </button>
 
-                                <span className="text-sm text-gray-700">
-                                    Página <span className="font-medium">{currentPage}</span> de <span className="font-medium">{totalPages}</span>
-                                </span>
+                    {testimonials.length > 0 && (
+                        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                            <button
+                                onClick={goToPreviousPage}
+                                disabled={currentPage === 1}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === 1
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                    }`}
+                            >
+                                Anterior
+                            </button>
 
-                                <button
-                                    onClick={goToNextPage}
-                                    disabled={currentPage === totalPages}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === totalPages
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                        }`}
-                                >
-                                    Siguiente
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            <span className="text-sm text-gray-700">
+                                Página <span className="font-medium">{currentPage}</span> de <span className="font-medium">{totalPages}</span>
+                            </span>
+
+                            <button
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === totalPages
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                    }`}
+                            >
+                                Siguiente
+                            </button>
+                        </div>
+                    )}
+
                 </div>
             </div>
         </div>
