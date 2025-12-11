@@ -1,22 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPublicTestimonials, getPublicTestimonyById, getPublicTestimonyEmbedCode, getTestimonials, getTestimonyById } from "../use-cases/testimonials.service";
 import { GetTestimonialsParams,  TestimonyResType} from "@/types/testimony-type";
+import { useUserStore } from "@/store/userStore";
 
 
 // Hook para obtener todos los testimonios (admin y editor)
-export const useGetTestimonials= () => {
+export const useGetTestimonials = () => {
+  const { token, hasHydrated } = useUserStore();
   return useQuery<{ testimonial: TestimonyResType }[]>({
     queryKey: ["testimonials"],
-    queryFn: () => getTestimonials(),
-   /*  refetchInterval: 60000, */ // se actualiza cada 60 segundos
+    queryFn: getTestimonials,
+    enabled: hasHydrated && !!token, 
   });
 };
 
 // Hook para obtener un testimonio por ID (admin y editor)
+
 export const useGetTestimonyById= (id: string) => {
-  return useQuery<TestimonyResType[]>({
+  const { token, hasHydrated } = useUserStore();
+  return useQuery<TestimonyResType>({
     queryKey: [`testimony-${id}`, id],
     queryFn: () => getTestimonyById(id),
+    enabled: hasHydrated && !!token,
   });
 };
 

@@ -1,51 +1,40 @@
 "use client"
 import React from 'react';
-import { MoreHorizontal, Eye, SquarePen, Trash2, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Eye, SquarePen, Trash2, Loader2, RotateCw } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { deleteTestimonyById, updateStatusOfTestimonyById } from '@/services/use-cases/testimonials.service';
 import { useGetTestimonials } from '@/services/use-queries-service/testimonials-query-service';
 import TestimonialView from './testimonial-view';
+import { getStatusBadge } from './table-components/getStatusBagde';
+import { formatDate } from './table-components/formatDate';
+import { getFormatBadge } from './table-components/getFormatBadge';
+import { TestimonyResType } from '@/types/testimony-type';
+import { TestimonialStatusModal } from './testimonial-status-modal';
 
-type TestimonialStatus = 'pending' | 'approved' | 'rejected';
 
-interface Testimonial {
-  id: string;
-  titulo: string;
-  autor: string;
-  empresa?: string;
-  cargo?: string;
-  contenido: string;
-  status: TestimonialStatus;
-  category: string;
-  tags: string[];
-  multimedia?: {
-    id: string;
-    tipo: 'IMAGEN' | 'VIDEO' | 'TEXTO';
-    url: string;
-    descripcion?: string;
-  };
-  creadoEn: string;
-  actualizadoEn: string;
-}
 
 interface TestimonialResponse {
-  testimonial: Testimonial;
+  testimonial: TestimonyResType;
 }
 
 const TestimonialsTable = () => {
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 6;
-  const [viewingTestimonial, setViewingTestimonial] = React.useState<Testimonial | null>(null);
+  const [viewingTestimonial, setViewingTestimonial] = React.useState<TestimonyResType | null>(null);
+
+  const [statusModalOpen, setStatusModalOpen] = React.useState(false);
+  const [selectedTestimonial, setSelectedTestimonial] = React.useState<TestimonyResType | null>(null);
+
 
   // ✅ 2. HOOKS DE QUERIES
   const { data, isLoading, isError, refetch } = useGetTestimonials();
-const mutationDeleteTestimonyById = useMutation({
-  mutationFn: (id: string) => deleteTestimonyById(id),
-});
-const mutationUpdateStatusTestimonyById = useMutation({
-  mutationFn: ({ id, data }: { id: string; data: any }) => updateStatusOfTestimonyById(id, data),
-});
+  const mutationDeleteTestimonyById = useMutation({
+    mutationFn: (id: string) => deleteTestimonyById(id),
+  });
+  const mutationUpdateStatusTestimonyById = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateStatusOfTestimonyById(id, data),
+  });
   // ✅ 3. USEMEMO Y CÁLCULOS
   const testimonials = React.useMemo(() => {
     if (!data) return [];
@@ -57,60 +46,6 @@ const mutationUpdateStatusTestimonyById = useMutation({
   const endIndex = startIndex + itemsPerPage;
   const currentTestimonials = testimonials.slice(startIndex, endIndex);
 
-  // ✅ 4. TODAS LAS FUNCIONES (getStatusBadge, getFormatBadge, formatDate, toggleDropdown, handleDelete, handleView, handleEdit, goToNextPage, goToPreviousPage)
-
-
-  const getStatusBadge = (status: TestimonialStatus) => {
-    const styles: Record<TestimonialStatus, string> = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-    };
-
-    
-
-    const labels: Record<TestimonialStatus, string> = {
-      pending: 'Pendiente',
-      approved: 'Aprobado',
-      rejected: 'Rechazado',
-    };
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
-        {labels[status]}
-      </span>
-    );
-  };
-
-  const getFormatBadge = (multimedia?: Testimonial['multimedia']) => {
-    if (!multimedia) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          Texto
-        </span>
-      );
-    }
-
-    const styles: Record<string, string> = {
-      TEXTO: 'bg-blue-100 text-blue-800',
-      VIDEO: 'bg-purple-100 text-purple-800',
-      IMAGEN: 'bg-pink-100 text-pink-800',
-    };
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[multimedia.tipo] || 'bg-gray-100 text-gray-800'}`}>
-        {multimedia.tipo}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date(dateString));
-  };
 
   const toggleDropdown = (id: string) => {
     setOpenDropdown(openDropdown === id ? null : id);
@@ -130,19 +65,19 @@ const mutationUpdateStatusTestimonyById = useMutation({
   };
 
   const handleView = (id: string) => {
-  const testimonial = testimonials.find((t: Testimonial) => t.id === id);
-  if (testimonial) {
-    setViewingTestimonial(testimonial);
-  }
-  setOpenDropdown(null);
-};
-
-  const handleEdit = (id: string) => {
-    // Implementar navegación a edición
-    console.log('Editar:', id);
+    const testimonial = testimonials.find((t: TestimonyResType) => t.id === id);
+    if (testimonial) {
+      setViewingTestimonial(testimonial);
+    }
     setOpenDropdown(null);
   };
 
+  const handleStatus = (testimonial: TestimonyResType) => {
+    if (!testimonial) return;
+    setSelectedTestimonial(testimonial);
+    setStatusModalOpen(true);
+    setOpenDropdown(null);
+  };
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
@@ -183,6 +118,8 @@ const mutationUpdateStatusTestimonyById = useMutation({
       </div>
     );
   }
+
+
 
   return (
     <div className="w-full p-8 bg-gray-50">
@@ -238,7 +175,7 @@ const mutationUpdateStatusTestimonyById = useMutation({
                     </td>
                   </tr>
                 ) : (
-                  currentTestimonials.map((testimonial: Testimonial, index: number) => (
+                  currentTestimonials.map((testimonial: TestimonyResType, index: number) => (
                     <tr key={testimonial.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(testimonial.status)}
@@ -285,34 +222,33 @@ const mutationUpdateStatusTestimonyById = useMutation({
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
-                          
+
                           {openDropdown === testimonial.id && (
                             <>
                               <div
                                 className="fixed inset-0 z-10"
                                 onClick={() => setOpenDropdown(null)}
                               />
-                              <div 
-                                className={`absolute right-0 w-48 bg-white rounded-md shadow-lg z-20 py-1 border border-gray-200 ${
-                                  index >= currentTestimonials.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'
-                                }`}
+                              <div
+                                className={`absolute right-0 w-48 bg-white rounded-md shadow-lg z-20 py-1 border border-gray-200 ${index >= currentTestimonials.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'
+                                  }`}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <button 
+                                <button
                                   className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                   onClick={() => handleView(testimonial.id)}
                                 >
                                   <Eye className='text-gray-600 h-4 w-4' />
                                   <span>Ver detalles</span>
                                 </button>
-                                <button 
+                                <button
                                   className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  onClick={() => handleEdit(testimonial.id)}
+                                  onClick={() => handleStatus(testimonial)}
                                 >
-                                  <SquarePen className='text-gray-600 h-4 w-4' />
-                                  <span>Editar</span>
+                                  <RotateCw className='text-gray-600 h-4 w-4' />
+                                  <span>Cambiar estado</span>
                                 </button>
-                                <button 
+                                <button
                                   className="flex justify-between items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                                   onClick={() => handleDelete(testimonial.id)}
                                   disabled={mutationDeleteTestimonyById.isPending}
@@ -320,7 +256,7 @@ const mutationUpdateStatusTestimonyById = useMutation({
                                   {mutationDeleteTestimonyById.isPending ? (
                                     <Loader2 className='h-4 w-4 animate-spin' />
                                   ) : (
-                                    <Trash2 className='text-red-600 h-4 w-4'/>
+                                    <Trash2 className='text-red-600 h-4 w-4' />
                                   )}
                                   <span>Eliminar</span>
                                 </button>
@@ -342,27 +278,25 @@ const mutationUpdateStatusTestimonyById = useMutation({
               <button
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  }`}
               >
                 Anterior
               </button>
-              
+
               <span className="text-sm text-gray-700">
                 Página <span className="font-medium">{currentPage}</span> de <span className="font-medium">{totalPages}</span>
               </span>
-              
+
               <button
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  currentPage === totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  }`}
               >
                 Siguiente
               </button>
@@ -380,19 +314,24 @@ const mutationUpdateStatusTestimonyById = useMutation({
           position={viewingTestimonial.cargo}
           company={viewingTestimonial.empresa || 'Sin empresa'}
           category={viewingTestimonial.category}
-          format={viewingTestimonial.multimedia?.tipo || 'TEXTO'} 
+          format={viewingTestimonial.multimedia?.tipo || 'TEXTO'}
           mediaUrl={viewingTestimonial.multimedia?.url}
           tags={viewingTestimonial.tags}
           createdAt={viewingTestimonial.creadoEn}
           onClose={() => setViewingTestimonial(null)}
-          onEdit={() => {
-            handleEdit(viewingTestimonial.id);
-            setViewingTestimonial(null);
-          }}
           onDelete={() => {
             handleDelete(viewingTestimonial.id);
             setViewingTestimonial(null);
           }}
+        />
+      )}
+      {statusModalOpen && (
+        <TestimonialStatusModal
+          statusModalOpen={statusModalOpen}
+          setStatusModalOpen={setStatusModalOpen}
+          selectedTestimonial={selectedTestimonial}
+          setSelectedTestimonial={setSelectedTestimonial}
+          refetch={refetch}
         />
       )}
     </div>
