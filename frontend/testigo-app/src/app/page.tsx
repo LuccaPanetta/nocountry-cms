@@ -3,8 +3,8 @@ import LayoutGeneral from "@/components/layout/LayoutGeneral";
 
 export default function Home() {
   return (
-    <LayoutGeneral>
-      <Index />
-    </LayoutGeneral>
+    <div>
+      <p>Testigo App</p>
+    </div>
   );
 }
