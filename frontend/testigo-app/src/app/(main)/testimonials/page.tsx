@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
-import { ArrowDown, ArrowUp, Search, SearchIcon, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Loader2, Search, SearchIcon, X } from "lucide-react"
 import CardTestimony from "@/components/testimonials/CardTestimony"
 import { useState, useMemo, useEffect } from "react"
 import { usePaginatedTestimonials } from "@/hooks/usePaginationTestimonials"
@@ -98,6 +98,17 @@ const TestimonialsPage = () => {
       return router.push('/login')
     }
     return router.push('/testimonials/create')
+  }
+
+   if (isLoading) {
+    return (
+      <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+          <p className="text-gray-600">Cargando testimonios...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

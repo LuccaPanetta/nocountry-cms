@@ -5,6 +5,7 @@ import { Card, CardContent } from "../ui/card"
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import TitleSection from "../ui/TitleSection"
 import { useCountUp } from "@/hooks/useCountUp"
+import { Loader2 } from "lucide-react"
 
 type MetricsCategoryItem = {
     category: string
@@ -20,8 +21,8 @@ type ChartDataItem = {
 }
 
 export function MetricsSummary() {
-    const { data: metrics } = useGetPublicStatistics()
-    const { data: metricsCategory } = useGetPublicStatisticsByCategories()
+    const { data: metrics, isLoading } = useGetPublicStatistics()
+    const { data: metricsCategory, isLoading: isLoadingMetricsCategory } = useGetPublicStatisticsByCategories()
 
     const CATEGORY_COLORS: Record<string, string> = {
         producto: "#2B628C",
@@ -53,6 +54,17 @@ export function MetricsSummary() {
         { title: "Total de embeds", dataKey: "embeds" },
         { title: "Contenido multimedia incluído", dataKey: "hasMultimedia" },
     ]
+
+      if (isLoading || isLoadingMetricsCategory) {
+    return (
+      <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+          <p className="text-gray-600">Cargando testimonios...</p>
+        </div>
+      </div>
+    );
+  }
 
     return (
         <>
