@@ -7,6 +7,7 @@ import TestimonialsTable  from './testimonial-table';
 import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MetricsSummary } from './metrics-dashboard';
+import { useGetTestimonials } from '@/services/use-queries-service/testimonials-query-service';
 
 type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';
 
@@ -14,6 +15,14 @@ export function AdminDashboard() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('moderacion');
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [totalTestimonials, setTotalTestimonials] = useState<number>(0)
+  const [totalApprovedTestimonials, setTotalApprovedTestimonials] = useState<number>(0)
+  const [totalInReviewTestimonials, setTotalInReviewTestimonials] = useState<number>(0)
+  const [totalPendingTestimonials, setTotalPendingTestimonials] = useState<number>(0)
+
+    const { data, isLoading, isError, refetch } = useGetTestimonials();
+    const testimonials = data?.map(item => item.testimonial) || [];
 
   // Inicializa la sección según la URL
   useEffect(() => {
@@ -29,6 +38,23 @@ export function AdminDashboard() {
     router.replace(`?section=${section}`);
   };
 
+useEffect(() => {
+  if (!data) return;
+
+  const testimonials = data.map(item => item.testimonial);
+
+  setTotalTestimonials(testimonials.length);
+  setTotalApprovedTestimonials(
+    testimonials.filter(t => t.status === "approved").length
+  );
+  setTotalInReviewTestimonials(
+    testimonials.filter(t => t.status === "in_review").length
+  );
+  setTotalPendingTestimonials(
+    testimonials.filter(t => t.status === "pending").length
+  );
+}, [data]);
+
   return (
     <div className="w-full bg-gray-50 m-auto min-h-screen"> 
       <Container>
@@ -36,25 +62,25 @@ export function AdminDashboard() {
           <TestimonialCard
             label="Total de Testimonios"
             icon={Users}
-            value={24}
+            value={totalTestimonials}
             color='text-Secondary'
           />
           <TestimonialCard
             label="Testimonios publicados"
             icon={CircleCheckBig}
-            value={156}
+            value={totalApprovedTestimonials}
             color='text-Primary'
           />
           <TestimonialCard
-            label="Testimonios Pendientes"
+            label="Testimonios en revisión"
             icon={CircleCheckBig}
-            value={1243}
+            value={totalInReviewTestimonials}
             color='text-Accent'
           />
           <TestimonialCard
-            label="Testimonios Rechazados"
+            label="Testimonios pendientes"
             icon={SquareX}
-            value={89}
+            value={totalPendingTestimonials}
             color='text-Neutro-1'
           />
         </div>

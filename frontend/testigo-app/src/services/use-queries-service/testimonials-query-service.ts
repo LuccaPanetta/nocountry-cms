@@ -5,7 +5,7 @@ import { GetTestimonialsParams,  TestimonyResType} from "@/types/testimony-type"
 
 // Hook para obtener todos los testimonios (admin y editor)
 export const useGetTestimonials= () => {
-  return useQuery<TestimonyResType[]>({
+  return useQuery<{ testimonial: TestimonyResType }[]>({
     queryKey: ["testimonials"],
     queryFn: () => getTestimonials(),
    /*  refetchInterval: 60000, */ // se actualiza cada 60 segundos
