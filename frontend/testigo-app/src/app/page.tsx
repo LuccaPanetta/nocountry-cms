@@ -1,3 +1,7 @@
 export default function Home() {
-  return <> Testigo App </>;
+  return (
+    <div>
+      <p>Testigo App</p>
+    </div>
+  );
 }
