@@ -145,6 +145,8 @@ const TestimonialView = ({
                   url={mediaUrl}
                   isYoutube={isYoutube}
                   previewType={mappedType}
+                  content={content}
+                  author={author}
                 />
               </div>
             )}

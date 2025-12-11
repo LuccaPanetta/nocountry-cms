@@ -1,10 +1,11 @@
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard'
-import React from 'react'
+import { Suspense } from 'react'
 
-const page = () => {
+export default function Page() {
   return (
-    <AdminDashboard />
+    <Suspense fallback={<div>Cargando panel de administración...</div>}>
+      <AdminDashboard />
+    </Suspense>
   )
 }
 
-export default page

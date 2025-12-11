@@ -1,4 +1,7 @@
+//app/(main)/testimonials/page.tsx
 'use client'
+
+import { Suspense } from 'react'
 import { Button } from "@/components/ui/button"
 import Container from "@/components/ui/Container"
 import { Input } from "@/components/ui/input"
@@ -13,9 +16,24 @@ import { useGetCategories } from "@/services/use-queries-service/categories-quer
 import { useRouter } from "next/navigation"
 import { useUserStore } from "@/store/userStore"
 
+// Componente principal que exporta la página - AHORA CON SUSPENSE
+export default function TestimonialsPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+          <p className="text-gray-600">Cargando testimonios...</p>
+        </div>
+      </div>
+    }>
+      <TestimonialsContent />
+    </Suspense>
+  )
+}
 
-const TestimonialsPage = () => {
-
+// Componente interno que contiene toda la lógica
+function TestimonialsContent() {
   const [filteredCategory, setFilteredCategory] = useState('');
   const [keyword, setKeyword] = useState('');
   const [orderValue, setOrderValue] = useState("desc-order")
@@ -23,13 +41,13 @@ const TestimonialsPage = () => {
 
   const { token } = useUserStore()
 
-  //Order
+  // Order
   const options = [
     { value: "asc-order", label: "Fecha Asc", icon: ArrowUp },
     { value: "desc-order", label: "Fecha Desc", icon: ArrowDown },
     { value: "asc-views", label: "Visualizaciones Asc", icon: ArrowUp },
-    { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },]
-
+    { value: "desc-views", label: "Visualizaciones Desc", icon: ArrowDown },
+  ]
 
   const { page, totalPages, testimonials, pageSize, total, onPageChange, isLoading } =
     usePaginatedTestimonials({
@@ -45,7 +63,6 @@ const TestimonialsPage = () => {
   const { data: categories } = useGetCategories();
   const categoryNames = categories?.map(cat => cat.name) || [];
   const hasActiveFilters = filteredCategory !== '' || keyword !== '';
-
 
   const searchedTestimonials = useMemo(() => {
     if (!keyword) return testimonials
@@ -90,9 +107,6 @@ const TestimonialsPage = () => {
     onPageChange(1)
   }, [filteredCategory, keyword, orderValue])
 
-  useEffect(() => {
-  }, [orderValue])
-
   const handleCreatePermission = () => {
     if (!token) {
       return router.push('/login')
@@ -100,7 +114,7 @@ const TestimonialsPage = () => {
     return router.push('/testimonials/create')
   }
 
-   if (isLoading) {
+  if (isLoading) {
     return (
       <div className="w-full p-8 bg-gray-50 flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
@@ -177,11 +191,13 @@ const TestimonialsPage = () => {
             <SelectTrigger className="w-full col-span-1 md:w-38 lg:w-50">
               <SelectValue placeholder="Selecciona" />
             </SelectTrigger>
-            <SelectContent> {options.map(({ value, label, icon: Icon }) => (
-              <SelectItem key={value} value={value} className="flex items-center gap-1">
-                <Icon size={15} />
-                {label}
-              </SelectItem>))}
+            <SelectContent> 
+              {options.map(({ value, label, icon: Icon }) => (
+                <SelectItem key={value} value={value} className="flex items-center gap-1">
+                  <Icon size={15} />
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -219,5 +235,3 @@ const TestimonialsPage = () => {
     </Container>
   )
 }
-
-export default TestimonialsPage
