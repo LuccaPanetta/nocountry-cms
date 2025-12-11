@@ -1,0 +1,412 @@
+ [
+  {
+    "id": "tst-001",
+    "titulo": "Implementación del nuevo dashboard de analítica",
+    "autor": "Laura Pérez",
+    "empresa": "DataFlow Corp",
+    "cargo": "Product Manager",
+    "contenido": "El nuevo dashboard nos permitió visualizar métricas críticas en tiempo real y tomar decisiones más rápidas.",
+    "status": "aprobado",
+    "category": "producto",
+    "creadoEn": "2025-01-05T10:32:00Z",
+    "actualizadoEn": "2025-01-06T12:10:00Z",
+    "tags": ["dashboard", "analítica", "producto"],
+    "multimedia": {
+      "id": "m-001",
+      "testimonio_id": "tst-001",
+      "tipo": "video",
+      "url": "https://images.unsplash.com/photo-1556155092-8707de31f9c4",
+      "descripcion": "Interfaz de dashboard analítico."
+    }
+  },
+  {
+    "id": "tst-002",
+    "titulo": "Experiencia en el evento anual de innovación",
+    "autor": "Marcelo González",
+    "empresa": "TechLatam",
+    "cargo": "Director de Innovación",
+    "contenido": "El evento de este año fue extraordinario, con demostraciones tecnológicas que marcaron tendencia.",
+    "status": "aprobado",
+    "category": "evento",
+    "creadoEn": "2025-02-01T14:12:00Z",
+    "actualizadoEn": "2025-02-02T09:00:00Z",
+    "tags": ["innovación", "tecnología", "evento"],
+    "multimedia": {
+      "id": "m-002",
+      "testimonio_id": "tst-002",
+      "tipo": "imagen",
+      "url": "https://media.licdn.com/dms/image/v2/C5612AQGQjLFzGP5-3A/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1520079905507?e=2147483647&v=beta&t=o7_p2zc4DFG27t0oXOoIACgi5ijZupBHThoiiSyVpxI",
+      "descripcion": "Conferencia de innovación."
+    }
+  },
+  {
+    "id": "tst-003",
+    "titulo": "Mejoras en procesos de manufactura",
+    "autor": "Sofía Rivera",
+    "empresa": "InduSteel",
+    "cargo": "Ingeniera de Procesos",
+    "contenido": "La automatización redujo un 30% los tiempos de producción sin comprometer la calidad.",
+    "status": "aprobado",
+    "category": "industria",
+    "creadoEn": "2025-01-12T08:20:00Z",
+    "actualizadoEn": "2025-01-15T13:55:00Z",
+    "tags": ["automatización", "manufactura", "eficiencia"],
+    "multimedia": {
+      "id": "m-003",
+      "testimonio_id": "tst-003",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+      "descripcion": "Planta industrial en funcionamiento."
+    }
+  },
+  {
+    "id": "tst-004",
+    "titulo": "Nuevo sistema de gestión de clientes",
+    "autor": "Diego Torres",
+    "empresa": "Commercia",
+    "cargo": "Gerente Comercial",
+    "contenido": "El CRM transformó la manera en la que gestionamos la relación con nuestros clientes.",
+    "status": "en revisión",
+    "category": "cliente",
+    "creadoEn": "2025-03-01T11:05:00Z",
+    "actualizadoEn": "2025-03-01T15:10:00Z",
+    "tags": ["CRM", "gestión de clientes", "software"],
+    "multimedia": {
+      "id": "m-004",
+      "testimonio_id": "tst-004",
+      "tipo": "imagen",
+      "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPqNYbtCWUtfx4d-JMSuD_xXnejDJtUr6M5Q&s",
+      "descripcion": "Pantalla de CRM."
+    }
+  },
+  {
+    "id": "tst-005",
+    "titulo": "La capacitación superó mis expectativas",
+    "autor": "Elena Fuentes",
+    "empresa": "CapacitaPro",
+    "cargo": "Analista de RRHH",
+    "contenido": "El programa de formación fue claro y práctico, ideal para nuestro equipo.",
+    "status": "borrador",
+    "category": "evento",
+    "creadoEn": "2025-02-20T09:40:00Z",
+    "actualizadoEn": "2025-02-20T11:00:00Z",
+    "tags": ["capacitación", "formación", "evento"],
+    "multimedia": {
+      "id": "m-005",
+      "testimonio_id": "tst-005",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1529070538774-1843cb3265df",
+      "descripcion": "Sesión de capacitación presencial."
+    }
+  },
+  {
+    "id": "tst-006",
+    "titulo": "Uso del producto en campo agrícola",
+    "autor": "Julián Ortega",
+    "empresa": "AgroSpace",
+    "cargo": "Supervisor Agrícola",
+    "contenido": "El dispositivo nos permitió monitorear la humedad del suelo con una precisión impresionante.",
+    "status": "aprobado",
+    "category": "producto",
+    "creadoEn": "2025-01-22T07:11:00Z",
+    "actualizadoEn": "2025-01-25T18:20:00Z",
+    "tags": ["agricultura", "tecnología", "campo"],
+    "multimedia": {
+      "id": "m-006",
+      "testimonio_id": "tst-006",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
+      "descripcion": "Sensores en cultivo."
+    }
+  },
+  {
+    "id": "tst-007",
+    "titulo": "Video explicativo del nuevo módulo",
+    "autor": "Carlos Medina",
+    "empresa": "SoftWorks",
+    "cargo": "Líder Técnico",
+    "contenido": "El video facilitó la comprensión del nuevo módulo y agilizó la adopción del equipo.",
+    "status": "aprobado",
+    "category": "producto",
+    "creadoEn": "2025-01-10T10:20:00Z",
+    "actualizadoEn": "2025-01-12T17:00:00Z",
+    "tags": ["video", "demostración", "software"],
+    "multimedia": {
+      "id": "m-007",
+      "testimonio_id": "tst-007",
+      "tipo": "video",
+      "url": "https://www.pexels.com/download/video/856451/2175257/",
+      "descripcion": "Video demostrativo de software."
+    }
+  },
+  {
+    "id": "tst-008",
+    "titulo": "Participación en la feria industrial",
+    "autor": "Ana Suárez",
+    "empresa": "MetalWorks",
+    "cargo": "Jefa de Planta",
+    "contenido": "La feria fue una excelente oportunidad para conectar con proveedores y conocer nuevas tecnologías.",
+    "status": "aprobado",
+    "category": "industria",
+    "creadoEn": "2025-02-05T16:00:00Z",
+    "actualizadoEn": "2025-02-05T18:00:00Z",
+    "tags": ["feria", "industria", "tecnología"],
+    "multimedia": {
+      "id": "m-008",
+      "testimonio_id": "tst-008",
+      "tipo": "imagen",
+      "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaxGbhLqxhvybX0v2Un3pJc1pUrrFgC6hvkw&s",
+      "descripcion": "Feria industrial."
+    }
+  },
+  {
+    "id": "tst-009",
+    "titulo": "Gracias a la consultoría optimizamos nuestro negocio",
+    "autor": "Ricardo Herrera",
+    "empresa": "MarketLeap",
+    "cargo": "CEO",
+    "contenido": "La consultoría estratégica nos ayudó a escalar operaciones de manera sostenible.",
+    "status": "en revisión",
+    "category": "cliente",
+    "creadoEn": "2025-03-03T09:15:00Z",
+    "actualizadoEn": "2025-03-03T11:30:00Z",
+    "tags": ["consultoría", "estrategia", "negocios"],
+    "multimedia": {
+      "id": "m-009",
+      "testimonio_id": "tst-009",
+      "tipo": "imagen",
+      "url": "https://www.tipsempresariales.com/uploads/1/3/1/4/131438314/published/consultor-empresarial.jpeg?1693613416",
+      "descripcion": "Reunión de consultoría."
+    }
+  },
+  {
+    "id": "tst-010",
+    "titulo": "Nuestra experiencia en el lanzamiento del producto",
+    "autor": "Valeria Ríos",
+    "empresa": "DigitalCo",
+    "cargo": "Coordinadora de Marketing",
+    "contenido": "El lanzamiento superó expectativas y generó gran impacto en clientes potenciales.",
+    "status": "aprobado",
+    "category": "evento",
+    "creadoEn": "2025-01-04T09:00:00Z",
+    "actualizadoEn": "2025-01-04T12:00:00Z",
+    "tags": ["lanzamiento", "marketing", "evento"],
+    "multimedia": {
+      "id": "m-010",
+      "testimonio_id": "tst-010",
+      "tipo": "video",
+      "url": "https://www.youtube.com/watch?v=p2Y0e6dqHzU",
+      "descripcion": "Video del lanzamiento."
+    }
+  },
+
+  {
+    "id": "tst-011",
+    "titulo": "Integración exitosa con nuestro sistema interno",
+    "autor": "Fernando López",
+    "empresa": "SysOne",
+    "cargo": "Arquitecto de Software",
+    "contenido": "La solución se integró sin fricciones con nuestra plataforma existente.",
+    "status": "aprobado",
+    "category": "producto",
+    "creadoEn": "2025-01-16T12:00:00Z",
+    "actualizadoEn": "2025-01-17T08:00:00Z",
+    "tags": ["integración", "software", "plataforma"],
+    "multimedia": {
+      "id": "m-011",
+      "testimonio_id": "tst-011",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31",
+      "descripcion": "Integración de sistemas."
+    }
+  },
+
+  {
+    "id": "tst-012",
+    "titulo": "Presentación en el congreso tecnológico",
+    "autor": "Milena Rivas",
+    "empresa": "FutureTech",
+    "cargo": "CTO",
+    "contenido": "Compartimos nuestros avances en IA frente a miles de asistentes.",
+    "status": "aprobado",
+    "category": "evento",
+    "creadoEn": "2025-02-25T10:00:00Z",
+    "actualizadoEn": "2025-02-25T16:00:00Z",
+    "tags": ["tecnología", "innovación", "IA"],
+    "multimedia": {
+      "id": "m-012",
+      "testimonio_id": "tst-012",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1518770660439-4636190af475",
+      "descripcion": "Congreso de tecnología."
+    }
+  },
+
+  {
+    "id": "tst-013",
+    "titulo": "Optimización logística",
+    "autor": "Hernán Varela",
+    "empresa": "CargoNet",
+    "cargo": "Supervisor Logístico",
+    "contenido": "Reducimos tiempos de despacho un 22% tras implementar la herramienta.",
+    "status": "rechazado",
+    "category": "industria",
+    "creadoEn": "2025-01-30T15:30:00Z",
+    "actualizadoEn": "2025-02-01T09:10:00Z",
+    "tags": ["logística", "optimización", "eficiencia"],
+    "multimedia": {
+      "id": "m-013",
+      "testimonio_id": "tst-013",
+      "tipo": "imagen",
+      "url": "https://www.beetrack.com/hs-fs/hubfs/Centro%20logistico.jpg?width=724&name=Centro%20logistico.jpg",
+      "descripcion": "Centro logístico."
+    }
+  },
+
+  {
+    "id": "tst-014",
+    "titulo": "Excelente soporte posventa",
+    "autor": "María Beltrán",
+    "empresa": "RetailMax",
+    "cargo": "Coordinadora de Tienda",
+    "contenido": "El equipo de soporte resolvió nuestras dudas de manera rápida y eficiente.",
+    "status": "aprobado",
+    "category": "cliente",
+    "creadoEn": "2025-03-10T09:10:00Z",
+    "actualizadoEn": "2025-03-10T10:00:00Z",
+    "tags": ["soporte", "cliente satisfecho", "posventa"],
+    "multimedia": {
+      "id": "m-014",
+      "testimonio_id": "tst-014",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1525182008055-f88b95ff7980",
+      "descripcion": "Atención al cliente."
+    }
+  },
+
+  {
+    "id": "tst-015",
+    "titulo": "Demostración del nuevo sistema automatizado",
+    "autor": "Sebastián Carrizo",
+    "empresa": "AutoLine",
+    "cargo": "Ingeniero Electrónico",
+    "contenido": "La demostración evidenció una mejora notable en precisión y velocidad.",
+    "status": "en revisión",
+    "category": "industria",
+    "creadoEn": "2025-02-10T08:40:00Z",
+    "actualizadoEn": "2025-02-11T14:20:00Z",
+     "tags": ["automatización", "industria 4.0", "eficiencia"],
+    "multimedia": {
+      "id": "m-015",
+      "testimonio_id": "tst-015",
+      "tipo": "video",
+      "url": "https://www.pexels.com/download/video/4480046/",
+      "descripcion": "Video de maquinaria automatizada."
+    }
+  },
+
+  {
+    "id": "tst-016",
+    "titulo": "Feedback del cliente tras la implementación",
+    "autor": "Nadia Benítez",
+    "empresa": "HealthNow",
+    "cargo": "Gerente de Operaciones",
+    "contenido": "La solución mejoró la experiencia de nuestros pacientes y redujo tiempos de espera.",
+    "status": "aprobado",
+    "category": "cliente",
+    "creadoEn": "2025-01-20T09:00:00Z",
+    "actualizadoEn": "2025-01-22T15:00:00Z",
+    "tags": ["salud", "cliente satisfecho", "eficiencia"],
+    "multimedia": {
+      "id": "m-016",
+      "testimonio_id": "tst-016",
+      "tipo": "imagen",
+      "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGOhCSjmC_FzeIWT5BrR-txi2LqNuoooqeoQ&s",
+      "descripcion": "Atención en centro de salud."
+    }
+  },
+
+  {
+    "id": "tst-017",
+    "titulo": "Gran valor en la demostración del producto",
+    "autor": "Tomás Herrera",
+    "empresa": "EcoGreen",
+    "cargo": "Responsable de Operaciones",
+    "contenido": "La demo nos permitió entender claramente el impacto ambiental positivo del producto.",
+    "status": "borrador",
+    "category": "producto",
+    "creadoEn": "2025-03-01T14:30:00Z",
+    "actualizadoEn": "2025-03-02T09:10:00Z",
+    "tags": ["sostenibilidad", "producto eco-amigable", "demostración"],
+    "multimedia": {
+      "id": "m-017",
+      "testimonio_id": "tst-017",
+      "tipo": "imagen",
+      "url": "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
+      "descripcion": "Producto eco-amigable."
+    }
+  },
+
+  {
+    "id": "tst-018",
+    "titulo": "Participación en el workshop de diseño",
+    "autor": "Luz Cabrera",
+    "empresa": "DesignHub",
+    "cargo": "Diseñadora UX",
+    "contenido": "El workshop fue muy práctico y nos permitió mejorar nuestro flujo de diseño.",
+    "status": "aprobado",
+    "category": "evento",
+    "creadoEn": "2025-02-18T11:00:00Z",
+    "actualizadoEn": "2025-02-18T13:00:00Z",
+    "tags": ["diseño", "UX", "workshop"],
+    "multimedia": {
+      "id": "m-018",
+      "testimonio_id": "tst-018",
+      "tipo": "imagen",
+      "url": "https://www.telefonica.com/es/wp-content/uploads/sites/4/2021/12/pexels-kaboompics-com-6224.jpg?w=1224&h=673&crop=1",
+      "descripcion": "Workshop creativo."
+    }
+  },
+
+  {
+    "id": "tst-019",
+    "titulo": "Automatizamos nuestro control de inventario",
+    "autor": "Pablo Díaz",
+    "empresa": "SupplyChainX",
+    "cargo": "Jefe de Depósito",
+    "contenido": "La herramienta de inventario redujo errores manuales y mejoró la precisión general.",
+    "status": "en revisión",
+    "category": "industria",
+    "creadoEn": "2025-01-28T07:50:00Z",
+    "actualizadoEn": "2025-01-30T10:00:00Z",
+    "tags": ["inventario", "automatización", "logística"],
+    "multimedia": {
+      "id": "m-019",
+      "testimonio_id": "tst-019",
+      "tipo": "imagen",
+      "url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxATEhMTEhMSEBISFhUSEhUXEhUSFRAVFRIWFhUSFxUYHSggGBolHRUVITEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGxAQGy0lICUvLS0tLS0tLS0vLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSstLS0tLS0tLi0tLS0tLi01L//AABEIALcBEwMBIgACEQEDEQH/xAAcAAABBQEBAQAAAAAAAAAAAAAFAAIDBAYBBwj/xAA/EAACAQIEAwYDBgQEBgMAAAABAgADEQQFEiExQVEGEyJhcYEykaEHI0JSscEUYnLRM0OCspKi0uHw8WODk//EABoBAAIDAQEAAAAAAAAAAAAAAAIDAAEEBQb/xAAwEQACAgEDAgQEBgIDAAAAAAAAAQIRAxIhMQRBEyJRYRQyobFScYGRwdEj8AUkQv/aAAwDAQACEQMRAD8A0mdX7pyBbY3nnlJfDPQe0Ct3L72sPnMHRXwicbqGdTEiqtG0rsPGfSE2WD3Xxn0mbW2M00XsDnFWijLTsNXOAcfjqzse8Yk+sIFYMzXYiPw5LaiLmqVlzLDdTLLJKWUE7wmViM202MhvEdgMuNQNpO44DrKdakVJB2I4y5QqshupsRIcW5dix4njIpRr3JTGYRATCiYaZ6u7AixtvNVlWIUgB9j16zbin5dzPOO+w1KMnTDGRZnnVCjzBPQTLZh2qqvsnhH1mhRbFNpGqxWJo0h4mAmfx/arlSHvMxXqsxuxJ9Y3UBDWNLkHWyxicdUqHxsTKzWnNJY2AJMuUcsIP3nh5wuCuSmhJ2Ev4bK3Nix0DrzhnAYPa1Onb+YwrQyccah1Hpyi5ZEhigBsRReoAiEuBxJlnA5EF3aHAVXZR8pHUDHyEzymxiiD1prSPAWMtamPDYTj0ltvG06wXYn0irsOjvddd4iwEgfFXNlBY+UY9A8ajBB05y9PqS/QfVxYG3PoIxUqvw8C9TGDEov+Gmo/mMclCtV43I+QhbRB3Z21BON6z/ScbE1G2HgHRRvCOFydR8Rv5L/eF8PggvwqEHXnFvPFcbhrG+5naGTOdz4B1O5MJ4XLEUgqC7D8R2AlzFY3D0t3cE+t4DzDtdcEUV9zLXiTI9EQviqZUXMbhzteZXDZ9UNxVN7m6npyIhIZgNOxmzS63FxmrDveiKZ7+OPWcg6WM1I9D7Tpag++9vnMVQp+ETadrUXuWvx5TKUKfhEw9W6oLAisywe48bQu6QaV8bTGpcjmiErAmeGxWaErM92jG6zT0rvIhOZeUIZe1lEJoQ3rBeAHgWWlJEXlVyYcOC0VjGSPpVQeOxkjLEW0M5A+PTgfOEaY8I9JWzFNpdwwJpjnNmOVwEteYA5vlt7sPeAtenabPEJsRxvAWGyS5Jfh0nQwZfL5jLlx77AmzNwF5ew2WE2Lm3lzh45aES6rYdYVydMPb+Ycby5Z1dFLF3B2X5a1rImkfmPGFaGUIu7nUfOEQ5OyL78o4YQndjf9IqU2xiiVg4GyC/6TvcMfiPsJbOlZTxGPA2HHoNzA3fAeyJRTVfKU8XX48o/uar7/AOGvVuMaqUQbC9VuvKWolOQKY1GOw26mQqn4ahuSdhDLrY9I/L8Ij1CG9RtvJJpIiVgjvqg8CqEtz5mWMPk7tu59z/aaTEZbYXUaSOZ4mVK2ZUKQ8Zu3SZvGk9ooZoXLI8LlSDlqPU8JdemijxsFHQbTN43tQ7bUxpHWCXru5u7E+8JYJS3kynkiuDS4vtFRp7INRgPHZ7XqXAOgeUHulzsI5cN+Y2miGKEewqU5MqupO5JY+cclBpdVVHAe5nKlZObcOQmiMZS4QptLkrphLWvzk9bDlCOXvIXxg/CJBVrseJ+UfHp5d9hbyLsauhgsGygnECmSN1JUlT7xTGkDpFC+Gf4n9CeP7HtnazBNUpEpuRymXemVThY2mwes/fhbHSR7STH5OlcWU6T0tOblwPKrXY1QyqGz7mGw9yu8oBfG80uIyipR2Yeh6wEqeJ/WcvKnFytGyLTSICsznacbrNOw3mc7Uj4Izo3/AJULz/Iy1lo+7WWtMhylfu1lzTKyPzMuC2RDpk1KtbY8Iis5pgN2ENzBQVNpe7N1VsL7gcYKxtQqp5y32dpHSSTxmjF5YX7i5byCOdYRVe6cDvMtjcawYqNprKqzIZxTtVM0YZW2LyKkWMHi6j+BmuOknakVNxB2XNZxNAyys/zWTHwG8Jix3annbeRNiyxsoLHy/vKuCFIL4yzHko5y6tWo3hpqKY8hdo2CTVgybuiKphTxquKY6DiYxayrtRp7/maX6GSEm9Q29dzC+Ey1V+FfdpHNIii2Z+lllWru5JHnsPlCuDyhF5az5bCEMVXo0xeo4Pl/2gLH9qwNqS2HWB5pcBeVEOb4Uo55XlKliDSdXG9p2jjWq3LG5/SRYgXBhtbbg2E8fiXxFK9NtLDcgc5jM0uTdvi4GFMLiO6bVq9ustZxg1r0+9pjcbkSKOl2iN2ZQIfSdFUKNxcy1UG1uF/1g2od7RyVi3sWFxjE22EbWxFuG8g4b85BUcmbcWFJWzNPI+EWTidW1940+cotEtTqZpFF4mcvKpK9YhU85CFmKVu9ikIfReNrrTRqh2tz6SLAZpSqgG4v1Er9pqiGkVO+riOkwgpVaRvSbbpOOnJO0zfSapnqYoa1KvZ15GZbMezNizU+e9oMyvtcyHTUuvnymrweapUFwwi89ZVUkXiThwzAYnCOjeIETMdrF+Ce0YvCI43UG/OYXtd2QqOAaW9t7TJixOGVPsPnLVBozuSj7oQhojMuwFSmml1IIlsLtMmaXnf5jsa8qK+mN0Syy2V25U0ao1uOlBc2HM2gQ9o6X5KnyX+8Zi6fNlWqEbQM8sIOpMnzJPAZdyBb0gYCxOf02BGht/MRZd2kFJdIplvPXb9ptx9Fn0U4/Vf2Z5dRi1XZsfWZvPaGklzw4SJu2LcqI/8A0P8A0yhi+0LVAQaa2PmTHYujzRdtfVAT6jG1syzlmAdzdRsOcO10ta8z+G7XVaaaEp0QPMMT/ukFftTXbiKQ9FP7tGT6TLJ9gY9RBI0i8puctoju1a6oCPc+88cTtDW/kI6W4/WbXDVmq4fUrNYC4F/pEy6eeOtXDGRzRnwafHZ1QpA28bfOZvH9p6z/AA+AfWB2FS17GKjg1IJZr+QjFBIFzbOPXZzuSxnWoNa52EnoU2tZAB5whhMlZj94YS3KB+VkAkWNzLdXnCyZYi8IKxQsYMkWiDCYFXJJ4iG8LRVF294B/izSJNr3lPEZrVbnYdBIlaIT9o8uFi6cOJA5TME3N7cPqYcweIqAkG5B4gwFjKwLHTstzaaOmhct+EKzS2Iaj3ld2ji0rkzoGQcTOE7ThMYrSEJ6VQcGG3XpHvhhyMrUzJ6bAceEhRw0jOyedlkPeu01EOvhtq5zH1qTrxBm4zhFFrcTxgZtzY7iefnmcZUdaGLVGzK1lRviEqLSq0zeix9Jp8Tk6NuuxlGtgmpi5FwIyOWEhcscoj8r7WstlrAr58prsHmVOoLgg3mMw+HSshbTcDaBquM7l/uWYW4ypRT4Im1yeq1cBTcbgesz+ZdnCN03lPKe1JAHeA268prsDmdOoNiDM2TBGXKHRyNGBRWpOCy3txU8GU7Mp8iCR7zCZllyUMWaT3NHUCrXsTRcaqb366WBPmCJ73jMspVRuBfrPOftN7NslCnXG/ct3Tn/AOOoboT/AEuWH/2DpNP/ABmrFNwfD+4jrEpx1LlAut2OpctfrqvKq9mlU70w4vxLODb2Mudm84ZqIU3JTwHYnYDwn5foZsssNR0UphXqi1tQptZrHfcLx5cevt2c2SUKcVZwcuTJF0v5/gya5FhxxoL/AMRcfUy1Ry7CjY4Wg3+hSfrNguAxh4YUi+++ld/e23l/2tMuT48lbUkXSbgmoh5Afm8h8h0iPHy/hX7P+xXiZ3wvozOHLMGy2WiinbZaC+nIdZHSymmP8m42/wAsDjw+c1qdncwO16K7WG9+FttgdtpJR7M48/FUoJ5Lrblbmg5SvFz+n2/sv/sPt/v7mRzTIUr4erSVdL2DU7gAhwLre3I8PczJ/Z/jN6uHfY2LKDxBGzr+/wA56rmPZLErTqVBW1sqk6VUgvp30g348eXGeM5tTfDYiliqZ1LUY1FPUg+ND6hv+Yw5wllxNS5N3SzlBrWg/iqtms2w4S7hcCLal3kOOCVBrTxLUAZfMMLiE+zHZjGEXdhRpnr4mt5Dl7zl4ZylafY60opbj8JgBVbTTsH5g8AOp8pcznBPh6dye9txsCpXzseImny/L6GGU2uSxGpzuzHl/wCpzMdNRbDfmDNFUUjy3FdoHO19PpxMlFXUt+su5v2bVWLoNvxL08x5eUr1KYCi0F7lO0UMSoIEs4fLVsDK7Hb0hDGZjTpYc1SRcDZebNwC/OVFb0U2BO02MWnahT2cjVUb8qngvqf09ZlWa5sIq9diWZjepUOpz5nlGqLCdTHDSqMUpanYyq0hadZt41zDBOq0ZfedWNMoh1W3koEgkz1gB6yFCNVhteKUGrG85JZD6dz2kBYjidzAyNveG83o6TxJvv6QRVO4nms3zs7mD5TgqA+UdXHgPPaWsbhQiqeOoXlHEA6TbhaKnFxdMZakrRT7J7o/9Zj8yyGlVPDSeojeyKfdv/Wf1hxB13PKandmdJNAjAZERT0tZrcJXqZXUpm9MlT05TVUFvflOl1Isd+ULW+4DiuwDwGfum1UEefKHatWhiqNSi5BSshpt1AYfEPMGxHmBM3nOIpo5U2tM/VzWmhvTYqenIxkU01KIDfZmWynF1sDiqtE2DhjRqL1ZWIVv7eTT2X7Ms/NXvKNQAFfGgItx2cfofnL2NwmEx2HC1KaujqCpAAZbrs6vxVh1nm2WYDGZfmI+OsiEMrcqqH97Egj1nZhNTTRzcmNwakevZv2lp0MRSwy0nq1ao1EIPgUkgE23PA+gF4VwWOSpcC6uvxIwsw87dIIxGABxC41GI1UO5PhuAGOpKnlxF9oscXTu6rVFdw4C6QAShvqUkfEOHLYkw9MWkkv19xbk027H4LO61WrWVKN6VJimrVYsymxG/z2B+sK0MSGGpeO4KnYhh+E9IAxY/hatTUWp4fEOKgqrf7mqfiVwPwtGZbmAbG93SqGtTNDxtt8ats1wNzYqL+cziYZHF1J73VfavYflucYs1GFVaJVfFUUVR3lFS5GrSB8I4b7+E78piO03YdqlWvRutPD94talUuCaRY3ZAvkGYehWeqtgqTfEobxa7HcK1rXHTh9T1gDtNlGGr0i6eNqQBbRVbdVFrNpbc2HE77SsanFVdm6UoOVtUY/K8Nl2BVaS1DXdblS1ncXNyFCiwFz9YRynOGxNQpSXSq3u7ggXHFQvEmeVdpqDYLHCql+7f7xBf8ACdqlP23/AOJZqKWaVaID0mBSoL2O2x3uCOt5mypY51Lv9+5rxTU42uxos3wGZrWTQExNBiASrCk9EbhiVY+IWPEG/lCC0qygll0g8BcX8tuQg3Ku2KtYVAUPrcH3l7H5yjAaWAv5wXVbDIyfcq4qpfYzO5vg6mkmmurnbn7f2hOriL87yzgmDbRYdJnnis++oFTzHCBc7xHiC32Te3Vuvt+5noHbjH0sPStYGq/wDY2HNjPK2BY3J47zT02LfWzJnlXlR2mLmKs0kFgJWqtNxlInM63CMYxLwlEEDOMd4284xkIPvaU3e5vJazbSFReCyHQsUnBURSyj6UzijW4qdXO37QK2KINnBU/SalmYX12ty9JC1GlUHIzzuWFys7OOVIFVsR3iqAwNp2ovh9pNiMjXipKnygPOsXVwy+Lxg7CKcZNjNaSLHZhD3b246jb5wspNt+ModmdqQJ2LHV84UVbtNDFxdIVGtuB1k2kAypVIWqm+xBlquine8B8k5MD24v3+xsCICwWDLuqKLs7BR6sbD9Zv8/yinVUsb6gNjAn2e4QPii7EWoKWA6s3hX6aj7CacctSoRONM1lUnB93S4Uj4abdTYeH14nzhbG4XvqV6ZAqAXQngT0PkZYx9KlXTu6irUW4NiLi4NwfUEAyPA0DTUC97cPS+3vaak9LtFSSnGmM7A5vUfvcJiV0V6HiCn8VJybMPzANcXH5lmkGW0Nd9I1CzWvw6G3t9IOSmNS1AB3iAhWtvpa2pb9DYG3UA8oN7T4os6FAQWSx9mN126fuJp8Wb+Rbs5ubwsMHPK9l+r9l+b4NXiKlMC1QoA21mIs3lY8ZWo0sLQVnRaVJTbUyKBfoPDx48JiVpV24Uqrcr6XP1tLK5TjGFhSZQdzdlA9bExS+IcqcEl66kIl1vRuOqDlJ+ihL9rapGnxzd/QqCgwLH4Cb21qQ2k+R2v6wL2T7OV8NUZmK6KqkVE4AEHwkcbm5Nh0J3l7s/gMRRLd5oCML21XIYcDbhwv9IfD+vyM0wnOMNMq96Di4ZWsiUl7PZni32r5QgRqf46bd5Q6stjqX5XHqomLyHHd5hjSO7UT4fOm3D5G4+U9X+2TKkq0addXVauHbcagGek5AYAXuSDpb0DdZ4jVBwuIv+Bh80biPYj6CBnx+Lj90Pwz0To0nAS+MuqFBUpm/Vb2gGjUJbje/CbHISwUo3qJypZHDg6MY6uQPVrYoA/d8PMG31lehnVandibWmwFLyE897SY9DUYU915kcGPUeUd085ZpVWwGX/GrsFZvjmq1DUqEsx4DoOQlBSWPlO1D7mOXYX5mdZKtjA3Y2s/KU6pkzmV6khBs4jThjQd5RR0mMDTrmQs0ohx2vEGjY9QOcFFnNMUk70dIpexD6ftrQhri+0HUsrdAdDknlvCoKsoHLhOphgB4WIPScDCvIt+x1p/MLChwviNzMr2+H3a/1TXDhMl27/w1/qhR+ZFS4LWSD7lPSXErWOxjOzLp3S6uFpYrU0vccJJR7lxd7FXEMTWp38xLeOYqQNJIMoZkbPRI/NDOMS9rtY22guN7l3QPrsTSbbkbTE9lhUWtUqDZBs/ncm36GegPTOkg77TzpKjJVcLe2ogjkReHhlTdgzXDN7QxRBG9weEMYTF34zDYfFMhsSbcbHh/6h7B5gp34TVwVSZrqbwFn3a/+A3NJqq1CALMECNY3uSDxAHyncTn9CioarUCX4Ddmb0Ubzzn7Q+0FLFUdFMOLOGDMAoIF+V785oxXadbGXMlTV7mnw/2vh92p0qG5B1Vy3vsFuJBi/tcoj/Opg/yUXf6kETzDJOy2IxhYUGokp8QarpIB4NpsWt52tDdH7J8Qf8AFxNCmeiq9T9dMfPPjhs6M0cM5cWGcX9sAOwfFN/StOkPoQfpMn2l+0HEYo2HeJTsRZqzMW8zaaXD/ZPhx/iYiq/9KogPz1Tg7BYJa4plXZTw1VGvf2tEvrsd7fYYukl3+55xhsaym4Cgnna5k2Jx9StpDNr030gAbX48BfkJ7TlvZLBUTbuKDdGNJWYe5F4aQYdPuhpQ8gABeV8cpBfC6TxPKi4UalZSpt4gVuOR3m/w9TwIw6QjnfZJap1UzZvoY3KMoqKop1BYLxPl5Tm514krijdg8uzLWAwZr031XUFWQHqSLfSeS59l1WhUanUBBHA8mHIie8UNKgACwGwHlBHafJKWKSzjxDg3MTb08liVCs2PWeE00N/1ncQ3yhfOcobDOUbe/A9RAlZp0U01aMDTTpkDmQvHsfaRNICcEa86Yyo0osZUaRzpnIDZBRwAjYpEQdaKcnJZD6uKrYaeE5aNNHQLD1gcZw4cqUNgePlOGo9kdWwyL8xMn26RjTWwJ8U0eCxwqcARKvaP/BaXHZke6BWRPppqr7bQjp6G4lvBU0ammoDgI18AhOxK+kGTCjaBmYqfuuoYQzjFSppvsw9oKzGk1MpdtQLD1hioAVjE2kA92SYLD2U3N5g+0WTP3zOjWHEibRWIW4J2gbMGDEnqN5k6vNLFBSi0NwwU5aWVkwa1KC8mA2P9/KB6mING+u4C8f2tNR2fpoaRDG1r2me7fhBhvysXRA3S5Jt6G1veb+ne6i+GJyOk2uUYzMs0L3aqXupOhgbgLe+kDl6TX9haNE01q1Qr1X3W4B7teQtw1dTMClIudBcUgD94zBmGk7CyqLnfl6Q/2fzGxK34E8gosTtYDgPKdHOmo0jH07Tncj1Q4eixB0Ldd1awBXzB4iOxdBXtc7iBcDjrjjCNPEzC1fJvpFopZbdPOBswwFVqlN0t4TvvbaF0qgx5eB4UCblbGJUYoVHA+LlBvaPKatZlamPEPPSR7w8lQRzPCjCK4BcbBWV0sRTADvqHQi5lxqvMmcqvKFatIklwEol0V41q8Gd9IK2LkLoH9qcKlUbi/Tynm+ZZS6EkeJfqPab/ABuKvAmLqiPx5JRM+XHGRg6gkDX5TcZZ2YbGOTbRSU+OoB/yr1b9PpKua9g8Qmo0mWqo5E6H+R2Pzj/icd03TMrwT5SMeWHoZAxlzG4Csnx02UDna4+Y2lGNck+BVNciiiigkOzsQnCIRDtooopZR9T3PM3kDVad7G15YRS58AvaPOCP4lvOMoSZ1HNIhoKoHhsIO7SH7loQ7sKTYEQb2jP3DQa3LvYsZeb0U6WEkpKA3GVctJ7lLdI9iSZWR3WwWKGm9+RufkaUP8wl7ewgrOz90vkw/WXTUNl2uLQlwV/6os1DsbDlAb+YtCobeBM4zUUmsRx5zH1nTxy05Gnp9d6Yj8oqbMtja85nmULiaNSiWtrXwn8jDdW9iBCODK6bgCxF46kq7wllcJJegvRqTPIMzVjTdKo7vE4fZxwJHMjqpG8BYHMStZWJCrpA2HLjcnre892zfs1h8SAaqBmAsGHhYDpqHKecZp9miiroSuy6t01oGA2+EkEX9be07MerhOPm2Oa+nlGVxCeBx5AHnC1LMLTvZzsOKWGFOrVLVuJI3ROiKDxX/wA2lXMMprUfiF05ON19+nvFaoSdJmmLkluFaGaCWRmItxmVkZLjhKcQ9ZsKOP8AOWGxwI4zDrWq+cvUK9Ta8pxCUrNM+Klao95Q7+wkb4qCET4isBBWLxkrY7GQNi8Z5wkgJSLGKxcsdnMnOLqeNilFd2P4n/lX9zHdl8g/iW7ysSlEbqvA1j+y+fP6zfU8JTS2lQq202AsAOUVly6NlyDGOrkkwuBp0VVKfwch0lSrQBZgee8lwFWzmmDcjcSStmVMNpqLpPI8pnasNOjyXt63doaf53A9h4v1AmEM3n2vlBiKSqb3pmobfzMVH+wzBzrdNGsaOdndzZydtFHCaUhQo5ReICNG0soRQxSYMIpKLPp/IqxIbe17iWVWspvfUPWXMowK2I94zM7UyoB3bhOfjm4rg1Tim+SqMWGOl1sTtIsdlquCp4GXAj8wDOlX46TJlWpbIrHKu4OoYAIAoOw4RxwbA9Zbe9+cd3kzvGO8QAZ5h2NMgA8RJ6XwD0hgkRulTyEvSTUCqXDeC81wSVQQRfpNM+GUyo+VcwYLiHGdOwdlxVLK3ALHVK6g3HC8lfLKga/EWlepl7A8DaZcsX6D8cl6ljv6t/CLraVM4+Oix433l+gGC7coP7QX0o3RhHJeVCnyE3qILXNrxwHQ3B9wZVrUUZVL+0npgBbCVVF2B8y7OI/ip2pN0HwH/Ty9vlM9XwlWifvENvzcVP8AqmuoLV1+I3W+0IYY7kHgY2OWS2e4LXoYehUQ8JYGIQcRNJmGSYd/wBG6r4D9NjMpjMqYVO7D8eGr+4/tGLJF7ETaOvVUnbhBuYYi20tYnJ8VSvdNY6odf0G/0gWqKtRtFOm7sdrBST79PUw0kW5bA/F4mF+z/Z5mqI+JUhSNSUzz6Fx08vn0hvIeyYp2rV7PUBuqcVp2/wBzefAfWabMcOGKta1iN+t4rLk2qJUVvuDMYyLTe2zCW8mra6QJPDjK9ej96VO9xLOW09F1A2Mx+zG+5E404gH8wj8zwmoqW3sd/MSTH0hpV/xKZNWqAWPHUPlLvZMqt6PEPtJZP4+oqX001pqL8vAGI+bGZgCGu2qsMdidXHvD8iAV+loEvO7i2gvyOVk+ZkmiNjqbx7CNAGiccRo2kshCG8UeVikIfYGQuGBMs5hloqWPMRRTHjScTTkbTLiYRABtHHCr0iijqQgjbApK9XKwekUUjiiWVamU/wDl5XfLmHAxRRbhENSZD/DOOhjSGEUUU8aCWRnBUjtQnIolqhqY1qYkGJwNOoLMIooIdjTgQBYcI04UgbTkUFxRakyBsMRvf2j6Nw07FBaCTJqq85ls5GmqjecUUHuF2DNRFbS24NpBhWI1DoTFFCrcpPYnFiLdYzHV7LpHFbGKKBJbhLgD5m9q9NgfiAhRNRdSLWHGdii+6GdmUO1rlad1JFiD7SQ5giYVqz3000LHrZReKKNhFNJP1FSdM8HzPHviatStU+N2v6DgqjyAsPaU+6iindSVUcxuyMraPRoopChMIkadikIOiiilkP/Z",
+      "descripcion": "Control de inventario automatizado."
+    }
+  },
+
+  {
+    "id": "tst-020",
+    "titulo": "Video del caso de éxito del cliente",
+    "autor": "Romina Salas",
+    "empresa": "CloudBridge",
+    "cargo": "Account Manager",
+    "contenido": "Registramos un caso de éxito donde el cliente aumentó un 40% la eficiencia usando nuestra solución.",
+    "status": "aprobado",
+    "category": "cliente",
+    "creadoEn": "2025-03-02T10:40:00Z",
+    "actualizadoEn": "2025-03-03T12:15:00Z",
+    "tags": ["caso de éxito", "cliente satisfecho", "video"],
+    "multimedia": {
+      "id": "m-020",
+      "testimonio_id": "tst-020",
+      "tipo": "video",
+      "url": "https://www.pexels.com/download/video/5495863/",
+      "descripcion": "Caso de éxito grabado."
+    }
+  }
+]
