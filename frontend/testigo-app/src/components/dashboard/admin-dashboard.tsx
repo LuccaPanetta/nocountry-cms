@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Users, CircleCheckBig, SquareX } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
-import TestimonialsTable  from './testimonial-table';
 import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MetricsSummary } from './metrics-dashboard';
