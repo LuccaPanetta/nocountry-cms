@@ -6,15 +6,14 @@ export type TestimonyResType = {
   empresa: string;
   cargo: string;
   contenido: string;
-  status: string;
+  status: TestimonyStatusType;
   category: string;
   creadoEn: string;
   actualizadoEn: string;
   tags: string[];
   multimedia: {
     id: string;
-    testimonio_id: string;
-    tipo: string;
+    tipo: 'IMAGEN' | 'VIDEO' | 'TEXTO';
     url: string;
     descripcion: string;
   };
@@ -75,9 +74,10 @@ export type TestimonyReqType = {
   };
 };
 
-export type TestimonyStatusType = {
-  status: string;
-};
+export type TestimonyStatusType =  'pending' | 'approved' | 'rejected' | 'in_review'
+
+export type TestimonyStatusTypeReq =  {status: TestimonyStatusType }
+
 
 export interface GetTestimonialsParams {
   page?: number;
