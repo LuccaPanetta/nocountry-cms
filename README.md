@@ -169,7 +169,7 @@ La API está documentada con **Swagger**. Accede a las especificaciones:
 
 | Entorno | Enlace | Notas |
 | :--- | :--- | :--- |
-| **🚀 Frontend Principal** | [nocountry-cms-dusky.vercel.app](https://nocountry-cms-dusky.vercel.app) | Aplicación administrativa y web pública. |
+| **🚀 Frontend Principal** | [nocountry-cms-dusky.vercel.app]([https://nocountry-cms-dusky.vercel.app](https://nocountry-cms-git-develop-frontend-luccapanettas-projects.vercel.app/)) | Aplicación administrativa y web pública. |
 | **🖥️ Backend (Swagger Docs)** | [nocountry-cms.onrender.com/api/v1/docs](https://nocountry-cms.onrender.com/api/v1/docs) | Documentación de la API desplegada. |
 | **🌍 Embed Tester** | [testimonios-embed-tester.vercel.app](https://testimonios-embed-tester.vercel.app/) | Sitio de demostración para probar el componente de *embed* externo. |
 
