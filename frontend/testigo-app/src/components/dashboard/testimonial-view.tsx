@@ -42,18 +42,18 @@ const TestimonialView = ({
   onDelete,
 }: ViewTestimonialProps) => {
   const [openModal, setOpenModal] = useState(false);
-  
+
   // Reutilizando la lógica de CardTestimony
   const { previewType, thumbnail, isYoutube } = useVideoPreview(mediaUrl ?? "");
-  
+
   // Crear un objeto testimonial simulado para usar el hook
   const testimonialForHook = {
     multimedia: { type: format, url: mediaUrl }
   };
-  
-  const mappedType: "video" | "imagen" = useNormalizeMultimediaType({ 
-    isYoutube, 
-    testimonial: testimonialForHook as any 
+
+  const mappedType: "video" | "imagen" = useNormalizeMultimediaType({
+    isYoutube,
+    testimonial: testimonialForHook as any
   });
 
   const getTypeIcon = (type: string) => {
@@ -69,10 +69,10 @@ const TestimonialView = ({
   };
 
   const handleDateFormat = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     };
     return new Date(dateString).toLocaleDateString('es-AR', options);
   };
@@ -105,10 +105,10 @@ const TestimonialView = ({
                   onClick={() => setOpenModal(true)}
                 >
                   {isYoutube && thumbnail && (
-                    <img 
-                      src={thumbnail} 
+                    <img
+                      src={thumbnail}
                       alt={title}
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
                     />
                   )}
 
@@ -123,10 +123,10 @@ const TestimonialView = ({
                   )}
 
                   {!isYoutube && mappedType === "imagen" && (
-                    <img 
-                      src={mediaUrl} 
+                    <img
+                      src={mediaUrl}
                       alt={title}
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
                     />
                   )}
 
@@ -161,7 +161,7 @@ const TestimonialView = ({
                 </Badge>
                 <Badge>{category}</Badge>
               </div>
-              
+
               <p className="text-xs text-muted-foreground mb-4">
                 {handleDateFormat(createdAt)}
               </p>
@@ -201,18 +201,19 @@ const TestimonialView = ({
 
               {/* Botones de acción */}
               <div className="space-y-3 pt-4 border-t">
-                <button
+                {onEdit && <button
                   onClick={onEdit}
                   className="w-full flex items-center justify-center gap-2 bg-primary text-white font-medium py-3 rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Editar Testimonio
-                </button>
-                <button
+                </button>}
+
+                {onDelete && <button
                   onClick={onDelete}
                   className="w-full flex items-center justify-center gap-2 bg-red-600 text-white font-medium py-3 rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Eliminar Testimonio
-                </button>
+                </button>}
               </div>
             </CardContent>
           </Card>

@@ -12,7 +12,7 @@ import { useGetTestimonyByIdForEdit } from '@/services/use-queries-service/testi
 import { TestimonialsMutationsService } from '@/services/use-mutations-service/testimonials-mutation-service';
 
 type ContentType = 'TEXTO' | 'IMAGEN' | 'VIDEO';
-type Status = 'pending' | 'approved' | 'rejected';
+
 
 interface TestimonialEditData {
   title: string;
@@ -21,7 +21,6 @@ interface TestimonialEditData {
   position?: string;
   company: string;
   category: string;
-  status: Status;
   imageDescription?: string;
   videoUrl?: string;
   videoDescription?: string;
@@ -64,7 +63,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
     formState: { errors },
   } = useForm<TestimonialEditData>();
 
-  const watchedStatus = watch('status');
+
   const watchedVideoUrl = watch('videoUrl');
 
   // Cargar datos del testimonio cuando llegan
@@ -92,7 +91,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
       setValue('author', testimony.autor || '');
       setValue('position', testimony.cargo || '');
       setValue('company', testimony.empresa || '');
-      setValue('status', (testimony.status || 'pending') as Status);
+     
       
       
       if (categories) {
@@ -123,34 +122,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
     }
   }, [testimonialData, setValue, categories]);
 
-  // Manejadores de archivos
-  {/*const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      imageFileRef.current = file;
-      setSelectedImageName(file.name);
-    }
-  };
-
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      videoFileRef.current = file;
-      setSelectedVideoName(file.name);
-    }
-  };
-
-  const clearImageSelection = () => {
-    imageFileRef.current = null;
-    setSelectedImageName('');
-  };
-
-  const clearVideoSelection = () => {
-    videoFileRef.current = null;
-    setSelectedVideoName('');
-  };
-  */}
-
+  
   // Submit - Actualizar testimonio
   const onSubmit = async (data: TestimonialEditData) => {
     setIsSubmitting(true);
@@ -214,7 +186,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
       setSuccess(true);
       setTimeout(() => {
         if (onClose) onClose();
-        else router.push('/dashboard/admin');
+        else router.push('/dashboard/editor');
       }, 1500);
 
     } catch (error) {
@@ -222,22 +194,6 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
       setError(error instanceof Error ? error.message : 'Error al actualizar el testimonio');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Eliminar testimonio
-  const handleDelete = async () => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este testimonio?')) {
-      return;
-    }
-
-    try {
-      await mutationDeleteTestimonyById.mutateAsync(testimonialId);
-      if (onClose) onClose();
-      else router.push('/dashboard/admin');
-    } catch (error) {
-      console.error('Error al eliminar:', error);
-      setError('Error al eliminar el testimonio');
     }
   };
 
@@ -376,105 +332,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
               </div>
             </section>
 
-            {/* Multimedia */}{/*
-            <section className="space-y-4 bg-gray-100 py-3 px-6 border border-gray-300 rounded-xl shadow-lg">
-              <h2 className="text-lg font-semibold text-gray-900">Multimedia</h2>
-              
-              <p className="text-sm text-gray-600">
-                Tipo actual: <span className="font-semibold">{contentType}</span>
-              </p>
-
-              {contentType === 'VIDEO' && (
-                <>
-                  <div className="space-y-2">
-                    <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-900">
-                      URL del Video
-                    </label>
-                    <input
-                      id="videoUrl"
-                      type="text"
-                      {...register('videoUrl')}
-                      placeholder="https://youtube.com/watch?v=..."
-                      className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900">
-                      O sube un nuevo video
-                    </label>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVideoFileChange}
-                      className="hidden"
-                      id="videoFileInput"
-                    />
-                    <label
-                      htmlFor="videoFileInput"
-                      className="cursor-pointer border-2 border-dashed border-gray-300 rounded-md px-6 py-4 flex flex-col items-center hover:border-blue-500"
-                    >
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        {selectedVideoName || 'Seleccionar archivo de video'}
-                      </p>
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="videoDescription" className="block text-sm font-medium text-gray-900">
-                      Descripción del video
-                    </label>
-                    <textarea
-                      id="videoDescription"
-                      {...register('videoDescription')}
-                      rows={3}
-                      className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                </>
-              )}
-
-              {contentType === 'IMAGEN' && (
-                <>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900">
-                      Subir nueva imagen (opcional)
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      id="imageFileInput"
-                    />
-                    <label
-                      htmlFor="imageFileInput"
-                      className="cursor-pointer border-2 border-dashed border-gray-300 rounded-md px-6 py-4 flex flex-col items-center hover:border-blue-500"
-                    >
-                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        {selectedImageName || 'Seleccionar nueva imagen'}
-                      </p>
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="imageDescription" className="block text-sm font-medium text-gray-900">
-                      Descripción de la imagen
-                    </label>
-                    <textarea
-                      id="imageDescription"
-                      {...register('imageDescription')}
-                      rows={3}
-                      className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                </>
-              )}
-            </section>
-            */}
-
+           
             {/* Metadata */}
             <section className="space-y-4 bg-gray-100 py-3 px-6 border border-gray-300 rounded-xl shadow-lg">
               <h2 className="text-lg font-semibold text-gray-900">Metadata</h2>
@@ -497,92 +355,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
                   ))}
                 </select>
               </div>
-
-              <div className="space-y-2">
-                <label htmlFor="status" className="block text-sm font-medium text-gray-900">
-                  Estado
-                </label>
-                <select
-                  id="status"
-                  {...register('status')}
-                  className="w-full bg-white rounded-md border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="pending">Pendiente</option>
-                  <option value="approved">Aprobado</option>
-                  <option value="rejected">Rechazado</option>
-                </select>
-              </div>
-
-              
-              {/* Tags */} {/*
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-900">
-                  Tags
-                </label>
-                
-                
-                <div className="min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 bg-Primary text-white px-2.5 py-1 rounded-md text-sm font-medium"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
-                          className="ml-1 hover:bg-Primary/80 rounded-sm transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                    {selectedTags.length === 0 && (
-                      <p className="text-sm text-gray-400 py-1">
-                        Selecciona hasta 5 tags
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                
-                {loadingTags ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-Primary"></div>
-                    <span>Cargando tags...</span>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-600 font-medium mt-3">
-                      Tags disponibles:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {availableTags
-                        ?.filter(tag => !selectedTags.includes(tag.name))
-                        .map((tag) => (
-                          <button
-                            key={tag.id}
-                            type="button"
-                            onClick={() => {
-                              if (selectedTags.length < 5) {
-                                setSelectedTags([...selectedTags, tag.name]);
-                              }
-                            }}
-                            disabled={selectedTags.length >= 5}
-                            className="inline-flex items-center px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
-                          >
-                            {tag.name}
-                          </button>
-                        ))}
-                    </div>
-                  </>
-                )}
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  {selectedTags.length}/5 tags seleccionados
-                </p>
-              </div> */}
+          
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-900">
@@ -628,21 +401,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
             >
               Cancelar
             </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isSubmitting || mutationDeleteTestimonyById.isPending}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-8 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {mutationDeleteTestimonyById.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Eliminando...
-                </>
-              ) : (
-                'Eliminar Testimonio'
-              )}
-            </button>
+          
           </div>
         </div>
       </form>

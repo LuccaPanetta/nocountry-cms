@@ -5,12 +5,15 @@ import { TestimonialsTableBase } from "./testimonial-table-base";
 import { useState } from "react";
 import { TestimonialStatusModal } from "./testimonial-status-modal";
 import TestimonialView from "./testimonial-view";
+import { useRouter } from "next/navigation";
 
 export default function TestimonialsTableEditor() {
   const { data, refetch } = useGetTestimonials();
   const testimonials = data
     ?.map(t => t.testimonial)
     ?.filter(t => t.status === "pending") ?? [];
+
+  const router = useRouter()
 
   const [viewingTestimonial, setViewingTestimonial] = useState<TestimonyResType | null>(null);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -29,8 +32,7 @@ export default function TestimonialsTableEditor() {
   };
 
   const handleEdit = (id: string) => {
-    // Implementar navegación a edición
-    console.log('Editar:', id);
+    router.push(`/dashboard/editor/${id}`);
     closeDropdown();
   };
 
@@ -64,13 +66,13 @@ export default function TestimonialsTableEditor() {
 
   return (
     <>
-    <TestimonialsTableBase
-      title="Modeeración de testimonios pendientes"
-      subtitle="Listado de testimonios que requieren revisión y/o edición"
-      testimonials={testimonials}
-      actions={actions}
-    />
-       {viewingTestimonial && (
+      <TestimonialsTableBase
+        title="Modeeración de testimonios pendientes"
+        subtitle="Listado de testimonios que requieren revisión y/o edición"
+        testimonials={testimonials}
+        actions={actions}
+      />
+      {viewingTestimonial && (
         <TestimonialView
           testimonialId={viewingTestimonial.id}
           title={viewingTestimonial.titulo || 'Sin título'}
@@ -84,11 +86,10 @@ export default function TestimonialsTableEditor() {
           tags={viewingTestimonial.tags}
           createdAt={viewingTestimonial.creadoEn}
           onClose={() => setViewingTestimonial(null)}
-           onEdit={() => {
+          onEdit={() => {
             handleEdit(viewingTestimonial.id);
             setViewingTestimonial(null);
           }}
-  
         />
       )}
       {statusModalOpen && (
@@ -100,6 +101,6 @@ export default function TestimonialsTableEditor() {
           refetch={refetch}
         />
       )}
-      </>
+    </>
   );
 }
