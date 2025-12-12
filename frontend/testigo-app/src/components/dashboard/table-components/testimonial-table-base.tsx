@@ -13,6 +13,7 @@ type ActionButton = {
     icon: React.ReactNode;
     onClick: (t: TestimonyResType) => void;
     danger?: boolean;
+    disabled?: (t: TestimonyResType) => boolean;
 };
 
 interface TestimonialsTableBaseProps {
@@ -161,24 +162,37 @@ export function TestimonialsTableBase({
 
                                                     {openDropdown === testimonial.id && (
                                                         <>
-                                                            <div className="fixed inset-0" onClick={() => { 
+                                                            <div className="fixed inset-0" onClick={() => {
                                                                 setOpenDropdown(null);
-                                                                 onCloseDropdown?.(); }} />
+                                                                onCloseDropdown?.();
+                                                            }} />
                                                             <div className="absolute right-0 w-48 bg-white rounded-md shadow z-20">
-                                                                {actions.map((action) => (
-                                                                    <button
-                                                                        key={action.label}
-                                                                        onClick={() => {
-                                                                            action.onClick(testimonial);
-                                                                            setOpenDropdown(null);
-                                                                            onCloseDropdown?.();
-                                                                        }}
-                                                                        className={`flex justify-between px-4 py-2 text-sm w-full hover:bg-gray-100 
-                                      ${action.danger ? "text-red-600" : "text-gray-700"}`}
-                                                                    >
-                                                                        {action.icon} <span>{action.label}</span>
-                                                                    </button>
-                                                                ))}
+                                                                {actions.map((action) => {
+                                                                    const isDisabled =
+                                                                        typeof action.disabled === "function"
+                                                                            ? action.disabled(testimonial)
+                                                                            : false;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={action.label}
+                                                                            onClick={() => {
+                                                                                if (isDisabled) return;
+                                                                                action.onClick(testimonial);
+                                                                                setOpenDropdown(null);
+                                                                                onCloseDropdown?.();
+                                                                            }}
+                                                                            disabled={isDisabled}
+                                                                            className={`
+        flex justify-between px-4 py-2 text-sm w-full
+        ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}
+        ${action.danger ? "text-red-600" : "text-gray-700"}
+      `}
+                                                                        >
+                                                                            {action.icon} <span>{action.label}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </>
                                                     )}

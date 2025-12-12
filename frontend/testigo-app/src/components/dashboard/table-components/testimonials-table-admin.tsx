@@ -13,7 +13,20 @@ import { TestimonialStatusModal } from "./testimonial-status-modal";
 export default function TestimonialsTableAdmin() {
   const { data, refetch } = useGetTestimonials();
 
-  const testimonials = data?.map(t => t.testimonial) ?? [];
+  const testimonials =
+    data
+      ?.map(t => t.testimonial)
+      ?.sort((a, b) => {
+        //Orden por status 'En revisión' primero
+        const isAReview = a.status === "in_review" ? 0 : 1;
+        const isBReview = b.status === "in_review" ? 0 : 1;
+
+        if (isAReview !== isBReview) {
+          return isAReview - isBReview;
+        }
+        //Orden por fecha descendente
+        return new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime();
+      }) ?? [];
 
 
   const [viewingTestimonial, setViewingTestimonial] = useState<TestimonyResType | null>(null);
@@ -68,6 +81,7 @@ export default function TestimonialsTableAdmin() {
       label: "Cambiar estado",
       icon: <RotateCw size={16} />,
       onClick: (t: TestimonyResType) => handleStatus(t),
+      disabled: (t: TestimonyResType) => t.status !== "in_review",
     },
     {
       label: "Eliminar",
