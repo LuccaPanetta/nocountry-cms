@@ -1,7 +1,6 @@
 import { CircleCheckBig } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Logo from './logo.png';
 
 interface TestimonialNotificationProps {
   onClose?: () => void;
@@ -27,7 +26,7 @@ const TestimonialNotification = ({ onClose }: TestimonialNotificationProps) => {
       <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
         <main className="flex flex-col justify-center items-center gap-4 w-auto px-14 py-8 bg-white rounded-2xl shadow-2xl pointer-events-auto animate-in zoom-in-95 duration-200">
           <picture>
-            <Image src={Logo} alt="logo de la empresa" width={100} height={100} />
+            <Image src="/testiGo_iso.svg" alt="logo de la empresa" width={100} height={100} />
           </picture>
           <CircleCheckBig className='text-Success text-center h-10 w-10' />
           <span className="text-Primary font-bold text-center text-lg">
