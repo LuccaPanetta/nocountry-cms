@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, CircleCheckBig, SquareX } from 'lucide-react';
+import { Users, CircleCheckBig, Hourglass, Edit3 } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
 import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,7 +21,7 @@ export function AdminDashboard() {
   const [totalInReviewTestimonials, setTotalInReviewTestimonials] = useState<number>(0)
   const [totalPendingTestimonials, setTotalPendingTestimonials] = useState<number>(0)
 
-    const { data, isLoading, isError, refetch } = useGetTestimonials();
+    const { data} = useGetTestimonials();
     const testimonials = data?.map(item => item.testimonial) || [];
 
   // Inicializa la sección según la URL
@@ -73,13 +73,13 @@ useEffect(() => {
           />
           <TestimonialCard
             label="Testimonios en revisión"
-            icon={CircleCheckBig}
+            icon={Edit3}
             value={totalInReviewTestimonials}
             color='text-Accent'
           />
           <TestimonialCard
             label="Testimonios pendientes"
-            icon={SquareX}
+            icon={Hourglass}
             value={totalPendingTestimonials}
             color='text-Neutro-1'
           />

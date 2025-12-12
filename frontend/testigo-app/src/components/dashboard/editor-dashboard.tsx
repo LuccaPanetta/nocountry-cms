@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, CircleCheckBig, SquareX } from 'lucide-react';
+import { Users, CircleCheckBig, SquareX, Hourglass, Edit3 } from 'lucide-react';
 import { TestimonialCard } from './testimonial-card';
 
 import Container from '../ui/Container';
@@ -77,13 +77,13 @@ useEffect(() => {
           />
           <TestimonialCard
             label="Testimonios en revisión"
-            icon={CircleCheckBig}
+            icon={Edit3}
             value={totalInReviewTestimonials}
             color='text-Accent'
           />
           <TestimonialCard
             label="Testimonios pendientes"
-            icon={SquareX}
+            icon={Hourglass}
             value={totalPendingTestimonials}
             color='text-Neutro-1'
           />
