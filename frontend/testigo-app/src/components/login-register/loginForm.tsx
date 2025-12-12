@@ -72,7 +72,7 @@ export default function LoginForm() {
               </FormItem>
             )}
           />
-          <Link href={'/login/req-pass-reset'}><p className="text-xs text-right mt-2">¿Olvidaste tu contraseña?</p></Link>
+          <Link href={''}><p className="text-xs text-right mt-2">¿Olvidaste tu contraseña?</p></Link>
         </div>
         {mutationPostLogin.isError && (
           <p className="text-destructive text-sm">
