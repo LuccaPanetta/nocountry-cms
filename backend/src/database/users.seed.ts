@@ -206,7 +206,79 @@ export class UsersSeed {
         email: 'camila.vega@testimonialcms.com',
         rol: UserRole.CONTRIBUTOR,
         password: hashedPassword,
-      }
+      },
+      // Añadir después del usuario "Camila Vega" existente:
+
+{
+  nombre: 'Andrea',
+  apellido: 'Castillo',
+  email: 'andrea.castillo@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Luis',
+  apellido: 'Martinez',
+  email: 'luis.martinez@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Paula',
+  apellido: 'Rios',
+  email: 'paula.rios@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Javier',
+  apellido: 'Hernandez',
+  email: 'javier.hernandez@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Gabriela',
+  apellido: 'Torres',
+  email: 'gabriela.torres@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Ricardo',
+  apellido: 'Molina',
+  email: 'ricardo.molina@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Isabel',
+  apellido: 'Castro',
+  email: 'isabel.castro@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Oscar',
+  apellido: 'Navarro',
+  email: 'oscar.navarro@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Patricia',
+  apellido: 'Silva',
+  email: 'patricia.silva@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+},
+{
+  nombre: 'Francisco',
+  apellido: 'Ortiz',
+  email: 'francisco.ortiz@testimonialcms.com',
+  rol: UserRole.CONTRIBUTOR,
+  password: hashedPassword,
+}
 
     ];
 
