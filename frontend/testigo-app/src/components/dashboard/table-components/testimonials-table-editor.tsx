@@ -1,30 +1,27 @@
 import { useGetTestimonials } from "@/services/use-queries-service/testimonials-query-service";
-import { Eye, RotateCw, Trash2 } from "lucide-react";
-import { TestimonialsTableBase } from "./testimonial-table-base";
 import { TestimonyResType } from "@/types/testimony-type";
-import { TestimonialStatusModal } from "./testimonial-status-modal";
+import { Eye, RotateCw, SquarePen } from "lucide-react";
+import { TestimonialsTableBase } from "./testimonial-table-base";
 import { useState } from "react";
-import TestimonialView from "./testimonial-view";
-import { useMutation } from "@tanstack/react-query";
-import { deleteTestimonyById } from "@/services/use-cases/testimonials.service";
+import { TestimonialStatusModal } from "./testimonial-status-modal";
+import TestimonialView from "./table-components/testimonial-view";
+import { useRouter } from "next/navigation";
 
-export default function TestimonialsTableAdmin() {
+export default function TestimonialsTableEditor() {
   const { data, refetch } = useGetTestimonials();
+  const testimonials = data
+    ?.map(t => t.testimonial)
+    ?.filter(t => t.status === "pending") ?? [];
 
-  const testimonials = data?.map(t => t.testimonial) ?? [];
-
+  const router = useRouter()
 
   const [viewingTestimonial, setViewingTestimonial] = useState<TestimonyResType | null>(null);
-
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<TestimonyResType | null>(null);
+
   const [forceDropdownClose, setForceDropdownClose] = useState(0);
 
   const closeDropdown = () => setForceDropdownClose(prev => prev + 1);
-
-  const mutationDeleteTestimonyById = useMutation({
-    mutationFn: (id: string) => deleteTestimonyById(id),
-  });
 
   const handleView = (id: string) => {
     const testimonial = testimonials.find((t: TestimonyResType) => t.id === id);
@@ -34,18 +31,12 @@ export default function TestimonialsTableAdmin() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este testimonio?')) {
-      try {
-        await mutationDeleteTestimonyById.mutateAsync(id);
-        closeDropdown();
-        refetch();
-      } catch (error) {
-        console.error('Error al eliminar:', error);
-        alert('Error al eliminar el testimonio');
-      }
-    }
+  const handleEdit = (id: string) => {
+    router.push(`/dashboard/editor/${id}`);
+    closeDropdown();
   };
+
+
 
   const handleStatus = (testimonial: TestimonyResType) => {
     if (!testimonial) return;
@@ -55,7 +46,6 @@ export default function TestimonialsTableAdmin() {
   };
 
 
-
   const actions = [
     {
       label: "Ver detalles",
@@ -63,28 +53,24 @@ export default function TestimonialsTableAdmin() {
       onClick: (t: TestimonyResType) => handleView(t.id),
     },
     {
+      label: "Editar",
+      icon: <SquarePen size={16} />,
+      onClick: (t: TestimonyResType) => handleEdit(t.id),
+    },
+    {
       label: "Cambiar estado",
       icon: <RotateCw size={16} />,
       onClick: (t: TestimonyResType) => handleStatus(t),
     },
-    {
-      label: "Eliminar",
-      icon: <Trash2 size={16} />,
-      danger: true,
-      onClick: (t: TestimonyResType) => handleDelete(t.id),
-    },
   ];
-
-
 
   return (
     <>
       <TestimonialsTableBase
-        title="Moderación de Testimonios"
-        subtitle="Gestiona y modera los testimonios enviados por los usuarios y/o editor"
+        title="Modeeración de testimonios pendientes"
+        subtitle="Listado de testimonios que requieren revisión y/o edición"
         testimonials={testimonials}
         actions={actions}
-        onCloseDropdown={closeDropdown}
       />
       {viewingTestimonial && (
         <TestimonialView
@@ -100,8 +86,8 @@ export default function TestimonialsTableAdmin() {
           tags={viewingTestimonial.tags}
           createdAt={viewingTestimonial.creadoEn}
           onClose={() => setViewingTestimonial(null)}
-          onDelete={() => {
-            handleDelete(viewingTestimonial.id);
+          onEdit={() => {
+            handleEdit(viewingTestimonial.id);
             setViewingTestimonial(null);
           }}
         />
@@ -115,7 +101,6 @@ export default function TestimonialsTableAdmin() {
           refetch={refetch}
         />
       )}
-
     </>
   );
 }

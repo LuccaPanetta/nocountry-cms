@@ -8,7 +8,8 @@ import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MetricsSummary } from './metrics-dashboard';
 import { useGetTestimonials } from '@/services/use-queries-service/testimonials-query-service';
-import TestimonialsTableEditor from './testimonials-table-editor';
+import TestimonialsTableEditor from './table-components/testimonials-table-editor';
+
 
 
 type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';

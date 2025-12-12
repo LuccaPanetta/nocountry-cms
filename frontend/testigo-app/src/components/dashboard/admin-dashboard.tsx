@@ -7,7 +7,7 @@ import Container from '../ui/Container';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MetricsSummary } from './metrics-dashboard';
 import { useGetTestimonials } from '@/services/use-queries-service/testimonials-query-service';
-import TestimonialsTableAdmin from './testimonials-table-admin';
+import TestimonialsTableAdmin from './table-components/testimonials-table-admin';
 
 type ActiveSection = 'moderacion' | 'usuarios' | 'configuraciones' | 'metricas';
 
