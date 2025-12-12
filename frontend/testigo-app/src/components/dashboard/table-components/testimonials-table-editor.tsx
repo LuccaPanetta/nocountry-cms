@@ -1,11 +1,11 @@
 import { useGetTestimonials } from "@/services/use-queries-service/testimonials-query-service";
 import { TestimonyResType } from "@/types/testimony-type";
 import { Eye, RotateCw, SquarePen } from "lucide-react";
-import { TestimonialsTableBase } from "./testimonial-table-base";
 import { useState } from "react";
-import { TestimonialStatusModal } from "./testimonial-status-modal";
-import TestimonialView from "./table-components/testimonial-view";
 import { useRouter } from "next/navigation";
+import { TestimonialsTableBase } from "./testimonial-table-base";
+import TestimonialView from "./testimonial-view";
+import { TestimonialStatusModal } from "./testimonial-status-modal";
 
 export default function TestimonialsTableEditor() {
   const { data, refetch } = useGetTestimonials();
@@ -67,7 +67,7 @@ export default function TestimonialsTableEditor() {
   return (
     <>
       <TestimonialsTableBase
-        title="Modeeración de testimonios pendientes"
+        title="Moderación de testimonios pendientes"
         subtitle="Listado de testimonios que requieren revisión y/o edición"
         testimonials={testimonials}
         actions={actions}

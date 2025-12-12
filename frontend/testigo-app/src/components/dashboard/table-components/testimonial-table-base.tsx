@@ -1,10 +1,11 @@
 
 import { TestimonyResType } from "@/types/testimony-type";
 import { MoreHorizontal } from "lucide-react";
-import { formatDate } from "./table-components/formatDate";
-import { getFormatBadge } from "./table-components/getFormatBadge";
-import { getStatusBadge } from "./table-components/getStatusBagde";
-import { useTestimonialsTable } from "@/hooks/useTestimonialsTable";
+import { getStatusBadge } from "./getStatusBagde";
+import { getFormatBadge } from "./getFormatBadge";
+import { formatDate } from "./formatDate";
+import { useTestimonialsTable } from "@/hooks/useTestimonials-table";
+
 
 
 type ActionButton = {

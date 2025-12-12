@@ -36,14 +36,16 @@ const DrawerMenu = ({ isOpen, setOpen, avatarInitials }: DrawerMenuProps) => {
     }, [isOpen]);
 
     const links = [
-        ...(rol === "admin" || rol === "editor"
+        ...(rol === "editor"
             ? [
                 { href: "/", label: "Inicio" },
-                { href: "/dashboard/admin?section=moderacion", label: "Moderación" },
+                { href: "/dashboard/editor", label: "Moderación" },
             ]
             : []),
         ...(rol === "admin"
             ? [
+                { href: "/", label: "Inicio" },
+                { href: "/dashboard/admin?section=moderacion", label: "Moderación" },
                 { href: "/dashboard/admin?section=usuarios", label: "Gestión de Usuarios" },
                 { href: "/dashboard/admin?section=configuraciones", label: "Configuraciones" },
                 { href: "/dashboard/admin?section=metricas", label: "Métricas" },

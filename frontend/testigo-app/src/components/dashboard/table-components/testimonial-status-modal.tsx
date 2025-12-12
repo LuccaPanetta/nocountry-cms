@@ -4,9 +4,10 @@ import { TestimonyResType, TestimonyStatusType, TestimonyStatusTypeReq } from '@
 import { QueryObserverResult, useMutation } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+
 import { useUserStore } from '@/store/userStore';
-import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 type TestimonialStatusModalProps = {
     statusModalOpen: boolean;
