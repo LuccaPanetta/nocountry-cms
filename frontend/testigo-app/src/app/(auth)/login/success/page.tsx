@@ -5,19 +5,19 @@ import { useUserStore } from "@/store/userStore"
 
 const page = () => {
 
-   const {nombre} = useUserStore();    
+   const {nombre, rol} = useUserStore();    
 
     const userName = nombre || "Usuario";
 
     const handleRedirect = () => {
    
-        switch (useUserStore.getState().rol) {
+        switch (rol) {
             case
                 'admin':
-                return '/admin/dashboard';  
+                return "/dashboard/admin?section=moderacion";  
             case
                 'editor':
-                return '/dashboard';  
+                return '/dashboard/editor';  
             default:
                 return '/testimonials/create';  
         }   

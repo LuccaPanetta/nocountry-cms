@@ -22,9 +22,7 @@ export const RegisterMutationsService = () => {
         rol: _res.user.rol,
         token: _res.access_token,
       });
-      if (_res.user.rol === "admin") router.push("/dashboard/admin");
-      else if (_res.user.rol === "editor") router.push("/dashboard/editor");
-      else router.push("/testimonials/create");
+       router.push("/register/success");
     },
   });
 
