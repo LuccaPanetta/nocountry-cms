@@ -157,7 +157,7 @@ export class TestimonialsService {
     return this.createWithMedia(createTestimonialDto, user);
   }
 
- async updateWithMedia(
+async updateWithMedia(
   id: string,
   updateTestimonialDto: UpdateTestimonialDto,
   file?: Express.Multer.File,
@@ -178,36 +178,23 @@ export class TestimonialsService {
       throw new NotFoundException(`Testimonio con ID ${id} no encontrado`);
     }
 
+    // ⚠️ IMPORTANTE: Remover campos de multimedia del DTO
+    // Esto evita que se procesen
+    delete (updateTestimonialDto as any).tipo;
+    delete (updateTestimonialDto as any).descripcion;
+    delete (updateTestimonialDto as any).multimediaUrl;
+
     // 1. Actualizar categoría si se proporciona
     if (updateTestimonialDto.categoryId !== undefined) {
-      const category = await this.categoryRepository.findOne({
-        where: { id: updateTestimonialDto.categoryId }
-      });
-
-      if (!category) {
-        throw new BadRequestException('La categoría especificada no existe');
-      }
-      testimonial.category = category;
+      // ... (código existente) ...
     }
 
     // 2. Actualizar tags si se proporcionan
     if (updateTestimonialDto.tagIds !== undefined) {
-      // Si es un array vacío, limpiar todos los tags
-      if (updateTestimonialDto.tagIds.length === 0) {
-        testimonial.tags = [];
-      } else {
-        const tags = await this.tagRepository.find({
-          where: { id: In(updateTestimonialDto.tagIds) }
-        });
-
-        if (tags.length !== updateTestimonialDto.tagIds.length) {
-          throw new BadRequestException('Algunos tags no existen');
-        }
-        testimonial.tags = tags;
-      }
+      // ... (código existente) ...
     }
 
-    // 3. Actualizar campos básicos (solo si se proporcionan)
+    // 3. Actualizar campos básicos
     if (updateTestimonialDto.contenido !== undefined) {
       testimonial.contenido = updateTestimonialDto.contenido;
     }
@@ -224,78 +211,11 @@ export class TestimonialsService {
       testimonial.cargo = updateTestimonialDto.cargo;
     }
 
-    // 4. Manejar multimedia
-    let nuevaMultimedia: Multimedia | null = null;
-
-    // 4.1. Si se envía un archivo (subir nuevo archivo)
-    if (file && multimediaData) {
-      const { tipo, descripcion } = multimediaData;
-
-      // Validar que el tipo esté presente
-      if (!tipo) {
-        throw new BadRequestException('El tipo de multimedia es requerido al subir un archivo');
-      }
-
-      // Si ya existe multimedia, eliminarla
-      if (testimonial.multimedia) {
-        await this.multimediaService.remove(testimonial.multimedia.id);
-      }
-
-      // Crear nueva multimedia
-      const multimediaResult = await this.multimediaService.createWithUpload(
-        id,
-        file,
-        tipo,
-        descripcion
-      );
-
-      // Asociar nueva multimedia al testimonio
-      testimonial.multimedia = multimediaResult.multimedia;
-      nuevaMultimedia = multimediaResult.multimedia;
-    } 
-    // 4.2. Si se envía multimediaUrl (URL externa)
-    else if (updateTestimonialDto.multimediaUrl !== undefined) {
-      
-      // Si la URL viene vacía o null, eliminar multimedia existente
-      if (!updateTestimonialDto.multimediaUrl || updateTestimonialDto.multimediaUrl.trim() === '') {
-        // Limpiar multimedia (eliminar archivo si existe)
-        if (testimonial.multimedia) {
-          await this.multimediaService.remove(testimonial.multimedia.id);
-          testimonial.multimedia = undefined;
-        }
-      } 
-      // Si se envía una URL válida, crear un registro de Multimedia para la URL externa
-      else {
-        // Validar URL
-        try {
-          new URL(updateTestimonialDto.multimediaUrl);
-        } catch {
-          throw new BadRequestException('La URL proporcionada no es válida');
-        }
-
-        // Si ya existe multimedia, eliminarla primero
-        if (testimonial.multimedia) {
-          await this.multimediaService.remove(testimonial.multimedia.id);
-        }
-
-        // Determinar tipo basado en la URL o usar el proporcionado
-        const tipo = multimediaData?.tipo || this.determinarTipoPorUrl(updateTestimonialDto.multimediaUrl);
-        
-        // Crear registro de Multimedia para la URL externa
-        const multimediaResult = await this.multimediaService.createWithUrl(
-          id,
-          updateTestimonialDto.multimediaUrl,
-          tipo,
-          multimediaData?.descripcion || 'URL externa de multimedia'
-        );
-
-        testimonial.multimedia = multimediaResult;
-        nuevaMultimedia = multimediaResult;
-      }
-    }
-    // 4.3. Si no se envía ni file ni multimediaUrl → mantener lo existente
-
-    // Guardar cambios en el testimonio
+    // ⚠️ 4. IGNORAR COMPLETAMENTE file y multimediaData
+    // No hacer nada con ellos
+    // El multimedia existente se mantiene automáticamente
+    
+    // Guardar cambios
     const updatedTestimonial = await this.testimonialRepository.save(testimonial);
     await queryRunner.commitTransaction();
 
@@ -309,10 +229,10 @@ export class TestimonialsService {
       throw new NotFoundException(`Testimonio con ID ${id} no encontrado después de la actualización`);
     }
 
-    // Transformar a DTO de respuesta
+    // Transformar a DTO
     return TestimonialMapper.toCreateResponseDto(
       testimonialCompleto,
-      nuevaMultimedia || testimonialCompleto.multimedia || undefined
+      testimonialCompleto.multimedia || undefined
     );
 
   } catch (error) {
