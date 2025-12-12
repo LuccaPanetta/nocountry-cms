@@ -32,6 +32,9 @@ interface TestimonialEditProps {
 }
 
 const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
+
+  console.log('🆔 Testimonial ID recibido:', testimonialId);
+
   const router = useRouter();
   const token = useUserStore((state) => state.token);
   
@@ -39,7 +42,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
   const { data: testimonialData, isLoading: loadingTestimony } = useGetTestimonyByIdForEdit(testimonialId);
   const { data: categories, isLoading: loadingCategories } = useGetCategories();
   const { data: availableTags, isLoading: loadingTags } = useGetTags();
-  const { mutationUpdateTestimonyById, mutationDeleteTestimonyById } = TestimonialsMutationsService();
+  const { mutationUpdateTestimonyById } = TestimonialsMutationsService();
 
   // Estados locales
   const [contentType, setContentType] = useState<ContentType>('TEXTO');
@@ -51,8 +54,7 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
   // Archivos nuevos (opcional)
   const imageFileRef = useRef<File | null>(null);
   const videoFileRef = useRef<File | null>(null);
-  const [selectedImageName, setSelectedImageName] = useState<string>('');
-  const [selectedVideoName, setSelectedVideoName] = useState<string>('');
+
 
   const {
     register,
@@ -68,16 +70,10 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
 
   // Cargar datos del testimonio cuando llegan
   useEffect(() => {
-    console.log('📊 testimonialData:', testimonialData);
-    console.log('📊 testimonialData tipo:', typeof testimonialData);
-    console.log('📊 testimonialData es array?:', Array.isArray(testimonialData));
-
-    
-    if (testimonialData) {     //&& testimonialData.length > 0
+      
+    if (testimonialData) {  
       const testimony = testimonialData.testimonial;
     
-      console.log('📝 testimony procesado:', testimony);
-
       if (!testimony) {
       console.error('❌ No hay testimony después de procesar');
       return;
@@ -85,7 +81,6 @@ const TestimonialEdit = ({ testimonialId, onClose }: TestimonialEditProps) => {
       
       
       // Setear valores en el formulario
-      console.log('✅ Seteando valores...');
       setValue('title', testimony.titulo || '');
       setValue('content', testimony.contenido || '');
       setValue('author', testimony.autor || '');

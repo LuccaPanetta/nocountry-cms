@@ -1,21 +1,22 @@
-// app/(main)/dashboard/editor/[id]/page.tsx
-import { Suspense } from 'react'
-import TestimonialEdit from '@/components/dashboard/testimonial-edit'
+"use client";
 
-interface PageProps {
-  params: Promise<{
-    id: string;
-  }>
-}
+import { Suspense } from "react";
+import TestimonialEdit from "@/components/dashboard/testimonial-edit";
+import { useParams } from "next/navigation";
 
-const page = async ({ params }: PageProps) => {
-  const { id } = await params;
-  
+const Page = () => {
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id; // asegura que sea string
+
+  if (!id) {
+    return <div>No se encontró el ID del testimonio.</div>;
+  }
+
   return (
     <Suspense fallback={<div>Cargando editor...</div>}>
       <TestimonialEdit testimonialId={id} />
     </Suspense>
-  )
-}
+  );
+};
 
-export default page
+export default Page;

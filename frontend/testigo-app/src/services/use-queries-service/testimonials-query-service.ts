@@ -64,5 +64,6 @@ export const useGetTestimonyByIdForEdit = (id: string) => {
   return useQuery<{ testimonial: TestimonyResType }>({
     queryKey: [`testimony-edit-${id}`, id],
     queryFn: () => getTestimonyById(id),
+    enabled: !!id,
   });
 };
