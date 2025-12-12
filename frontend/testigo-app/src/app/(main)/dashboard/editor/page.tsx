@@ -1,10 +1,12 @@
+import { Suspense } from 'react'
 import { EditorDashboard } from '@/components/dashboard/editor-dashboard'
-import React from 'react'
 
-const page = () => {
+const Page = () => {
   return (
-   <EditorDashboard />
+    <Suspense fallback={<div>Cargando panel del editor...</div>}>
+      <EditorDashboard />
+    </Suspense>
   )
 }
 
-export default page
+export default Page
