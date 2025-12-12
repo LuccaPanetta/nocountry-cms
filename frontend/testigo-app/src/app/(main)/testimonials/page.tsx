@@ -39,7 +39,7 @@ function TestimonialsContent() {
   const [orderValue, setOrderValue] = useState("desc-order")
   const router = useRouter();
 
-  const { token } = useUserStore()
+  const { token, rol } = useUserStore()
 
   // Order
   const options = [
@@ -107,12 +107,17 @@ function TestimonialsContent() {
     onPageChange(1)
   }, [filteredCategory, keyword, orderValue])
 
+
   const handleCreatePermission = () => {
     if (!token) {
       return router.push('/login')
     }
-    return router.push('/testimonials/create')
+    if (rol === "contributor") {
+      return router.push('/testimonials/create')
+    }
+    return
   }
+
 
   if (isLoading) {
     return (
@@ -130,6 +135,7 @@ function TestimonialsContent() {
       <Button
         className="w-1/2 md:w-1/4 lg:w-1/6 ml-auto"
         onClick={handleCreatePermission}
+        disabled={!!token && (rol === "admin" || rol === "editor")}
       >
         Crear testimonio
       </Button>
@@ -191,7 +197,7 @@ function TestimonialsContent() {
             <SelectTrigger className="w-full col-span-1 md:w-38 lg:w-50">
               <SelectValue placeholder="Selecciona" />
             </SelectTrigger>
-            <SelectContent> 
+            <SelectContent>
               {options.map(({ value, label, icon: Icon }) => (
                 <SelectItem key={value} value={value} className="flex items-center gap-1">
                   <Icon size={15} />

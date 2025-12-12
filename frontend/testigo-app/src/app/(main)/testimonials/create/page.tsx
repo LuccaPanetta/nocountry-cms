@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MessageCircle, CirclePlay, Image as ImageIcon } from 'lucide-react'
-import { FileUpload } from '@/components/testimonials/FileUpload'
 import { VideoSourceSelector } from '@/components/testimonials/VideoSourceSelector'
 import { ImageSourceSelector } from '@/components/testimonials/ImageSourceSelector'
 import { TagsInput } from '@/components/testimonials/TagsInput'
@@ -442,7 +441,7 @@ export default function CreateTestimonialPage() {
                   type="button"
                   onClick={() => handleContentTypeChange('text')}
                   variant={contentType === 'text' ? 'default' : 'outline'}
-                  className="h-auto py-4 flex flex-col gap-2"
+                  className="h-auto py-3 flex gap-2"
                 >
                   <MessageCircle className="h-6 w-6" />
                   <span>Texto</span>
@@ -451,7 +450,7 @@ export default function CreateTestimonialPage() {
                   type="button"
                   onClick={() => handleContentTypeChange('image')}
                   variant={contentType === 'image' ? 'default' : 'outline'}
-                  className="h-auto py-4 flex flex-col gap-2"
+                  className="h-auto py-3 flex gap-2"
                 >
                   <ImageIcon className="h-6 w-6" />
                   <span>Imagen</span>
@@ -460,7 +459,7 @@ export default function CreateTestimonialPage() {
                   type="button"
                   onClick={() => handleContentTypeChange('video')}
                   variant={contentType === 'video' ? 'default' : 'outline'}
-                  className="h-auto py-4 flex flex-col gap-2"
+                  className="h-auto py-3 flex gap-2"
                 >
                   <CirclePlay className="h-6 w-6" />
                   <span>Video</span>
