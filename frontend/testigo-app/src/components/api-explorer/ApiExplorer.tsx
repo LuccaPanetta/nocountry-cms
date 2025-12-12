@@ -7,6 +7,7 @@ import { ApiEndpointCard, ApiEndpointType } from './ApiEndpointCard';
 import { LiveDemo } from './LiveDemo';
 import { EmbedTester } from './EmbedTester';
 import { Code, Database, BarChart3, Link, Terminal } from 'lucide-react';
+import StatisticsContent from "./StatisticsContent"; 
 
 // Definición de endpoints basada en tu imagen
 const apiEndpoints: ApiEndpointType[] = [
@@ -102,7 +103,7 @@ const apiEndpoints: ApiEndpointType[] = [
       { name: 'id', type: 'string', required: true, description: 'ID del testimonio', example: '123e4567-e89b-12d3-a456-426614174000' }
     ]
   },
- {
+  {
     method: 'GET',
     path: '/public/embeds/{id}/code',
     description: 'Obtener solo código HTML del embed',
@@ -122,7 +123,7 @@ const apiEndpoints: ApiEndpointType[] = [
       { name: 'id', type: 'string', required: true, description: 'ID del testimonio', example: '123e4567-e89b-12d3-a456-426614174000' }
     ]
   },
-    {
+  {
     method: 'GET',
     path: '/public/embeds/{id}/preview',
     description: 'Vista previa del embed',
@@ -164,8 +165,8 @@ export function ApiExplorer({ baseUrl = process.env.NEXT_PUBLIC_URL_BASE || '' }
   const [activeTab, setActiveTab] = useState('endpoints');
 
   // Extraer el path base sin el segmento final si es necesario
-  const cleanBaseUrl = baseUrl.endsWith('') 
-    ? baseUrl 
+  const cleanBaseUrl = baseUrl.endsWith('')
+    ? baseUrl
     : baseUrl.replace(/\/api\/v1\/?$/, '');
 
   const apiBaseUrl = `${cleanBaseUrl}`;
@@ -259,7 +260,7 @@ export function ApiExplorer({ baseUrl = process.env.NEXT_PUBLIC_URL_BASE || '' }
                   </CardHeader>
                   <CardContent>
                     <pre className="bg-gray-900 text-gray-100 p-4 rounded text-xs">
-{`<!-- Incrustar en tu HTML -->
+                      {`<!-- Incrustar en tu HTML -->
 <div id="testimonial-embed"></div>
 <script src="${apiBaseUrl}/public/embed/{id}.js"></script>`}
                     </pre>
@@ -272,7 +273,7 @@ export function ApiExplorer({ baseUrl = process.env.NEXT_PUBLIC_URL_BASE || '' }
                   </CardHeader>
                   <CardContent>
                     <pre className="bg-gray-900 text-gray-100 p-4 rounded text-xs">
-{`// Obtener datos oEmbed
+                      {`// Obtener datos oEmbed
 GET ${apiBaseUrl}/public/embeds/{id}/oembed
 
 // Respuesta JSON típica
@@ -305,7 +306,7 @@ GET ${apiBaseUrl}/public/embeds/{id}/oembed
                     </p>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Iframe Directo</CardTitle>
@@ -319,7 +320,7 @@ GET ${apiBaseUrl}/public/embeds/{id}/oembed
                     </p>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">API Directa</CardTitle>
@@ -347,46 +348,7 @@ GET ${apiBaseUrl}/public/embeds/{id}/oembed
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <div className="text-3xl font-bold text-primary">1,234</div>
-                    <p className="text-sm text-gray-600">Testimonios Totales</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <div className="text-3xl font-bold text-green-600">45K</div>
-                    <p className="text-sm text-gray-600">Vistas Totales</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <div className="text-3xl font-bold text-blue-600">890</div>
-                    <p className="text-sm text-gray-600">Embeds Activos</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <div className="text-3xl font-bold text-purple-600">15</div>
-                    <p className="text-sm text-gray-600">Categorías</p>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="mt-6">
-                <h4 className="font-semibold mb-3">Endpoints de Estadísticas:</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">GET {apiBaseUrl}/public/stats</code>
-                    <span className="text-sm text-gray-600">→ Estadísticas generales</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">GET {apiBaseUrl}/public/stats/categories</code>
-                    <span className="text-sm text-gray-600">→ Estadísticas por categoría</span>
-                  </div>
-                </div>
-              </div>
+              <StatisticsContent />
             </CardContent>
           </Card>
         </TabsContent>
@@ -404,7 +366,7 @@ GET ${apiBaseUrl}/public/embeds/{id}/oembed
             <div>
               <h3 className="font-semibold mb-2">Para desarrolladores:</h3>
               <pre className="bg-gray-900 text-gray-100 p-4 rounded text-sm overflow-x-auto">
-{`// Ejemplo usando fetch
+                {`// Ejemplo usando fetch
 fetch('${apiBaseUrl}/public/testimonials?limit=3')
   .then(response => response.json())
   .then(data => {
@@ -425,11 +387,11 @@ axios.get('${apiBaseUrl}/public/testimonials', {
 });`}
               </pre>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-2">Para WordPress o CMS:</h3>
               <pre className="bg-gray-900 text-gray-100 p-4 rounded text-sm overflow-x-auto">
-{`// Shortcode para WordPress
+                {`// Shortcode para WordPress
 function testimonial_embed_shortcode($atts) {
     $atts = shortcode_atts(['id' => ''], $atts);
     
@@ -444,11 +406,11 @@ function testimonial_embed_shortcode($atts) {
 add_shortcode('testimonial', 'testimonial_embed_shortcode');`}
               </pre>
             </div>
-            
+
             <div>
               <h3 className="font-semibold mb-2">Para React/Next.js:</h3>
               <pre className="bg-gray-900 text-gray-100 p-4 rounded text-sm overflow-x-auto">
-{`// Componente React para testimonios
+                {`// Componente React para testimonios
 import { useEffect, useState } from 'react';
 
 function TestimonialEmbed({ id }) {
