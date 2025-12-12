@@ -7,7 +7,6 @@ import { Copy, ExternalLink, Code, Play, Terminal, Loader2, FileText, FileCode, 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export type ApiEndpointType = {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';

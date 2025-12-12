@@ -1,18 +1,41 @@
-import { Metadata } from 'next';
+'use client'
+
 import Container from '@/components/ui/Container';
 import { ApiExplorer } from '@/components/api-explorer/ApiExplorer';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useUserStore } from "@/store/userStore";
+import { useRouter } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Explorador de API - Testimonial CMS',
-  description: 'Explora y prueba la API pública del sistema de testimonios',
-};
 
 export default function ApiExplorerPage() {
+
+  const router = useRouter();
+  const { token, rol } = useUserStore();
+
+  const handleAccessCMS = () => {
+    if (!token) {
+      return router.push("/login");
+    }
+
+    switch (rol) {
+      case "contributor":
+        return router.push("/");
+
+      case "editor":
+        return router.push("/dashboard/editor");
+
+      case "admin":
+        return router.push("/dashboard/admin?section=moderacion");
+
+      default:
+        return router.push("/login");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <header className="border-b">
         <Container>
           <div className="flex items-center justify-between py-4">
@@ -28,13 +51,13 @@ export default function ApiExplorerPage() {
                 <p className="text-sm text-gray-600">API Pública</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
-              <Button variant="outline" asChild>
-                <Link href="/login">Acceder al CMS</Link>
+              <Button variant="outline" onClick={handleAccessCMS}>
+                Acceder al CMS
               </Button>
               <Button asChild>
-                <a 
+                <a
                   href={`${process.env.NEXT_PUBLIC_URL_BASE}/docs`}
                   target="_blank"
                   rel="noopener noreferrer"
