@@ -20,11 +20,11 @@ export const TestimonialsMutationsService = () => {
     },
   });
 
-   const mutationUpdateStatusTestimonyById = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TestimonyStatusType }) => {
-      return updateStatusOfTestimonyById(id, data);
-    },
-  });
+ const mutationUpdateStatusTestimonyById = useMutation({
+  mutationFn: ({ id, data }: { id: string; data: TestimonyStatusType }) => {
+    return updateStatusOfTestimonyById(id, { status: data });
+  },
+});
 
   const mutationDeleteTestimonyById = useMutation({
     mutationFn: (id: string) => {

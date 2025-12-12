@@ -1,4 +1,5 @@
-import React from 'react'
+// app/(main)/dashboard/editor/[id]/page.tsx
+import { Suspense } from 'react'
 import TestimonialEdit from '@/components/dashboard/testimonial-edit'
 
 interface PageProps {
@@ -7,14 +8,13 @@ interface PageProps {
   }>
 }
 
-
 const page = async ({ params }: PageProps) => {
   const { id } = await params;
   
   return (
-    <div>
+    <Suspense fallback={<div>Cargando editor...</div>}>
       <TestimonialEdit testimonialId={id} />
-    </div>
+    </Suspense>
   )
 }
 
